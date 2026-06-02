@@ -100,6 +100,12 @@ async function startCamera() {
             audio: true
         });
         cameraView.srcObject = stream;
+        // 전면카메라 좌우반전 보정
+if (currentFacingMode === "user") {
+    cameraView.style.transform = "scaleX(-1)";
+} else {
+    cameraView.style.transform = "scaleX(1)";
+}
 
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
@@ -122,8 +128,19 @@ async function startCamera() {
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const recordTime = `${hours}:${minutes}`;
 
-            const savedId = await saveVideoToDB(blob, currentAltitude, recordTime);
-            addVideoSlideToUI(blob, currentAltitude, savedId, recordTime);
+            const savedId = await saveVideoToDB(
+    blob,
+    currentAltitude,
+    recordTime,
+    currentFacingMode
+);
+           addVideoSlideToUI(
+    blob,
+    currentAltitude,
+    savedId,
+    recordTime,
+    currentFacingMode
+);
         };
 
     } catch (error) {
@@ -133,11 +150,18 @@ async function startCamera() {
 }
 
 // IndexedDB에 영상을 저장하는 함수 (촬영 시간 데이터 포함)
-function saveVideoToDB(blob, altitude, recordTime) {
+function saveVideoToDB(blob, altitude, recordTime, facingMode) {
     return new Promise((resolve) => {
         const transaction = db.transaction(["videos"], "readwrite");
         const store = transaction.objectStore("videos");
-        const request = store.add({ videoBlob: blob, altitudeText: altitude, recordTime: recordTime });
+
+        const request = store.add({
+            videoBlob: blob,
+            altitudeText: altitude,
+            recordTime: recordTime,
+            facingMode: facingMode
+        });
+
         request.onsuccess = (e) => resolve(e.target.result);
     });
 }
@@ -160,14 +184,25 @@ function loadSavedVideos() {
 
     request.onsuccess = function(e) {
         const savedList = e.target.result;
-        savedList.forEach(item => {
-            addVideoSlideToUI(item.videoBlob, item.altitudeText, item.id, item.recordTime);
-        });
-    };
+     savedList.forEach(item => {
+    addVideoSlideToUI(
+        item.videoBlob,
+        item.altitudeText,
+        item.id,
+        item.recordTime,
+        item.facingMode
+    );
+});
 }
 
 // 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 슬라이드 내 시간 자막도 대기화면과 똑같이 미니멀화)
-function addVideoSlideToUI(blob, altitude, id, recordTime) {
+function addVideoSlideToUI(
+    blob,
+    altitude,
+    id,
+    recordTime,
+    facingMode
+) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
@@ -177,6 +212,10 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
+
+    if (facingMode === "user") {
+    newVideo.style.transform = "scaleX(-1)";
+}
 
     newVideo.muted = true;
     newVideo.playsInline = true;
@@ -462,11 +501,37 @@ async function generateTotalLogVideo() {
                 const videoY = (canvas.height - videoHeight) / 2;
 
                 ctx.save();
-                ctx.beginPath();
-                ctx.roundRect(videoX, videoY, videoWidth, videoHeight, 20);
-                ctx.clip();
-                ctx.drawImage(hiddenVideo, videoX, videoY, videoWidth, videoHeight);
-                ctx.restore();
+ctx.beginPath();
+ctx.roundRect(videoX, videoY, videoWidth, videoHeight, 20);
+ctx.clip();
+
+if (item.facingMode === "user") {
+
+    ctx.translate(videoX + videoWidth, videoY);
+    ctx.scale(-1, 1);
+
+    ctx.drawImage(
+        hiddenVideo,
+        0,
+        0,
+        videoWidth,
+        videoHeight
+    );
+
+} else {
+
+    ctx.drawImage(
+        hiddenVideo,
+        videoX,
+        videoY,
+        videoWidth,
+        videoHeight
+    );
+
+}
+
+ctx.restore();
+                
 
                 // 🌟 [다운로드 영상용 캔버스 시간 자막 렌더링 스타일 수정]
                 // 해상도 비율(720px)을 고려해 크기를 슬림한 18px로 조절하고 동글동글한 폰트 우선순위 지정
