@@ -100,12 +100,7 @@ async function startCamera() {
             audio: true
         });
         cameraView.srcObject = stream;
-        // 전면카메라 좌우반전 보정
-if (currentFacingMode === "user") {
-    cameraView.style.transform = "scaleX(-1)";
-} else {
-    cameraView.style.transform = "scaleX(1)";
-}
+        
 
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
@@ -213,8 +208,6 @@ function addVideoSlideToUI(
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    if (facingMode === "user") {
-    newVideo.style.transform = "scaleX(-1)";
 }
 
     newVideo.muted = true;
@@ -505,33 +498,15 @@ ctx.beginPath();
 ctx.roundRect(videoX, videoY, videoWidth, videoHeight, 20);
 ctx.clip();
 
-if (item.facingMode === "user") {
-
-    ctx.translate(videoX + videoWidth, videoY);
-    ctx.scale(-1, 1);
-
-    ctx.drawImage(
-        hiddenVideo,
-        0,
-        0,
-        videoWidth,
-        videoHeight
-    );
-
-} else {
-
-    ctx.drawImage(
-        hiddenVideo,
-        videoX,
-        videoY,
-        videoWidth,
-        videoHeight
-    );
-
-}
+ctx.drawImage(
+    hiddenVideo,
+    videoX,
+    videoY,
+    videoWidth,
+    videoHeight
+);
 
 ctx.restore();
-                
 
                 // 🌟 [다운로드 영상용 캔버스 시간 자막 렌더링 스타일 수정]
                 // 해상도 비율(720px)을 고려해 크기를 슬림한 18px로 조절하고 동글동글한 폰트 우선순위 지정
