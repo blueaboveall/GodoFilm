@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>등산 고도 카메라</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="background-container">
+<!-- 🌟 원래 위치 복구를 위해 영상 박스와 하단 버튼을 묶어주는 투명 받침대 추가 -->
+<div class="app-container">
+
+<!-- 스마트폰 액정 틀 (원래 크기와 비율 100% 복구) -->
+<div class="phone-screen">
+<div class="slider-wrapper" id="slider-wrapper">
+
+<!-- 카메라 촬영 페이지 -->
+<div class="slide-page camera-page" id="camera-page">
+<video id="camera-view" autoplay playsinline muted></video>
+<div class="altitude-overlay">
+<span id="altitude-text">⛰️ 고도 불러오는 중...</span>
+</div>
+
+<button id="record-btn">REC</button>
+
+<button id="switch-camera-btn" aria-label="카메라 전환">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-.73"/>
+</svg>
+</button>
+
+<div class="swipe-hint">▶ 오른쪽으로 밀어서 찍은 영상 보기</div>
+</div>
+
+</div>
+</div>
+
+<!-- 🌟 영상 네모박스 바깥 아래, 우측 하단에 완벽하게 정렬된 다운로드 버튼 -->
+<button id="total-download-btn">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4M7 10l5 5 5-5M12 15V3"/>
+</svg>
+<span>등산log 다운로드</span>
+</button>
+
+</div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
