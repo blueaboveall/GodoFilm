@@ -197,29 +197,37 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 원본 비율 유지 + 위아래 Crop 잘라내기 버전)
+// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 등산로그 및 촬영대기 매커니즘 완전 이식 버전)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
     
-    // 🌟 [Crop 핵심 1] 박스를 벗어나는 위아래 영상을 시각적으로 완전히 잘라내기(Crop) 위한 설정
+    // 🌟 [핵심 이식 1] 16:9 가로 상자 밖으로 삐져나오는 세로형 영상의 모든 영역을 칼같이 커팅(Crop)
     newSlide.style.position = 'relative'; 
     newSlide.style.overflow = 'hidden'; 
     newSlide.style.display = 'flex';
     newSlide.style.justifyContent = 'center';
     newSlide.style.alignItems = 'center';
+    newSlide.style.width = '100%';
+    newSlide.style.height = '100%';
 
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [Crop 핵심 2] 영상을 압축(축소)하지 않고, 박스 종횡비에 맞춰 가득 채운 뒤 넘치는 위아래를 쳐내는 마법의 조합
+    // 🌟 [핵심 이식 2] 등산로그 인코더와 동일한 화면 채움 매커니즘 적용
+    // 세로 비율(9:16) 영상을 가로 상자(16:9)에 억지로 구겨 넣지 않고, 
+    // 상자의 세로(Height)를 100% 채운 뒤 원본 비율에 맞춰 가로가 상자 옆으로 자연스럽게 삐져나가도록 유도하며,
+    // object-fit: cover와 정중앙 정렬을 통해 찌그러짐을 원천 봉쇄하고 위아래/양옆을 자연스럽게 크롭합니다.
     newVideo.style.setProperty('width', '100%', 'important');
     newVideo.style.setProperty('height', '100%', 'important');
-    newVideo.style.setProperty('object-fit', 'cover', 'important'); // 찌그러짐을 절대 방지하고 비율 유지하며 채움
-    newVideo.style.setProperty('object-position', 'center center', 'important'); // 정중앙을 기준으로 위아래를 똑같이 잘라냄
+    newVideo.style.setProperty('object-fit', 'cover', 'important'); 
+    newVideo.style.setProperty('object-position', 'center center', 'important'); 
+    
+    // 모바일 브라우저 렌더러가 영상을 강제 압축하는 버그 방지용 스케일 고정
+    newVideo.style.setProperty('transform', 'scale(1)', 'important');
 
     newVideo.muted = false; 
     newVideo.playsInline = true;
