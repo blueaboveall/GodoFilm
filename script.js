@@ -495,37 +495,45 @@ async function generateTotalLogVideo() {
             while (isCurrentVideoPlaying) {
                 ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-                const videoWidth = canvas.width * 0.85;
-                const videoHeight = videoWidth * (9 / 16);
-                const videoX = (canvas.width - videoWidth) / 2;
-                const videoY = (canvas.height - videoHeight) / 2;
+                // 1. 영상이 위치할 박스 틀 설정 (기존 비율 유지)
+                const containerWidth = canvas.width * 0.85; // 612px
+                const containerHeight = containerWidth * (9 / 16); // 344.25px (가로로 긴 비율로 고정!)
+                const videoX = (canvas.width - containerWidth) / 2;
+                const videoY = (canvas.height - containerHeight) / 2;
 
+                // 2. [🌟 강제 크롭 핵심 수식] 
+                // 압축(찌그러짐) 없이 가로폭을 틀에 맞추고, 세로 원본 비율대로 확대하여 위아래를 넘치게 만듭니다.
+                const drawWidth = containerWidth;
+                const drawHeight = containerWidth * (hiddenVideo.videoHeight / hiddenVideo.videoWidth);
+                
+                // 3. 넘친 영상의 위아래를 정확히 반반씩 잘라내기 위한 중앙 정렬 계산
+                const offsetX = videoX;
+                const offsetY = videoY - (drawHeight - containerHeight) / 2;
+
+                // 4. 둥근 모서리 틀을 만들고 넘치는 위아래 Cut!
                 ctx.save();
                 ctx.beginPath();
-                ctx.roundRect(videoX, videoY, videoWidth, videoHeight, 20);
-                ctx.clip();
-                ctx.drawImage(hiddenVideo, videoX, videoY, videoWidth, videoHeight);
+                ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
+                ctx.clip(); // 🌟 이 명령어가 containerHeight(가로형 박스)를 벗어나는 위아래 영상을 칼같이 잘라냅니다!
+                
+                // 5. 계산된 좌표로 영상 그리기
+                ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
-                // 🌟 [다운로드 영상용 캔버스 시간 자막 렌더링 스타일 수정]
-                // 해상도 비율(720px)을 고려해 크기를 슬림한 18px로 조절하고 동글동글한 폰트 우선순위 지정
-                ctx.font = "600 18px system-ui, -apple-system, sans-serif";
+                // 6. 시간 자막 (가로형 영상 박스 내부 좌측 상단에 안착)
+                ctx.font = "600 20px system-ui, -apple-system, sans-serif";
                 ctx.fillStyle = "white";
-                ctx.shadowColor = "transparent"; 
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
-                
-                // 🌟 최종 비디오 인코딩용 여백도 기존 30에서 16으로 바짝 좁혀 매칭 완료
-                const padding = 16; 
-                
-                const displayTime = item.recordTime || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
-                ctx.fillText(displayTime, videoX + padding, videoY + padding);
+                const displayTime = item.recordTime || "00:00";
+                ctx.fillText(displayTime, videoX + 20, videoY + 20);
 
-                // 2️⃣ 고도 표시 자막 합성 (가운데 정중앙 고도 자막은 기존 굵고 큰 스타일 유지)
-                ctx.font = "bold 32px sans-serif";
+                // 7. 고도 자막 (가로형 영상 박스 정중앙에 안착)
+                ctx.font = "bold 36px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText(item.altitudeText, canvas.width / 2, canvas.height / 2);
+                ctx.fillStyle = "white";
+                ctx.fillText(item.altitudeText, canvas.width / 2, videoY + (containerHeight / 2));
 
                 await new Promise(requestAnimationFrame);
             }
