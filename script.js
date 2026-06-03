@@ -197,14 +197,14 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🍏 아이폰 사파리 압축 버그 완벽 저격 버전)
+// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 유저 촬영 화면 그대로 16:9 꽉 찬 크롭 버전)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
     
-    // 16:9 가로 상자 밖으로 삐져나오는 세로형 영상의 모든 영역을 칼같이 커팅(Crop)
+    // 🌟 슬라이드 상자 자체가 가로로 긴 16:9 비율이므로 넘치는 위아래 원본을 숨깁니다.
     newSlide.style.position = 'relative'; 
     newSlide.style.overflow = 'hidden'; 
     newSlide.style.display = 'flex';
@@ -217,23 +217,23 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [아이폰 사파리 버그 해결 핵심] 
-    // 아이폰 사파리가 메타데이터를 오인해서 영상을 찌그러트리지 못하도록, 
-    // 가로세로 종횡비를 9:16(세로형 원본 비율)로 계산하라고 CSS 스펙으로 강제 지정합니다.
-    newVideo.style.setProperty('width', 'auto', 'important'); // 너비를 auto로 풀어 아이폰이 강제로 늘리는 것을 방지
-    newVideo.style.setProperty('height', '100%', 'important'); // 높이를 상자에 맞춤
-    newVideo.style.setProperty('aspect-ratio', '9 / 16', 'important'); // 🌟 아이폰에게 9:16 비율임을 강제로 주입
-    newVideo.style.setProperty('object-fit', 'cover', 'important'); 
-    newVideo.style.setProperty('object-position', 'center center', 'important'); 
+    // 🌟 [검은 여백 및 압축 해결 핵심]
+    // 아이폰 사파리에게 이 비디오 박스의 렌더링 비율을 '16:9(가로형)'로 강제 지정합니다.
+    // 이렇게 해야 양옆의 검은색 여백이 사라지고, 영상이 가로로 꽉 차게 확대됩니다!
+    newVideo.style.setProperty('width', '100%', 'important');
+    newVideo.style.setProperty('height', '100%', 'important');
+    newVideo.style.setProperty('aspect-ratio', '16 / 9', 'important'); // 🌟 9/16에서 16/9로 전면 수정!
+    newVideo.style.setProperty('object-fit', 'cover', 'important'); // 비율을 유지하며 꽉 채우고, 넘치는 위아래(치약 밖 배경)를 쳐냄
+    newVideo.style.setProperty('object-position', 'center center', 'important'); // 정중앙 기준 크롭
 
     newVideo.muted = false; 
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
-    newVideo.setAttribute('webkit-playsinline', ''); // 🌟 iOS 사파리 전용 전체화면 방지 속성 추가
+    newVideo.setAttribute('webkit-playsinline', '');
     newVideo.controls = true;
     newVideo.loop = true;
 
-    // 🌟 [아이폰 버그 2차 방어] 영상 데이터가 완전히 로드되면 다시 한번 비율을 cover로 고정 유도
+    // 영상 데이터가 로드되면 다시 한번 cover 속성을 강력하게 동기화
     newVideo.addEventListener('loadedmetadata', function() {
         newVideo.style.setProperty('object-fit', 'cover', 'important');
     });
