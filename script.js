@@ -197,14 +197,14 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 유저 촬영 화면 그대로 16:9 꽉 찬 크롭 버전)
+// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🍏 아이폰 세로 압축/찌부 현상 물리적 강제 크롭 버전)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
     
-    // 🌟 슬라이드 상자 자체가 가로로 긴 16:9 비율이므로 넘치는 위아래 원본을 숨깁니다.
+    // 🌟 [중요] 부모 상자는 가로로 긴 16:9 규격을 유지하며, 위아래로 길게 늘어난 비디오 영역을 싹둑 잘라냅니다.
     newSlide.style.position = 'relative'; 
     newSlide.style.overflow = 'hidden'; 
     newSlide.style.display = 'flex';
@@ -217,14 +217,15 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [검은 여백 및 압축 해결 핵심]
-    // 아이폰 사파리에게 이 비디오 박스의 렌더링 비율을 '16:9(가로형)'로 강제 지정합니다.
-    // 이렇게 해야 양옆의 검은색 여백이 사라지고, 영상이 가로로 꽉 차게 확대됩니다!
+    // 🌟 [아이폰 압축 버그 전면 격파]
+    // 아이폰 사파리가 영상을 위아래로 찌부러트리지 못하도록 물리적 크기 비율을 강제합니다.
+    // 가로를 100%로 고정하고, 높이를 16:9 상자 대비 세로 비율인 177.78%로 과감하게 늘려버립니다.
+    // 이렇게 하면 아이폰이 강제로 압축할 여지없이 대기 화면과 똑같은 9:16 종횡비가 유지되며 위아래가 깔끔하게 크롭됩니다.
+    newVideo.style.setProperty('position', 'absolute', 'important');
     newVideo.style.setProperty('width', '100%', 'important');
-    newVideo.style.setProperty('height', '100%', 'important');
-    newVideo.style.setProperty('aspect-ratio', '16 / 9', 'important'); // 🌟 9/16에서 16/9로 전면 수정!
-    newVideo.style.setProperty('object-fit', 'cover', 'important'); // 비율을 유지하며 꽉 채우고, 넘치는 위아래(치약 밖 배경)를 쳐냄
-    newVideo.style.setProperty('object-position', 'center center', 'important'); // 정중앙 기준 크롭
+    newVideo.style.setProperty('height', '177.77%', 'important'); // 🌟 16:9 상자 안에서 9:16 원본 비율을 유지하게 만드는 마법의 높이 값
+    newVideo.style.setProperty('object-fit', 'cover', 'important'); // 찌그러짐 방지 고정
+    newVideo.style.setProperty('object-position', 'center center', 'important'); // 정중앙 정렬
 
     newVideo.muted = false; 
     newVideo.playsInline = true;
@@ -232,11 +233,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.setAttribute('webkit-playsinline', '');
     newVideo.controls = true;
     newVideo.loop = true;
-
-    // 영상 데이터가 로드되면 다시 한번 cover 속성을 강력하게 동기화
-    newVideo.addEventListener('loadedmetadata', function() {
-        newVideo.style.setProperty('object-fit', 'cover', 'important');
-    });
 
     // 중앙 고도 자막 레이어
     const newOverlay = document.createElement('div');
