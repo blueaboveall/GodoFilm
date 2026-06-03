@@ -534,20 +534,32 @@ async function generateTotalLogVideo() {
                 ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
-                // 6. 시간 자막 (가로형 영상 박스 내부 좌측 상단에 안착)
-                ctx.font = "600 20px system-ui, -apple-system, sans-serif";
+               // 🌟 가독성을 위한 그림자 효과 추가 (UI처럼 글씨를 또렷하게)
+                ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+
+                // 6. 시간 자막 (해상도에 맞춰 폰트 크기 28px로 큼직하게 & 폰트체 통일)
+                ctx.font = '600 28px system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif';
                 ctx.fillStyle = "white";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
                 const displayTime = item.recordTime || "00:00";
-                ctx.fillText(displayTime, videoX + 20, videoY + 20);
+                ctx.fillText(displayTime, videoX + 24, videoY + 24);
 
-                // 7. 고도 자막 (가로형 영상 박스 정중앙에 안착)
-                ctx.font = "bold 36px sans-serif";
+                // 7. 고도 자막 (크기 46px로 확대 & 글꼴 통일로 이모지 치우침 현상 방지)
+                ctx.font = 'bold 46px system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif';
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = "white";
                 ctx.fillText(item.altitudeText, canvas.width / 2, videoY + (containerHeight / 2));
+
+                // 🌟 다음 프레임을 위해 그림자 리셋 (안 하면 영상 화면 자체에 그림자가 번짐)
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
 
                 await new Promise(requestAnimationFrame);
             }
