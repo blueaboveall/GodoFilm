@@ -111,12 +111,40 @@ async function startCamera() {
         }
 
         // 3. 녹화용 캔버스 설정
-        const videoTrack = stream.getVideoTracks()[0];
-        const { width, height } = videoTrack.getSettings();
-        
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // 비디오 메타데이터가 로드되어 '실제 화면 해상도'를 알 수 있을 때 캔버스 크기 세팅
+        cameraView.onloadedmetadata = () => {
+            canvas.width = cameraView.videoWidth;
+            canvas.height = cameraView.videoHeight;
+        };
+
+        // 매 프레임마다 캔버스에 그리기
+        function drawFrame() {
+            if (cameraView.paused || cameraView.ended || !canvas.width) {
+                requestAnimationFrame(drawFrame);
+                return;
+            }
+            
+            // 아이폰 화면 회전 등으로 인해 실시간으로 해상도가 변할 경우 대응
+            const vw = cameraView.videoWidth;
+            const vh = cameraView.videoHeight;
+            if (canvas.width !== vw || canvas.height !== vh) {
+                canvas.width = vw;
+                canvas.height = vh;
+            }
+
+            ctx.save();
+            if (currentFacingMode === "user") {
+                ctx.scale(-1, 1);
+                ctx.drawImage(cameraView, -vw, 0, vw, vh);
+            } else {
+                ctx.drawImage(cameraView, 0, 0, vw, vh);
+            }
+            ctx.restore();
+            requestAnimationFrame(drawFrame);
+        }
         const ctx = canvas.getContext('2d');
 
         // 매 프레임마다 캔버스에 그리기
@@ -416,6 +444,9 @@ async function generateTotalLogVideo() {
         const hiddenVideo = document.createElement('video');
         hiddenVideo.muted = true;
         hiddenVideo.playsInline = true;
+        hiddenVideo.setAttribute('playsinline', ''); // iOS 필수 속성
+        hiddenVideo.style.display = 'none'; // 화면에는 안 보이게 처리
+        document.body.appendChild(hiddenVideo); // 🌟 iOS Safari 버그 방지: DOM에 무조건 삽입
 
         const canvasStream = canvas.captureStream(30);
         const encodedChunks = [];
@@ -483,7 +514,7 @@ async function generateTotalLogVideo() {
             hiddenVideo.src = URL.createObjectURL(item.videoBlob);
 
             await new Promise((resolve) => {
-                hiddenVideo.onloadedmetadata = resolve;
+                hiddenVideo.onloadeddata = resolve; // 🌟 metadata 대신 data로 변경
             });
             await hiddenVideo.play();
 
@@ -538,9 +569,9 @@ async function generateTotalLogVideo() {
         }
 
         canvasRecorder.stop();
+        hiddenVideo.remove(); // 🌟 작업이 끝난 후 숨겨둔 비디오를 화면에서 삭제
     };
 }
-
 // 앱 시작 초기화
 async function initApp() {
     await initDatabase();
