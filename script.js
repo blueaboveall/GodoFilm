@@ -1,5 +1,3 @@
-
-
 const cameraView = document.getElementById('camera-view');
 const recordBtn = document.getElementById('record-btn');
 const altitudeText = document.getElementById('altitude-text');
@@ -141,11 +139,19 @@ async function startCamera() {
 
         // 4. 캔버스 스트림을 녹화
         const canvasStream = canvas.captureStream(30);
-        // 오디오 트랙 추가 (캔버스 스트림에는 오디오가 없으므로)
-        canvasStream.addTrack(stream.getAudioTracks()[0]);
+        
+        // 🌟 [소리 녹음 핵심 수정] 마이크 소리 트랙을 가져와서 캔버스 스트림에 확실하게 결합합니다.
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+            canvasStream.addTrack(audioTracks[0]);
+        }
 
         const mimeType = getSupportedMimeType();
-        const options = mimeType ? { mimeType } : {};
+        // 🌟 오디오를 누락 없이 믹싱하도록 비트레이트 옵션을 세팅합니다.
+        const options = mimeType ? { 
+            mimeType,
+            audioBitsPerSecond: 128000
+        } : {};
         mediaRecorder = new MediaRecorder(canvasStream, options);
 
         mediaRecorder.ondataavailable = function(event) {
@@ -154,7 +160,6 @@ async function startCamera() {
             }
         };
         
-        // ... (나머지 onstop 로직은 동일)
         mediaRecorder.onstop = async function() {
             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
             recordedChunks = [];
@@ -217,7 +222,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    newVideo.muted = true;
+    newVideo.muted = false; // 🌟 소리가 나도록 false로 수정합니다.
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
@@ -299,7 +304,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
 
-// 슬라이드가 이동할 때 현재 화면의 비디오만 깨워서 재생시키는 로직
+// 슬라이드가 이동할 때 현재 화면의 비디오만 깨워서 재생시키는 로직 (소리 켜고 끄기 제어 추가)
 function updateSliderPosition() {
     sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
 
@@ -309,9 +314,11 @@ function updateSliderPosition() {
         if (video) {
             if (i === currentSlideIndex) {
                 video.load();
+                video.muted = false; // 🌟 현재 보고 있는 슬라이드 영상의 소리 활성화
                 video.play().catch(err => console.log("자동재생 정책 우회 중: ", err));
             } else {
                 video.pause();
+                video.muted = true;  // 🌟 지나간 영상들은 소리 끄기
             }
         }
     }
@@ -416,10 +423,20 @@ async function generateTotalLogVideo() {
         await new Promise((resolve) => { bgImg.onload = resolve; });
 
         const hiddenVideo = document.createElement('video');
-        hiddenVideo.muted = true;
+        hiddenVideo.muted = false; // 🌟 인코더용 비디오 소리 허용
         hiddenVideo.playsInline = true;
 
         const canvasStream = canvas.captureStream(30);
+        
+        // 🌟 [소리 다운로드 핵심 수정] 개별 비디오 트랙의 오디오 스트림을 추출해 최종 다운로드 스트림에 병합합니다.
+        if (hiddenVideo.captureStream) {
+            const videoAudioTrack = hiddenVideo.captureStream().getAudioTracks()[0];
+            if (videoAudioTrack) canvasStream.addTrack(videoAudioTrack);
+        } else if (hiddenVideo.mozCaptureStream) {
+            const videoAudioTrack = hiddenVideo.mozCaptureStream().getAudioTracks()[0];
+            if (videoAudioTrack) canvasStream.addTrack(videoAudioTrack);
+        }
+
         const encodedChunks = [];
 
         function getDownloadMimeType() {
@@ -501,8 +518,7 @@ async function generateTotalLogVideo() {
                 const videoX = (canvas.width - containerWidth) / 2;
                 const videoY = (canvas.height - containerHeight) / 2;
 
-                // 2. [🌟 강제 크롭 핵심 수식] 
-                // 압축(찌그러짐) 없이 가로폭을 틀에 맞추고, 세로 원본 비율대로 확대하여 위아래를 넘치게 만듭니다.
+                // 2. 강제 크롭 핵심 수식
                 const drawWidth = containerWidth;
                 const drawHeight = containerWidth * (hiddenVideo.videoHeight / hiddenVideo.videoWidth);
                 
@@ -514,7 +530,7 @@ async function generateTotalLogVideo() {
                 ctx.save();
                 ctx.beginPath();
                 ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
-                ctx.clip(); // 🌟 이 명령어가 containerHeight(가로형 박스)를 벗어나는 위아래 영상을 칼같이 잘라냅니다!
+                ctx.clip();
                 
                 // 5. 계산된 좌표로 영상 그리기
                 ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
@@ -555,4 +571,3 @@ async function initApp() {
 }
 
 initApp();
-
