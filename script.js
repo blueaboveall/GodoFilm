@@ -429,9 +429,18 @@ async function generateTotalLogVideo() {
         const hiddenVideo = document.createElement('video');
         hiddenVideo.muted = true;
         hiddenVideo.playsInline = true;
-        hiddenVideo.setAttribute('playsinline', ''); // iOS 필수 속성
-        hiddenVideo.style.display = 'none'; // 화면에는 안 보이게 처리
-        document.body.appendChild(hiddenVideo); // 🌟 iOS Safari 버그 방지: DOM에 무조건 삽입
+        hiddenVideo.setAttribute('playsinline', ''); 
+        
+        // 🌟 아이폰 필수: display='none' 대신, 크기를 1px로 줄여 화면 밖에 투명하게 숨겨야 
+        // 아이폰 엔진이 비디오를 검은 화면으로 만들지 않고 정상적으로 그려냅니다.
+        hiddenVideo.style.position = 'fixed';
+        hiddenVideo.style.top = '0';
+        hiddenVideo.style.left = '-9999px'; 
+        hiddenVideo.style.width = '1px';
+        hiddenVideo.style.height = '1px';
+        hiddenVideo.style.opacity = '0.01';
+        hiddenVideo.style.pointerEvents = 'none';
+        document.body.appendChild(hiddenVideo);
 
         const canvasStream = canvas.captureStream(30);
         const encodedChunks = [];
@@ -534,28 +543,40 @@ async function generateTotalLogVideo() {
                 ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
-               // 🌟 가독성을 위한 그림자 효과 추가 (UI처럼 글씨를 또렷하게)
+                // 🌟 가독성을 위한 그림자 효과 추가 (글씨를 또렷하게)
                 ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
                 ctx.shadowBlur = 4;
                 ctx.shadowOffsetX = 1;
                 ctx.shadowOffsetY = 1;
 
-                // 6. 시간 자막 (해상도에 맞춰 폰트 크기 28px로 큼직하게 & 폰트체 통일)
-                ctx.font = '600 28px system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif';
+                // 6. 시간 자막 (사파리 캔버스 호환용 폰트 지정)
+                ctx.font = "600 30px sans-serif";
                 ctx.fillStyle = "white";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
                 const displayTime = item.recordTime || "00:00";
                 ctx.fillText(displayTime, videoX + 24, videoY + 24);
 
-                // 7. 고도 자막 (크기 46px로 확대 & 글꼴 통일로 이모지 치우침 현상 방지)
-                ctx.font = 'bold 46px system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif';
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
+                // 7. 고도 자막 (🌟 사파리 이모지 정렬 버그 우회 시스템)
+                ctx.font = "bold 46px sans-serif";
                 ctx.fillStyle = "white";
-                ctx.fillText(item.altitudeText, canvas.width / 2, videoY + (containerHeight / 2));
+                ctx.textBaseline = "middle";
 
-                // 🌟 다음 프레임을 위해 그림자 리셋 (안 하면 영상 화면 자체에 그림자가 번짐)
+                const fullAltitudeText = item.altitudeText || "⛰️ 해발 0m";
+                // 문장에서 이모지(⛰️)를 빼고 "해발 xxm" 텍스트만 추출
+                const cleanText = fullAltitudeText.replace("⛰️", "").trim(); 
+                const textWidth = ctx.measureText(cleanText).width;
+                const totalCenterX = canvas.width / 2;
+
+                // 🌟 [여기가 빠졌었어요!] "해발 XXm" 글씨를 화면 중앙 쪽에 그리는 명령어입니다.
+                ctx.textAlign = "center";
+                ctx.fillText(cleanText, totalCenterX + 25, videoY + (containerHeight / 2));
+
+                // 이모지 부분은 글자 바로 왼쪽에 바짝 붙여서 right 정렬로 따로 배치!
+                ctx.textAlign = "right";
+                ctx.fillText("⛰️", totalCenterX - (textWidth / 2) + 10, videoY + (containerHeight / 2));
+
+                // 🌟 다음 프레임을 위해 그림자 효과 리셋
                 ctx.shadowColor = "transparent";
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetX = 0;
