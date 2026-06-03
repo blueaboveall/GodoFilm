@@ -4,7 +4,7 @@ const altitudeText = document.getElementById('altitude-text');
 const sliderWrapper = document.getElementById('slider-wrapper');
 const cameraPage = document.getElementById('camera-page');
 const switchCameraBtn = document.getElementById('switch-camera-btn');
-const totalDownloadBtn = document.getElementById('total-download-btn'); // 🌟 전체 다운로드 버튼 가져오기
+const totalDownloadBtn = document.getElementById('total-download-btn'); 
 
 let mediaRecorder;
 let recordedChunks = [];
@@ -51,29 +51,24 @@ function initDatabase() {
     });
 }
 
-// 실시간 촬영 대기화면 전용 시계 구동 함수 (🎨 크기 축소, 코너 밀착 및 동글한 시스템 폰트 적용)
+// 실시간 촬영 대기화면 전용 시계 구동 함수
 function startCameraClock() {
     let cameraTimeText = document.getElementById('camera-time-text');
     if (!cameraTimeText) {
         cameraTimeText = document.createElement('div');
         cameraTimeText.id = 'camera-time-text';
         
-        // 🌟 상단/좌측 여백을 30px에서 14px로 대폭 줄여 구석에 바짝 붙임
         cameraTimeText.style.position = 'absolute';
         cameraTimeText.style.top = '14px';
         cameraTimeText.style.left = '14px';
         cameraTimeText.style.color = 'white';
-        
-        // 🌟 크기를 24px에서 15px로 슬림하게 줄이고, 자간을 조여 귀여운 느낌 유도
         cameraTimeText.style.fontSize = '15px';
         cameraTimeText.style.fontWeight = '600';
-        
-        // 🌟 각진 기본 폰트 대신, 기기별 가장 둥글고 세련된 라운드형 시스템 폰트셋 부여
         cameraTimeText.style.fontFamily = 'system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
         cameraTimeText.style.letterSpacing = '-0.3px';
         cameraTimeText.style.zIndex = '10';
         if (cameraPage) {
-            cameraPage.style.position = 'relative'; // 기준점 고정
+            cameraPage.style.position = 'relative'; 
             cameraPage.appendChild(cameraTimeText);
         }
     }
@@ -85,7 +80,7 @@ function startCameraClock() {
         cameraTimeText.innerText = `${hours}:${minutes}`;
     }
     updateClock();
-    setInterval(updateClock, 1000); // 1초마다 촬영 대기화면 시간 업데이트
+    setInterval(updateClock, 1000); 
 }
 
 // 카메라 켜기
@@ -100,17 +95,14 @@ async function startCamera() {
             audio: true
         });
 
-        // 1. 화면 출력용 비디오 태그 설정
         cameraView.srcObject = stream;
         
-        // 2. 화면엔 거울처럼 보여주기 (CSS)
         if (currentFacingMode === "user") {
             cameraView.style.transform = "scaleX(-1)";
         } else {
             cameraView.style.transform = "scaleX(1)";
         }
 
-        // 3. 녹화용 캔버스 설정
         const videoTrack = stream.getVideoTracks()[0];
         const { width, height } = videoTrack.getSettings();
         
@@ -119,7 +111,6 @@ async function startCamera() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
 
-        // 매 프레임마다 캔버스에 그리기
         function drawFrame() {
             if (cameraView.paused || cameraView.ended) return;
             
@@ -134,20 +125,16 @@ async function startCamera() {
             requestAnimationFrame(drawFrame);
         }
         
-        // 비디오가 재생될 때 캔버스 드로잉 시작
         cameraView.onplay = drawFrame;
 
-        // 4. 캔버스 스트림을 녹화
         const canvasStream = canvas.captureStream(30);
         
-        // 🌟 [소리 녹음 핵심 수정] 마이크 소리 트랙을 가져와서 캔버스 스트림에 확실하게 결합합니다.
         const audioTracks = stream.getAudioTracks();
         if (audioTracks.length > 0) {
             canvasStream.addTrack(audioTracks[0]);
         }
 
         const mimeType = getSupportedMimeType();
-        // 🌟 오디오를 누락 없이 믹싱하도록 비트레이트 옵션을 세팅합니다.
         const options = mimeType ? { 
             mimeType,
             audioBitsPerSecond: 128000
@@ -165,7 +152,7 @@ async function startCamera() {
             recordedChunks = [];
             const currentAltitude = altitudeText.innerText;
             const now = new Date();
-            const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
             const savedId = await saveVideoToDB(blob, currentAltitude, recordTime);
             addVideoSlideToUI(blob, currentAltitude, savedId, recordTime);
         };
@@ -176,7 +163,7 @@ async function startCamera() {
     }
 }
 
-// IndexedDB에 영상을 저장하는 함수 (촬영 시간 데이터 포함)
+// IndexedDB에 영상을 저장하는 함수
 function saveVideoToDB(blob, altitude, recordTime) {
     return new Promise((resolve) => {
         const transaction = db.transaction(["videos"], "readwrite");
@@ -196,7 +183,7 @@ function deleteVideoFromDB(id) {
     });
 }
 
-// 디비에 저장되어 있던 영상들을 화면에 쭉 로드하는 함수
+// 디비에 저장되어 있던 영상들을 화면에 로드하는 함수
 function loadSavedVideos() {
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
@@ -222,7 +209,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [웹사이트 슬라이드 찌그러짐 해결] 영상을 압축하지 않고 넘치는 영역을 칼같이 잘라내서(Cut) 채우는 설정
+    // 🌟 [웹사이트 슬라이드 찌러짐 버그 해결] 영상이 강제 압축되지 않고 위아래가 깔끔히 잘리도록 처리
     newVideo.style.width = '100%';
     newVideo.style.height = '100%';
     newVideo.style.objectFit = 'cover'; 
@@ -233,15 +220,12 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.controls = true;
     newVideo.loop = true;
 
-    // 중앙 고도 자막 레이어
     const newOverlay = document.createElement('div');
     newOverlay.className = 'altitude-overlay';
     newOverlay.innerHTML = `<span>${altitude}</span>`;
 
-    // 영상 내부 왼쪽 상단 시간 자막 레이어 생성
     const timeOverlay = document.createElement('div');
     timeOverlay.className = 'time-overlay';
-    
     timeOverlay.style.position = 'absolute';
     timeOverlay.style.top = '14px';
     timeOverlay.style.left = '14px';
@@ -269,16 +253,12 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
 
     deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-
         if (confirm("이 영상을 영구 삭제하시겠습니까?")) {
             await deleteVideoFromDB(id);
-
             const childrenArray = Array.from(sliderWrapper.children);
             const slideIndex = childrenArray.indexOf(newSlide);
-
             newSlide.remove();
             totalSlides--;
-
             if (slideIndex <= currentSlideIndex) {
                 if (currentSlideIndex >= totalSlides) {
                     currentSlideIndex = totalSlides - 1;
@@ -286,7 +266,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
                     currentSlideIndex--;
                 }
             }
-
             updateSliderPosition();
         }
     });
@@ -307,7 +286,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
 
-// 슬라이드가 이동할 때 현재 화면의 비디오만 깨워서 재생시키는 로직
+// 슬라이드가 이동할 때 현재 화면의 비디오 처리
 function updateSliderPosition() {
     sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
 
@@ -381,7 +360,6 @@ document.addEventListener('mouseup', e => { touchEndX = e.screenX; handleSwipe()
 
 function handleSwipe() {
     const swipeDistance = touchStartX - touchEndX;
-
     if (swipeDistance < -50) {
         if (currentSlideIndex > 0) {
             currentSlideIndex--;
@@ -397,7 +375,7 @@ function handleSwipe() {
 }
 
 // ==========================================
-// 비디오 캔버스 병합 인코더 시스템 (소리 및 모바일 크롭 비율 수정 완료)
+// 비디오 캔버스 병합 인코더 시스템 (소리 보강 및 모바일 크롭 완전 수정 완료)
 // ==========================================
 totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 
@@ -418,6 +396,175 @@ async function generateTotalLogVideo() {
 
         const canvas = document.createElement('canvas');
         canvas.width = 720;
-        canvas.height =
+        canvas.height = 1280;
+        const ctx = canvas.getContext('2d');
+
+        const bgImg = new Image();
+        bgImg.src = 'my-background.png';
+        await new Promise((resolve) => { bgImg.onload = resolve; });
+
+        const hiddenVideo = document.createElement('video');
+        hiddenVideo.muted = false; 
+        hiddenVideo.playsInline = true;
+        hiddenVideo.setAttribute('playsinline', '');
+        hiddenVideo.setAttribute('crossorigin', 'anonymous');
+        hiddenVideo.preload = 'auto';
+
+        const canvasStream = canvas.captureStream(30);
+        const encodedChunks = [];
+
+        function getDownloadMimeType() {
+            const appleFriendlyTypes = [
+                'video/mp4;codecs=avc1',   
+                'video/mp4;codecs=h264',
+                'video/mp4',
+                'video/quicktime'          
+            ];
+            for (const type of appleFriendlyTypes) {
+                if (MediaRecorder.isTypeSupported(type)) return type;
+            }
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
+            return 'video/webm';
+        }
+
+        const downloadMimeType = getDownloadMimeType();
+        
+        try {
+            if (hiddenVideo.captureStream) {
+                const audioTrack = hiddenVideo.captureStream().getAudioTracks()[0];
+                if (audioTrack) canvasStream.addTrack(audioTrack);
+            } else if (hiddenVideo.mozCaptureStream) {
+                const audioTrack = hiddenVideo.mozCaptureStream().getAudioTracks()[0];
+                if (audioTrack) canvasStream.addTrack(audioTrack);
+            }
+        } catch (err) {
+            console.log("오디오 스트림 사전 결합 건너뜀:", err);
+        }
+
+        const canvasRecorder = new MediaRecorder(canvasStream, downloadMimeType ? { mimeType: downloadMimeType } : {});
+
+        canvasRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) encodedChunks.push(event.data);
+        };
+
+        canvasRecorder.onstop = () => {
+            const actualMime = canvasRecorder.mimeType || '';
+            let extension = 'mp4';
+            
+            if (actualMime.includes('webm')) {
+                extension = 'webm';
+            } else if (actualMime.includes('quicktime')) {
+                extension = 'mov';
+            }
+
+            const finalBlob = new Blob(encodedChunks, { type: actualMime || 'video/mp4' });
+            const finalVideoURL = URL.createObjectURL(finalBlob);
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0'); 
+            const day = String(now.getDate()).padStart(2, '0');
+            const formattedDate = `${year}.${month}.${day}`;
+
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = finalVideoURL;
+            downloadAnchor.download = `${formattedDate} 등산log.${extension}`;
+            downloadAnchor.click();
+
+            if (extension === 'webm') {
+                alert("⚠️ 현재 브라우저가 MP4 녹화를 지원하지 않아 WebM으로 다운로드되었습니다. 맥북 QuickTime 대신 Chrome 브라우저나 VLC 플레이어를 이용해 주세요.");
+            }
+
+            totalDownloadBtn.disabled = false;
+            totalDownloadBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4M7 10l5 5 5-5M12 15V3"/>
+                </svg><span>등산log 다운로드</span>`;
+        };
+
+        canvasRecorder.start();
+
+        for (const item of savedList) {
+            hiddenVideo.src = URL.createObjectURL(item.videoBlob);
+
+            await new Promise((resolve) => {
+                hiddenVideo.onloadedmetadata = () => {
+                    if (hiddenVideo.videoWidth > 0) resolve();
+                    else hiddenVideo.onloadeddata = resolve;
+                };
+            });
+
+            hiddenVideo.volume = 1.0;
+            await hiddenVideo.play().catch(e => console.log("비디오 재생 유저 승인 필요:", e));
+
+            let isCurrentVideoPlaying = true;
+            hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
+
+            while (isCurrentVideoPlaying) {
+                ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+
+                // 1. 영상 상자 틀 고정 (가로폭 85%, 16:9 가로형 비율)
+                const containerWidth = canvas.width * 0.85; 
+                const containerHeight = containerWidth * (9 / 16); 
+                const videoX = (canvas.width - containerWidth) / 2;
+                const videoY = (canvas.height - containerHeight) / 2;
+
+                // 🌟 [모바일 강제 칼크롭(Cut) 보정 공식 적용]
+                // 메타데이터가 뒤집혀 들어와 세로 영상이 홀쭉하게 찌그러지는 현상을 원천 방어합니다.
+                const rawW = hiddenVideo.videoWidth || 720;
+                const rawH = hiddenVideo.videoHeight || 1280;
+                
+                const realVideoWidth = Math.min(rawW, rawH);
+                const realVideoHeight = Math.max(rawW, rawH);
+                
+                // 가로 너비를 슬라이드 틀에 딱 맞춰 채운 뒤, 세로는 원본 종횡비에 맞춰 위아래로 대폭 확장합니다. (절대 압축되지 않음)
+                const drawWidth = containerWidth;
+                const drawHeight = containerWidth * (realVideoHeight / realVideoWidth);
+                
+                // 삐져나온 위아래를 정중앙 기준 반반씩 날리기 위한 오프셋 조절
+                const offsetX = videoX;
+                const offsetY = videoY - (drawHeight - containerHeight) / 2;
+
+                // 2. 둥근 사각형 클리핑 영역을 생성하고 넘친 위아래 싹둑 잘라내기(Cut)!
+                ctx.save();
+                ctx.beginPath();
+                ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
+                ctx.clip(); 
+                ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
+                ctx.restore();
+
+                // 3. 시간 자막 그리기
+                ctx.font = "600 20px system-ui, -apple-system, sans-serif";
+                ctx.fillStyle = "white";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "top";
+                const displayTime = item.recordTime || "00:00";
+                ctx.fillText(displayTime, videoX + 20, videoY + 20);
+
+                // 4. 고도 자막 그리기
+                ctx.font = "bold 36px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "white";
+                ctx.fillText(item.altitudeText, canvas.width / 2, videoY + (containerHeight / 2));
+
+                await new Promise(requestAnimationFrame);
+            }
+        }
+
+        canvasRecorder.stop();
+    };
+}
+
+// 앱 시작 초기화
+async function initApp() {
+    await initDatabase();
+    loadSavedVideos();
+    await startCamera();
+    startCameraClock();
+
+    altitudeText.innerText = "⛰️ 초기 고도 측정 중...";
+    getRealAltitude();
+}
 
 initApp();
