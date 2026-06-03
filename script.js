@@ -197,14 +197,14 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 등산로그 및 촬영대기 매커니즘 완전 이식 버전)
+// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🍏 아이폰 사파리 압축 버그 완벽 저격 버전)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
     
-    // 🌟 [핵심 이식 1] 16:9 가로 상자 밖으로 삐져나오는 세로형 영상의 모든 영역을 칼같이 커팅(Crop)
+    // 16:9 가로 상자 밖으로 삐져나오는 세로형 영상의 모든 영역을 칼같이 커팅(Crop)
     newSlide.style.position = 'relative'; 
     newSlide.style.overflow = 'hidden'; 
     newSlide.style.display = 'flex';
@@ -217,23 +217,26 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [핵심 이식 2] 등산로그 인코더와 동일한 화면 채움 매커니즘 적용
-    // 세로 비율(9:16) 영상을 가로 상자(16:9)에 억지로 구겨 넣지 않고, 
-    // 상자의 세로(Height)를 100% 채운 뒤 원본 비율에 맞춰 가로가 상자 옆으로 자연스럽게 삐져나가도록 유도하며,
-    // object-fit: cover와 정중앙 정렬을 통해 찌그러짐을 원천 봉쇄하고 위아래/양옆을 자연스럽게 크롭합니다.
-    newVideo.style.setProperty('width', '100%', 'important');
-    newVideo.style.setProperty('height', '100%', 'important');
+    // 🌟 [아이폰 사파리 버그 해결 핵심] 
+    // 아이폰 사파리가 메타데이터를 오인해서 영상을 찌그러트리지 못하도록, 
+    // 가로세로 종횡비를 9:16(세로형 원본 비율)로 계산하라고 CSS 스펙으로 강제 지정합니다.
+    newVideo.style.setProperty('width', 'auto', 'important'); // 너비를 auto로 풀어 아이폰이 강제로 늘리는 것을 방지
+    newVideo.style.setProperty('height', '100%', 'important'); // 높이를 상자에 맞춤
+    newVideo.style.setProperty('aspect-ratio', '9 / 16', 'important'); // 🌟 아이폰에게 9:16 비율임을 강제로 주입
     newVideo.style.setProperty('object-fit', 'cover', 'important'); 
     newVideo.style.setProperty('object-position', 'center center', 'important'); 
-    
-    // 모바일 브라우저 렌더러가 영상을 강제 압축하는 버그 방지용 스케일 고정
-    newVideo.style.setProperty('transform', 'scale(1)', 'important');
 
     newVideo.muted = false; 
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
+    newVideo.setAttribute('webkit-playsinline', ''); // 🌟 iOS 사파리 전용 전체화면 방지 속성 추가
     newVideo.controls = true;
     newVideo.loop = true;
+
+    // 🌟 [아이폰 버그 2차 방어] 영상 데이터가 완전히 로드되면 다시 한번 비율을 cover로 고정 유도
+    newVideo.addEventListener('loadedmetadata', function() {
+        newVideo.style.setProperty('object-fit', 'cover', 'important');
+    });
 
     // 중앙 고도 자막 레이어
     const newOverlay = document.createElement('div');
@@ -302,6 +305,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     sliderWrapper.offsetHeight;
     sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
+
 // 슬라이드가 이동할 때 현재 화면의 비디오 처리
 function updateSliderPosition() {
     sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
