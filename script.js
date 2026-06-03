@@ -103,13 +103,20 @@ async function startCamera() {
             cameraView.style.transform = "scaleX(1)";
         }
 
-        const videoTrack = stream.getVideoTracks()[0];
-        const { width, height } = videoTrack.getSettings();
-        
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+
+        await new Promise(resolve => {
+            cameraView.onloadedmetadata = () => {
+                canvas.width = cameraView.videoWidth;
+                canvas.height = cameraView.videoHeight;
+                resolve();
+            };
+        });
+
         const ctx = canvas.getContext('2d');
+
+        const width = canvas.width;
+        const height = canvas.height;
 
         function drawFrame() {
             if (cameraView.paused || cameraView.ended) return;
@@ -212,20 +219,31 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newSlide.style.alignItems = 'center';
     newSlide.style.width = '100%';
     newSlide.style.height = '100%';
+    newSlide.style.aspectRatio = '9 / 16';
 
     const newVideo = document.createElement('video');
-    newVideo.src = videoURL;
-    newVideo.className = 'saved-video';
+newVideo.src = videoURL;
+
+newVideo.addEventListener('loadedmetadata', () => {
+    alert(
+        'video size: ' +
+        newVideo.videoWidth +
+        ' x ' +
+        newVideo.videoHeight
+    );
+});
+
+newVideo.className = 'saved-video';
 
     // 🌟 [순수 크롭 핵심 2] 비율 조정 절대 금지! 
     // 영상의 원래 비율(종횡비)을 브라우저가 강제로 찌그러트리지 못하도록 오직 고정 가로폭(100%)만 줍니다.
     // 높이는 자동으로 원본 비율을 유지하며 흘러내리게 두고, 부모 상자의 overflow: hidden이 위아래만 잘라내게 만듭니다.
     newVideo.style.setProperty('position', 'absolute', 'important');
-    newVideo.style.setProperty('width', '100%', 'important'); 
-    newVideo.style.setProperty('height', 'auto', 'important'); // 🌟 높이를 auto로 두어 찌부러짐을 원천 봉쇄합니다!
-    
-    // 아이폰 사파리가 억지로 화면을 늘리는 버그를 막기 위해 원본 비율 그대로 채우는 cover 속성만 깔끔하게 부여
-    newVideo.style.setProperty('object-fit', 'cover', 'important'); 
+    newVideo.style.setProperty('width', '100%', 'important');
+    newVideo.style.setProperty('height', '100%', 'important');
+
+    newVideo.style.setProperty('object-fit', 'cover', 'important');
+    newVideo.style.setProperty('object-position', 'center center', 'important');
     newVideo.style.setProperty('object-position', 'center center', 'important'); 
 
     newVideo.muted = false; 
