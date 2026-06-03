@@ -197,14 +197,14 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🍏 아이폰 세로 압축/찌부 현상 물리적 강제 크롭 버전)
+// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 영상 비율 조작 절대 금지 + 순수 위아래 Crop 버전)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
     
-    // 🌟 [중요] 부모 상자는 가로로 긴 16:9 규격을 유지하며, 위아래로 길게 늘어난 비디오 영역을 싹둑 잘라냅니다.
+    // 🌟 [순수 크롭 핵심 1] 부모 상자는 영상 박스 비율을 유지하며, 삐져나오는 위아래 화면을 칼같이 잘라냅니다.
     newSlide.style.position = 'relative'; 
     newSlide.style.overflow = 'hidden'; 
     newSlide.style.display = 'flex';
@@ -217,15 +217,16 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [아이폰 압축 버그 전면 격파]
-    // 아이폰 사파리가 영상을 위아래로 찌부러트리지 못하도록 물리적 크기 비율을 강제합니다.
-    // 가로를 100%로 고정하고, 높이를 16:9 상자 대비 세로 비율인 177.78%로 과감하게 늘려버립니다.
-    // 이렇게 하면 아이폰이 강제로 압축할 여지없이 대기 화면과 똑같은 9:16 종횡비가 유지되며 위아래가 깔끔하게 크롭됩니다.
+    // 🌟 [순수 크롭 핵심 2] 비율 조정 절대 금지! 
+    // 영상의 원래 비율(종횡비)을 브라우저가 강제로 찌그러트리지 못하도록 오직 고정 가로폭(100%)만 줍니다.
+    // 높이는 자동으로 원본 비율을 유지하며 흘러내리게 두고, 부모 상자의 overflow: hidden이 위아래만 잘라내게 만듭니다.
     newVideo.style.setProperty('position', 'absolute', 'important');
-    newVideo.style.setProperty('width', '100%', 'important');
-    newVideo.style.setProperty('height', '177.77%', 'important'); // 🌟 16:9 상자 안에서 9:16 원본 비율을 유지하게 만드는 마법의 높이 값
-    newVideo.style.setProperty('object-fit', 'cover', 'important'); // 찌그러짐 방지 고정
-    newVideo.style.setProperty('object-position', 'center center', 'important'); // 정중앙 정렬
+    newVideo.style.setProperty('width', '100%', 'important'); 
+    newVideo.style.setProperty('height', 'auto', 'important'); // 🌟 높이를 auto로 두어 찌부러짐을 원천 봉쇄합니다!
+    
+    // 아이폰 사파리가 억지로 화면을 늘리는 버그를 막기 위해 원본 비율 그대로 채우는 cover 속성만 깔끔하게 부여
+    newVideo.style.setProperty('object-fit', 'cover', 'important'); 
+    newVideo.style.setProperty('object-position', 'center center', 'important'); 
 
     newVideo.muted = false; 
     newVideo.playsInline = true;
