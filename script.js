@@ -197,22 +197,26 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 모바일 찌그러짐 방지 및 컷 크롭 적용)
+// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 웹사이트 슬라이드 압축/찌그러짐 완전 해결 버전)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
 
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
+    
+    // 🌟 넘치는 세로 영상을 칼같이 잘라내기(Cut) 위해 슬라이드 상자에 넘침 숨김 처리 추가
     newSlide.style.position = 'relative'; 
+    newSlide.style.overflow = 'hidden'; 
 
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
 
-    // 🌟 [1번 문제 해결] CSS가 욱여넣으려고 압축(fill)하는 대항마로 '!important'를 선언하여 강제로 Cut(cover) 시킵니다.
+    // 🌟 [핵심 수정] 영상을 억지로 구겨 넣지 않고, 가로폭을 채운 뒤 넘치는 위아래는 싹둑 쳐내서(Cut) 원본 비율 유지
     newVideo.style.setProperty('width', '100%', 'important');
     newVideo.style.setProperty('height', '100%', 'important');
-    newVideo.style.setProperty('object-fit', 'cover', 'important'); 
+    newVideo.style.setProperty('object-fit', 'cover', 'important'); // 찌그러짐 방지 마법의 명령어
+    newVideo.style.setProperty('object-position', 'center', 'important'); // 영상을 상자 정중앙에 정렬
 
     newVideo.muted = false; 
     newVideo.playsInline = true;
@@ -220,10 +224,12 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     newVideo.controls = true;
     newVideo.loop = true;
 
+    // 중앙 고도 자막 레이어
     const newOverlay = document.createElement('div');
     newOverlay.className = 'altitude-overlay';
     newOverlay.innerHTML = `<span>${altitude}</span>`;
 
+    // 영상 내부 왼쪽 상단 시간 자막 레이어 생성
     const timeOverlay = document.createElement('div');
     timeOverlay.className = 'time-overlay';
     timeOverlay.style.position = 'absolute';
@@ -285,7 +291,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     sliderWrapper.offsetHeight;
     sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
-
 // 슬라이드가 이동할 때 현재 화면의 비디오 처리
 function updateSliderPosition() {
     sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
