@@ -414,24 +414,46 @@ async function generateTotalLogVideo() {
         bgImg.src = 'my-background.png';
         await new Promise((resolve) => { bgImg.onload = resolve; });
 
+        // 🌟 [보완] 비디오 태그 설정 최적화
         const hiddenVideo = document.createElement('video');
-        hiddenVideo.muted = true;
+        hiddenVideo.muted = false;       // 소리를 켜야 추출이 됨
         hiddenVideo.playsInline = true;
+        hiddenVideo.autoplay = true;     // 브라우저가 첫 프레임을 빨리 로드하도록 유도
+
+        // 🌟 [보완] Web Audio API 완벽한 초기화 및 강제 활성화
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContextClass();
+        
+        // 다운로드 버튼을 누르는 '사용자 클릭 이벤트' 안에서 생성되었으므로 강제 resume
+        if (audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+        }
+
+        const source = audioCtx.createMediaElementSource(hiddenVideo);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
 
         const canvasStream = canvas.captureStream(30);
+        
+        // 🌟 [보완] 오디오 트랙을 캔버스 스트림에 확실하게 바인딩
+        const audioTracks = dest.stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+            canvasStream.addTrack(audioTracks[0]);
+        }
+
         const encodedChunks = [];
 
         function getDownloadMimeType() {
             const appleFriendlyTypes = [
-                'video/mp4;codecs=avc1',   
-                'video/mp4;codecs=h264',
+                'video/mp4;codecs=avc1,mp4a.40.2', 
+                'video/mp4;codecs=h264,aac',
                 'video/mp4',
                 'video/quicktime'          
             ];
             for (const type of appleFriendlyTypes) {
                 if (MediaRecorder.isTypeSupported(type)) return type;
             }
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')) return 'video/webm;codecs=vp9,opus';
             return 'video/webm';
         }
 
@@ -443,6 +465,8 @@ async function generateTotalLogVideo() {
         };
 
         canvasRecorder.onstop = () => {
+            audioCtx.close();
+
             const actualMime = canvasRecorder.mimeType || '';
             let extension = 'mp4';
             
@@ -463,7 +487,6 @@ async function generateTotalLogVideo() {
 
             const downloadAnchor = document.createElement('a');
             downloadAnchor.href = finalVideoURL;
-            
             downloadAnchor.download = `${formattedDate} 등산log.${extension}`;
             downloadAnchor.click();
 
@@ -486,7 +509,22 @@ async function generateTotalLogVideo() {
             await new Promise((resolve) => {
                 hiddenVideo.onloadedmetadata = resolve;
             });
-            await hiddenVideo.play();
+            
+            // 🌟 [보완] 영상 재생 직전 오디오 컨텍스트 상태 재점검 (브라우저 잠금 해제)
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+
+            // 🌟 [보완] 재생 시 에러가 나면 소리 없이 진행되는 것을 막기 위해 에러 캐칭 추가
+            try {
+                await hiddenVideo.play();
+            } catch (playError) {
+                console.error("비디오 오디오 재생 차단 발생, 우회 시도:", playError);
+                // 혹시라도 차단되면 음소거 후 재생했다가 즉시 음소거 해제 시도
+                hiddenVideo.muted = true;
+                await hiddenVideo.play();
+                hiddenVideo.muted = false;
+            }
 
             let isCurrentVideoPlaying = true;
             hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
@@ -494,32 +532,25 @@ async function generateTotalLogVideo() {
             while (isCurrentVideoPlaying) {
                 ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-                // 1. 영상이 위치할 박스 틀 설정 (기존 비율 유지)
-                const containerWidth = canvas.width * 0.85; // 612px
-                const containerHeight = containerWidth * (9 / 16); // 344.25px (가로로 긴 비율로 고정!)
+                const containerWidth = canvas.width * 0.85; 
+                const containerHeight = containerWidth * (9 / 16); 
                 const videoX = (canvas.width - containerWidth) / 2;
                 const videoY = (canvas.height - containerHeight) / 2;
 
-                // 2. [🌟 강제 크롭 핵심 수식] 
-                // 압축(찌그러짐) 없이 가로폭을 틀에 맞추고, 세로 원본 비율대로 확대하여 위아래를 넘치게 만듭니다.
                 const drawWidth = containerWidth;
                 const drawHeight = containerWidth * (hiddenVideo.videoHeight / hiddenVideo.videoWidth);
                 
-                // 3. 넘친 영상의 위아래를 정확히 반반씩 잘라내기 위한 중앙 정렬 계산
                 const offsetX = videoX;
                 const offsetY = videoY - (drawHeight - containerHeight) / 2;
 
-                // 4. 둥근 모서리 틀을 만들고 넘치는 위아래 Cut!
                 ctx.save();
                 ctx.beginPath();
                 ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
-                ctx.clip(); // 🌟 이 명령어가 containerHeight(가로형 박스)를 벗어나는 위아래 영상을 칼같이 잘라냅니다!
+                ctx.clip(); 
                 
-                // 5. 계산된 좌표로 영상 그리기
                 ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
-                // 6. 시간 자막 (가로형 영상 박스 내부 좌측 상단에 안착)
                 ctx.font = "600 20px system-ui, -apple-system, sans-serif";
                 ctx.fillStyle = "white";
                 ctx.textAlign = "left";
@@ -527,7 +558,6 @@ async function generateTotalLogVideo() {
                 const displayTime = item.recordTime || "00:00";
                 ctx.fillText(displayTime, videoX + 20, videoY + 20);
 
-                // 7. 고도 자막 (가로형 영상 박스 정중앙에 안착)
                 ctx.font = "bold 36px sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
