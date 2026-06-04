@@ -555,7 +555,7 @@ async function generateTotalLogVideo() {
                 ctx.fillStyle = "white"; // 모든 자막 색상
 
                 // =========================================
-                // 자막 렌더링 시스템 (33px 정밀 튜닝 버전)
+                // 자막 렌더링 시스템 (30px 최종 안착 버전)
                 // =========================================
                 
                 // 🌟 글자 그림자 효과 제거 유지
@@ -566,22 +566,22 @@ async function generateTotalLogVideo() {
                 
                 ctx.fillStyle = "white"; // 자막 색상
 
-                // 6. 시간 자막 (33px 해발 자막에 맞춘 자연스러운 크기)
-                // 너무 튀지 않게 26px로 부드럽게 조정
-                ctx.font = "600 26px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif";
+                // 6. 시간 자막 (30px 해발 자막과 가장 어울리는 크기)
+                // 균형감 있는 24px로 최종 세팅
+                ctx.font = "600 24px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
                 
-                // 구석 균형 여백 세팅
-                const timeX = videoX + 22; 
-                const timeY = videoY + 22; 
+                // 구석 여백 안정적으로 배치
+                const timeX = videoX + 20; 
+                const timeY = videoY + 20; 
                 
                 const displayTime = item.recordTime || "00:00";
                 ctx.fillText(displayTime, timeX, timeY);
 
 
-                // 7. 고도 자막 (딱 요청하신 완벽한 33px 크기!)
-                ctx.font = "bold 33px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif"; 
+                // 7. 고도 자막 (요청하신 완벽한 30px 크기!)
+                ctx.font = "bold 30px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif"; 
                 ctx.textBaseline = "middle";
                 ctx.textAlign = "left"; 
 
@@ -589,9 +589,9 @@ async function generateTotalLogVideo() {
                 const emojiStr = "⛰️";
                 const cleanText = fullAltitudeText.replace("⛰️", "").trim(); // "해발 xxm"
 
-                // 💡 33px 폰트 크기에 완벽하게 대응하는 이모지 폭과 간격 계산
-                const fixedEmojiWidth = 38; // 이모지 폭 33px 비율 최적화
-                const gap = 10; // 딱 보기 좋은 글자 간격
+                // 💡 30px 폰트 크기에 완벽하게 대응하는 이모지 폭과 간격 계산
+                const fixedEmojiWidth = 35; // 30px 비율에 최적화된 이모지 폭
+                const gap = 10; // 자연스러운 글자 간격
                 const textWidth = ctx.measureText(cleanText).width;
                 
                 // 전체 가로 길이 계산 후 완벽한 정중앙 배치
