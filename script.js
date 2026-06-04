@@ -549,46 +549,56 @@ async function generateTotalLogVideo() {
                 ctx.shadowOffsetX = 1;
                 ctx.shadowOffsetY = 1;
 
-                // 6. 시간 자막 (사파리 캔버스 호환용 폰트 지정)
-                ctx.font = "600 30px sans-serif";
-                ctx.fillStyle = "white";
+               // =========================================
+                // 자막 렌더링 시스템 (최종 디테일 튜닝 버전)
+                // =========================================
+                ctx.fillStyle = "white"; // 모든 자막 색상
+
+                // 6. 시간 자막 (🎨 컴팩트하게 크기 축소 및 위치 조정)
+                // 폰트 크기를 더 줄여서 delicately하게 표현
+                ctx.font = "bold 26px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
+                
+                // 기존 위치에서 살짝 더 안쪽으로 당겨서 더 세련되게 배치
+                const timeX = videoX + 20; 
+                const timeY = videoY + 20; 
+                
                 const displayTime = item.recordTime || "00:00";
-                ctx.fillText(displayTime, videoX + 24, videoY + 24);
+                ctx.fillText(displayTime, timeX, timeY);
 
-                // 7. 고도 자막 (맥북 & 아이폰 사파리 폰트 크기 및 이모지 버그 완벽 해결 버전)
-                // 720px 해상도 기준 화면과 가장 잘 맞는 크기로 세팅 (기존 46px -> 38px 조정)
-                ctx.font = "bold 38px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif";
-                ctx.fillStyle = "white";
+
+                // 7. 고도 자막 (🎨 전체적인 크기를 더 줄여서 délicate한 비율 구현)
+                // 폰트 크기를 줄여서 '오른쪽 사진'의 비율과 일치하도록 최적화
+                ctx.font = "bold 32px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif"; 
                 ctx.textBaseline = "middle";
+                ctx.textAlign = "left"; // 겹침 방지를 위해 'left' 고정
 
                 const fullAltitudeText = item.altitudeText || "⛰️ 해발 0m";
+                const emojiStr = "⛰️";
                 const cleanText = fullAltitudeText.replace("⛰️", "").trim(); // "해발 xxm"
-                
-                // 텍스트 정렬은 가장 기본적이고 오류 없는 'left' 고정
-                ctx.textAlign = "left";
 
-                // 💡 사파리 이모지 버그 방어: 이모지 가로폭을 브라우저에 묻지 않고 
-                // 38px 폰트 크기에 비례하는 고정값(약 42px)을 강제로 부여합니다.
-                const safeEmojiWidth = 42; 
-                const gap = 12; // 이모지와 글자 사이의 간격
-                const textWidth = ctx.measureText(cleanText).width; // "해발 xxm"의 실제 가로 길이
+                // 💡 [아이폰 버그 완벽 방어] 이모지 가로폭을 강제 고정합니다. 
+                // 폰트 크기에 맞게 이모지 폭도 줄여 비율을 맞춥니다.
+                const fixedEmojiWidth = 36; // 기존 42에서 줄임
+                const gap = 10; // 이모지와 글자 사이의 간격
+                const textWidth = ctx.measureText(cleanText).width;
                 
                 // 전체 콘텐츠의 총 가로 길이 계산
-                const totalContentWidth = safeEmojiWidth + gap + textWidth;
+                const totalContentWidth = fixedEmojiWidth + gap + textWidth;
                 
-                // 전체 가로 중앙(canvas.width / 2)을 기준으로 시작점 X 좌표 도출
+                // 중앙 시작점 계산
                 const startX = (canvas.width - totalContentWidth) / 2;
                 const centerY = videoY + (containerHeight / 2);
 
-                // 1. 이모지 그리기
-                ctx.fillText("⛰️", startX, centerY);
+                // 1단계: 이모지 그리기
+                ctx.fillText(emojiStr, startX, centerY);
 
-                // 2. 이모지 폭과 간격을 더한 안전한 절대 좌표에 글씨 그리기
-                ctx.fillText(cleanText, startX + safeEmojiWidth + gap, centerY);
+                // 2단계: 이모지 우측에 글씨 그리기
+                ctx.fillText(cleanText, startX + fixedEmojiWidth + gap, centerY);
 
-                // 🌟 다음 프레임을 위해 그림자 효과 리셋
+
+                // 🌟 다음 프레임을 위해 그림자 효과 리셋 (필수 유지)
                 ctx.shadowColor = "transparent";
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetX = 0;
