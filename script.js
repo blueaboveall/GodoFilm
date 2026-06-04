@@ -557,26 +557,35 @@ async function generateTotalLogVideo() {
                 const displayTime = item.recordTime || "00:00";
                 ctx.fillText(displayTime, videoX + 24, videoY + 24);
 
-                // 7. 고도 자막 (🌟 사파리 이모지 정렬 버그 우회 시스템)
+                // 7. 고도 자막 (맥북 & 아이폰 사파리 크로스브라우징 완벽 호환 시스템)
                 ctx.font = "bold 46px sans-serif";
                 ctx.fillStyle = "white";
                 ctx.textBaseline = "middle";
 
                 const fullAltitudeText = item.altitudeText || "⛰️ 해발 0m";
-                // 문장에서 이모지(⛰️)를 빼고 "해발 xxm" 텍스트만 추출
-                const cleanText = fullAltitudeText.replace("⛰️", "").trim(); 
+                const emojiStr = "⛰️";
+                const cleanText = fullAltitudeText.replace("⛰️", "").trim(); // "해발 xxm"
+                
+                // 정렬 방식은 가장 기본적이고 안전한 "left"로 통일
+                ctx.textAlign = "left";
+
+                // 각각의 실제 가로 길이 측정
+                const emojiWidth = ctx.measureText(emojiStr).width;
+                const gap = 15; // 이모지와 글자 사이의 간격
                 const textWidth = ctx.measureText(cleanText).width;
-                const totalCenterX = canvas.width / 2;
+                
+                // 전체 콘텐츠(이모지 + 간격 + 글자)의 총 가로 길이 및 시작점 계산
+                const totalContentWidth = emojiWidth + gap + textWidth;
+                const startX = (canvas.width - totalContentWidth) / 2;
+                const centerY = videoY + (containerHeight / 2);
 
-                // 🌟 [여기가 빠졌었어요!] "해발 XXm" 글씨를 화면 중앙 쪽에 그리는 명령어입니다.
-                ctx.textAlign = "center";
-                ctx.fillText(cleanText, totalCenterX + 25, videoY + (containerHeight / 2));
+                // 1. 이모지 그리기
+                ctx.fillText(emojiStr, startX, centerY);
 
-                // 이모지 부분은 글자 바로 왼쪽에 바짝 붙여서 right 정렬로 따로 배치!
-                ctx.textAlign = "right";
-                ctx.fillText("⛰️", totalCenterX - (textWidth / 2) + 10, videoY + (containerHeight / 2));
+                // 2. 이모지 우측에 "해발 xxm" 글씨 그리기
+                ctx.fillText(cleanText, startX + emojiWidth + gap, centerY);
 
-                // 🌟 다음 프레임을 위해 그림자 효과 리셋
+                // 🌟 다음 프레임을 위해 그림자 효과 리셋 (필수 유지)
                 ctx.shadowColor = "transparent";
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetX = 0;
