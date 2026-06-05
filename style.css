@@ -11,7 +11,6 @@ background-color: #e0e0e0;
 display: flex;
 justify-content: center;
 font-family: sans-serif;
-overflow: hidden; /* 📱 아이폰 사파리에서 불필요한 스크롤이 생기는 것을 전면 차단 */
 }
 
 .background-container {
@@ -27,7 +26,7 @@ justify-content: center;
 align-items: center;
 }
 
-/* 영상 박스 크기(85%)를 기준으로 삼는 투명 중심축 컨테이너 */
+/* 🌟 영상 박스 크기(85%)를 기준으로 삼는 투명 중심축 컨테이너 */
 .app-container {
 width: 85%;
 position: relative;
@@ -35,13 +34,13 @@ display: flex;
 flex-direction: column;
 }
 
-/* 스마트폰 액정 틀 (다시 정중앙 배치 완료) */
+/* 스마트폰 액정 틀 (가출 종료! 무조건 정중앙에 고정되도록 원래 구조 복원) */
 .phone-screen {
-width: 100%; 
+width: 100%; /* 부모인 app-container 너비를 100% 채움 */
 aspect-ratio: 16 / 9;
 position: relative;
 border-radius: 12px;
-overflow: hidden; 
+overflow: hidden; /* 기차 슬라이더가 밖으로 탈출하지 못하게 차단 */
 box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 background: #000;
 }
@@ -146,25 +145,24 @@ width: 100%;
 height: 100%;
 }
 
-/* 🌟 [위치 원상복구 및 버그 강제 차단형 디자인] */
+/* 🌟 [원본 위치 복구] 영상 박스 바로 아래 바깥, 우측 정렬 라인에 딱 붙어있는 하얀 글자 버튼 */
 #total-download-btn {
-position: absolute;  /* 원래 잘 나오던 absolute 방식으로 롤백 */
-bottom: -32px;       /* 하단 여백 살짝 더 띄워서 터치 편하게 조정 */
-right: 0; 
+position: absolute;
+bottom: -28px; /* 영상 박스 하단 테두리로부터 28px 아래 공간 배치 */
+right: 0; /* 영상 박스 우측 테두리 라인과 수직 일직선 정렬 */
 display: flex;
 align-items: center;
 justify-content: center;
 background-color: transparent;
 color: white;
 border: none;
-padding: 10px 5px;   /* 📱 터치 영역 패딩 대폭 상향 */
+padding: 4px 0;
 font-size: 13px;
 font-weight: bold;
 cursor: pointer;
 filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
 transition: opacity 0.2s ease;
-z-index: 25;        /* 레이어를 한 층 더 위로 격상 */
--webkit-tap-highlight-color: transparent;
+z-index: 20;
 }
 
 #total-download-btn:hover {
@@ -179,14 +177,6 @@ stroke: white;
 fill: none;
 }
 
-/* 🎯 [초강력 핵심 패치] 사파리가 화면 우측 하단 구석탱이에 강제로 몰래 복사해버리는 가짜 유령 버튼 숨기기 */
-body > #total-download-btn,
-body > div > #total-download-btn {
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-}
-
 .swipe-hint {
 position: absolute;
 bottom: 12px;
@@ -198,4 +188,14 @@ z-index: 10;
 background-color: rgba(0,0,0,0.4);
 padding: 2px 6px;
 border-radius: 4px;
+}
+
+/* 🎯 [치트키] 사파리가 화면 구석에 복사하는 유령 버튼을 CSS 단에서 완전 투명 삭제 */
+body > #total-download-btn,
+body > div[class*="Safari"] #total-download-btn,
+#total-download-btn:not(.app-container #total-download-btn) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
