@@ -111,23 +111,26 @@ async function startCamera() {
         }
 
         // 🌟 [사파리 일시정지 아이콘 방지] 투명 터치 방어막 레이어 삽입
-        let safariShield = document.getElementById('safari-shield');
-        if (!safariShield) {
-            safariShield = document.createElement('div');
-            safariShield.id = 'safari-shield';
-            safariShield.style.position = 'absolute';
-            safariShield.style.top = '0';
-            safariShield.style.left = '0';
-            safariShield.style.width = '100%';
-            safariShield.style.height = '100%';
-            safariShield.style.backgroundColor = 'transparent';
-            safariShield.style.zIndex = '1'; // 비디오 바로 위에 낮게 배치
-            
-            if (cameraView.parentElement) {
-                cameraView.parentElement.style.position = 'relative';
-                cameraView.parentElement.appendChild(safariShield);
-            }
-        }
+let safariShield = document.getElementById('safari-shield');
+if (!safariShield) {
+    safariShield = document.createElement('div');
+    safariShield.id = 'safari-shield';
+    safariShield.style.position = 'absolute';
+    safariShield.style.top = '0';
+    safariShield.style.left = '0';
+    safariShield.style.width = '100%';
+    safariShield.style.height = '100%';
+    safariShield.style.backgroundColor = 'transparent';
+    safariShield.style.zIndex = '1'; // 비디오 바로 위 레벨(낮게 설정)
+    
+    if (cameraView.parentElement) {
+        cameraView.parentElement.style.position = 'relative';
+        
+        // 🛠️ [기존 코드] cameraView.parentElement.appendChild(safariShield);
+        // 🎯 [수정 코드] 비디오(cameraView) 바로 다음 순서로 끼워 넣어 버튼들이 밀리지 않게 방어!
+        cameraView.parentElement.insertBefore(safariShield, cameraView.nextSibling);
+    }
+}
 
         // 🛠️ 버튼이 원래 CSS 디자인 위치를 유지하면서 방어막 레이어만 뚫고 올라오도록 셋업
         if (recordBtn) recordBtn.style.zIndex = '10';
