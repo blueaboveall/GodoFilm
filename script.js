@@ -129,6 +129,17 @@ async function startCamera() {
             }
         }
 
+        // 🛠️ [레이어 클릭 차단 버그 튜닝]
+        // 방어막(zIndex: 11)이 버튼들을 가리지 않도록, 주요 조작 버튼들의 레이어 순위를 방어막 위로 강제 인양합니다.
+        if (recordBtn) {
+            if (!recordBtn.style.position || recordBtn.style.position === 'static') recordBtn.style.position = 'relative';
+            recordBtn.style.zIndex = '12';
+        }
+        if (switchCameraBtn) {
+            if (!switchCameraBtn.style.position || switchCameraBtn.style.position === 'static') switchCameraBtn.style.position = 'relative';
+            switchCameraBtn.style.zIndex = '12';
+        }
+
         // 3. 녹화용 캔버스 설정
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
