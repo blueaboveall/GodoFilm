@@ -25,7 +25,13 @@ background-repeat: no-repeat;
 display: flex;
 justify-content: center;
 align-items: center;
+
+
+position: relative
+z-index: 1;
 }
+
+
 
 /* 🌟 영상 박스 크기(85%)를 기준으로 삼는 투명 중심축 컨테이너 */
 .app-container {
@@ -33,6 +39,8 @@ width: 85%;
 position: relative;
 display: flex;
 flex-direction: column;
+
+z-index: 10;
 }
 
 /* 스마트폰 액정 틀 (가출 종료! 무조건 정중앙에 고정되도록 원래 구조 복원) */
@@ -218,5 +226,7 @@ body > div[class*="Safari"] #total-download-btn,
     background-position: center;
     background-repeat: no-repeat;
     
-    z-index: -1; /* 다른 상자들보다 무조건 맨 뒤로 가라! */
+    /* ⚠️ 기존의 -1을 지우고 아래 두 줄로 완벽하게 교체합니다! */
+    z-index: 0; 
+    pointer-events: none; 
 }
