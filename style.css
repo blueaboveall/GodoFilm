@@ -1,17 +1,30 @@
 * {
-margin: 0;
-padding: 0;
-box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body, html {
     width: 100%;
     height: 100%;
-    /* 사파리가 억지로 하얀색/회색을 채우지 못하도록 강력하게 투명화 */
     background: transparent !important; 
     display: flex;
     justify-content: center;
     font-family: sans-serif;
+}
+
+/* ✨ 최신 폰 위아래 빈 여백에 노란 종이 질감을 채워주는 진짜 바닥 도화지 */
+.full-screen-bg {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-image: url('bg-pattern.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -2; /* 👈 아차산 배경보다 무조건 한참 뒤로 보냅니다 */
 }
 
 .background-container {
@@ -25,23 +38,18 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-
-    /* ✅ 오타 수정 완료! 세미콜론(;)을 붙여 정상 작동하게 만듭니다. */
     position: relative;
-    z-index: 1;
+    z-index: 1; /* 👈 노란 배경보다 위에 배치 */
 }
 
-/* 🌟 영상 박스 크기(85%)를 기준으로 삼는 투명 중심축 컨테이너 */
 .app-container {
     width: 85%;
     position: relative;
     display: flex;
     flex-direction: column;
-    /* 노란 배경보다 확실하게 위로 올려 버튼을 활성화 */
-    z-index: 10; 
+    z-index: 2;
 }
 
-/* 스마트폰 액정 틀 */
 .phone-screen {
     width: 100%; 
     aspect-ratio: 16 / 9;
@@ -52,7 +60,6 @@ body, html {
     background: #000;
 }
 
-/* 좌우로 움직이는 기차 */
 .slider-wrapper {
     display: flex;
     width: 100%;
@@ -60,7 +67,6 @@ body, html {
     transition: transform 0.3s ease-out;
 }
 
-/* 모든 페이지를 액정 크기에 100% 꽉 차게 설정 */
 .slide-page {
     flex: 0 0 100%;
     width: 100%;
@@ -68,14 +74,12 @@ body, html {
     position: relative;
 }
 
-/* 카메라 및 저장된 비디오 공통 스타일 */
 #camera-view, .saved-video {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-/* 해발고도 자막 스타일 */
 .altitude-overlay {
     position: absolute;
     top: 50%;
@@ -88,7 +92,6 @@ body, html {
     z-index: 10;
 }
 
-/* 촬영 버튼 */
 #record-btn {
     position: absolute;
     bottom: 12px;
@@ -103,10 +106,9 @@ body, html {
     font-weight: bold;
     font-size: 12px;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20; /* 👈 유령 막보다 위로 번쩍 들어 올림! */
 }
 
-/* 카메라 전/후면 전환 버튼 */
 #switch-camera-btn {
     position: absolute;
     bottom: 12px;
@@ -119,7 +121,7 @@ body, html {
     color: white;
     padding: 6px;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20; /* 👈 유령 막보다 위로 번쩍 들어 올림! */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,7 +131,6 @@ body, html {
     height: 100%;
 }
 
-/* 저장된 영상 우측 하단의 쓰레기통 삭제 버튼 디자인 */
 .delete-btn {
     position: absolute;
     bottom: 12px;
@@ -142,7 +143,7 @@ body, html {
     color: white;
     padding: 8px;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -152,7 +153,6 @@ body, html {
     height: 100%;
 }
 
-/* 🌟 다운로드 버튼 */
 #total-download-btn {
     position: absolute;
     bottom: -28px; 
@@ -197,7 +197,6 @@ body, html {
     border-radius: 4px;
 }
 
-/* 🎯 [치트키] 사파리 유령 버튼 완전 삭제 */
 body > #total-download-btn,
 body > div[class*="Safari"] #total-download-btn,
 #total-download-btn:not(.app-container #total-download-btn) {
@@ -205,25 +204,4 @@ body > div[class*="Safari"] #total-download-btn,
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-}
-
-/* ✨ 최신 폰 위아래 빈 여백에 노란 종이 질감을 채워주는 진짜 바닥 도화지 */
-.full-screen-bg {
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    
-    background-image: url('bg-pattern.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    
-    /* 레이어 순서를 정상화하고, 클릭이 아래로 관통하도록 설정 */
-    z-index: 0; 
-    pointer-events: none; 
 }
