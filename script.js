@@ -224,7 +224,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
-    newVideo.muted = true; // 발표용 전용: 음소거로 안전하게 고정
+    newVideo.muted = false;
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
