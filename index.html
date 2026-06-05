@@ -5,43 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>등산했냥</title>
     <link rel="stylesheet" href="style.css">
-    
     <link rel="manifest" href="manifest.json">
-
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 </head>
 <body>
-    <div class="full-screen-bg">
+    <div class="full-screen-bg"></div>
 
-        <div class="background-container">
-            <div class="app-container">
+    <div class="background-container">
+        <div class="app-container">
 
-                <div class="phone-screen">
-                    <div class="slider-wrapper" id="slider-wrapper">
+            <div class="phone-screen">
+                <div class="slider-wrapper" id="slider-wrapper" style="display: flex; width: 100%; height: 100%; transition: transform 0.3s ease-out;">
+                    <div class="slide-page camera-page" id="camera-page">
+                        <video id="camera-view" autoplay playsinline muted></video>
+                        <div class="altitude-overlay">
+                            <span id="altitude-text">⛰️ 고도 불러오는 중...</span>
+                        </div>
 
-                        <div class="slide-page camera-page" id="camera-page">
-                            <video id="camera-view" autoplay playsinline muted></video>
-                            <div class="altitude-overlay">
-                                <span id="altitude-text">⛰️ 고도 불러오는 중...</span>
-                            </div>
+                        <button id="record-btn">REC</button>
 
-                            <button id="record-btn">REC</button>
+                        <button id="switch-camera-btn" aria-label="카메라 전환">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-.73"/>
+                            </svg>
+                        </button>
 
-                            <button id="switch-camera-btn" aria-label="카메라 전환">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-.73"/>
-                                </svg>
-                            </button>
+                        <div class="swipe-hint">▶ 밀어서 이전 영상 확인</div>
+                    </div> 
+                </div> 
+            </div> 
 
-                            <div class="swipe-hint">▶ 밀어서 이전 영상 확인</div>
-                        </div> </div> </div> <button id="total-download-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4M7 10l5 5 5-5M12 15V3"/>
-                    </svg>
-                    <span>등산log 다운로드</span>
-                </button>
+            <button id="total-download-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                <span>등산log 다운로드</span>
+            </button>
 
-            </div> </div> </div> <script src="script.js"></script>
+        </div> 
+    </div> 
+
+    <script src="script.js"></script>
 </body>
 </html>
