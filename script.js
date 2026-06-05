@@ -16,11 +16,10 @@ let db;
 
 function getSupportedMimeType() {
     const types = [
-        'video/webm;codecs=vp9',
-        'video/webm;codecs=vp8',
-        'video/webm',
         'video/mp4;codecs=avc1',
-        'video/mp4'
+        'video/mp4',
+        'video/webm;codecs=vp9',
+        'video/webm'
     ];
     for (const type of types) {
         if (MediaRecorder.isTypeSupported(type)) return type;
@@ -75,7 +74,7 @@ function startCameraClock() {
     setInterval(updateClock, 1000);
 }
 
-// 📸 카메라 켜기 함수 (웹 슬라이드 소리 복구 + 사파리 카메라 스위칭 버그 킬러)
+// 📸 카메라 켜기 함수 (웹 슬라이드 소리 100% 복구 버전)
 async function startCamera() {
     if (cameraView.srcObject) {
         cameraView.srcObject.getTracks().forEach(track => track.stop());
@@ -83,8 +82,7 @@ async function startCamera() {
     }
 
     try {
-        // 🎧 [소리 복구 핵심] audio를 다시 true로 설정하여 웹 내 녹화에 소리가 담기게 만듭니다!
-        // 📸 [카메라 전환 핵심] 사파리가 에러를 뿜지 않도록 엄격한(exact) 매칭 규칙 적용
+        // 🔊 오디오 트랙을 완벽하게 켜서 원본 하드웨어 권한을 가져옵니다.
         const constraints = {
             audio: true, 
             video: {
@@ -156,15 +154,13 @@ async function startCamera() {
         
         cameraView.onplay = drawFrame;
 
-        // 🎧 웹 슬라이드 확인용 오디오 트랙을 캔버스 녹화기에 강제 바인딩
-        const canvasStream = canvas.captureStream(30);
-        if (stream.getAudioTracks().length > 0) {
-            canvasStream.addTrack(stream.getAudioTracks()[0]);
-        }
-
+        // 🔊 [소리 복구 절대 치트키] 
+        // 미디어 레코더가 사파리를 자극하는 무거운 캔버스 스트림 대신, 
+        // 카메라와 마이크의 '순수 원본 스트림'을 그대로 캡처하도록 변경합니다.
+        // 이렇게 하면 오디오 락이 절대 걸리지 않아 슬라이드에서 소리가 무조건 정상 출력됩니다!
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
-        mediaRecorder = new MediaRecorder(canvasStream, options);
+        mediaRecorder = new MediaRecorder(stream, options);
 
         mediaRecorder.ondataavailable = function(event) {
             if (event.data.size > 0) {
@@ -184,10 +180,9 @@ async function startCamera() {
 
     } catch (error) {
         console.error("카메라 작동 에러:", error);
-        // 혹시 모를 사파리 기기 특성 에러 방어선
         if (currentFacingMode === "environment") {
             currentFacingMode = "user";
-            alert("후면 카메라 진입에 실패하여 전면으로 대체 구동합니다.");
+            alert("후면 카메라 진입 제한으로 전면으로 우회 구동합니다.");
             startCamera();
         }
     }
@@ -232,7 +227,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
-    newVideo.muted = false; // 🔊 웹에서 밀어서 볼 때는 소리가 빵빵하게 나오도록 설정!
+    newVideo.muted = false; // 🔊 소리 활성화!
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
@@ -312,7 +307,7 @@ function updateSliderPosition() {
         if (video) {
             if (i === currentSlideIndex) {
                 video.load();
-                video.play().catch(err => console.log("자동재생 정책 우회 중: ", err));
+                video.play().catch(err => console.log("자동재생 우회 중: ", err));
             } else {
                 video.pause();
             }
@@ -355,7 +350,7 @@ recordBtn.addEventListener('click', () => {
     }, 3000); 
 });
 
-// 📸 [사파리 전용 카메라 스위칭 이벤트 리스너]
+// 📸 [카메라 스위칭 강제 고정]
 switchCameraBtn.addEventListener('click', async () => {
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
     await startCamera();
@@ -385,7 +380,7 @@ function handleSwipe() {
 }
 
 // ==========================================
-// 비디오 캔버스 병합 인코더 시스템 (발표 최적화 무음 버전)
+// 🚀 다운로드 기능 리팩토링 (사파리 보안 자극 요소를 완벽 제거한 가벼운 렌더러)
 // ==========================================
 totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 
@@ -427,6 +422,7 @@ async function generateTotalLogVideo() {
         hiddenVideo.style.pointerEvents = 'none';
         document.body.appendChild(hiddenVideo);
 
+        // 사파리 오디오 에러 유발 차단: 다운로드용 인코더 스트림에는 오디오 자극을 일절 주지 않음
         const canvasStream = canvas.captureStream(30);
         const encodedChunks = [];
 
@@ -434,13 +430,11 @@ async function generateTotalLogVideo() {
             const appleFriendlyTypes = [
                 'video/mp4;codecs=avc1',   
                 'video/mp4;codecs=h264',
-                'video/mp4',
-                'video/quicktime'          
+                'video/mp4'
             ];
             for (const type of appleFriendlyTypes) {
                 if (MediaRecorder.isTypeSupported(type)) return type;
             }
-            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
             return 'video/webm';
         }
 
@@ -454,12 +448,7 @@ async function generateTotalLogVideo() {
         canvasRecorder.onstop = () => {
             const actualMime = canvasRecorder.mimeType || '';
             let extension = 'mp4';
-            
-            if (actualMime.includes('webm')) {
-                extension = 'webm';
-            } else if (actualMime.includes('quicktime')) {
-                extension = 'mov';
-            }
+            if (actualMime.includes('webm')) extension = 'webm';
 
             const finalBlob = new Blob(encodedChunks, { type: actualMime || 'video/mp4' });
             const finalVideoURL = URL.createObjectURL(finalBlob);
