@@ -4,7 +4,7 @@ const altitudeText = document.getElementById('altitude-text');
 const sliderWrapper = document.getElementById('slider-wrapper');
 const cameraPage = document.getElementById('camera-page');
 const switchCameraBtn = document.getElementById('switch-camera-btn');
-const totalDownloadBtn = document.getElementById('total-download-btn'); // 🌟 전체 다운로드 버튼 가져오기
+const totalDownloadBtn = document.getElementById('total-download-btn');
 
 let mediaRecorder;
 let recordedChunks = [];
@@ -13,8 +13,8 @@ let totalSlides = 1;
 
 let currentFacingMode = "user";
 let db;
+let globalAudioTrack = null; // 🎤 마이크 오디오 트랙을 전역으로 안전하게 보관할 보관함
 
-// 브라우저가 지원하는 최적의 비디오 포맷을 찾는 함수
 function getSupportedMimeType() {
     const types = [
         'video/webm;codecs=vp9',
@@ -29,21 +29,17 @@ function getSupportedMimeType() {
     return '';
 }
 
-// 브라우저 내부 비밀 저장소(IndexedDB) 열기
 function initDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open("HikeCameraDB", 1);
-
         request.onupgradeneeded = function(e) {
             const database = e.target.result;
             database.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
         };
-
         request.onsuccess = function(e) {
             db = e.target.result;
             resolve();
         };
-
         request.onerror = function(e) {
             console.error("DB 에러", e);
             reject();
@@ -51,33 +47,25 @@ function initDatabase() {
     });
 }
 
-// 실시간 촬영 대기화면 전용 시계 구동 함수 (🎨 크기 축소, 코너 밀착 및 동글한 시스템 폰트 적용)
 function startCameraClock() {
     let cameraTimeText = document.getElementById('camera-time-text');
     if (!cameraTimeText) {
         cameraTimeText = document.createElement('div');
         cameraTimeText.id = 'camera-time-text';
-        
-        // 🌟 상단/좌측 여백을 30px에서 14px로 대폭 줄여 구석에 바짝 붙임
         cameraTimeText.style.position = 'absolute';
         cameraTimeText.style.top = '14px';
         cameraTimeText.style.left = '14px';
         cameraTimeText.style.color = 'white';
-        
-        // 🌟 크기를 24px에서 15px로 슬림하게 줄이고, 자간을 조여 귀여운 느낌 유도
         cameraTimeText.style.fontSize = '15px';
         cameraTimeText.style.fontWeight = '600';
-        
-        // 🌟 각진 기본 폰트 대신, 기기별 가장 둥글고 세련된 라운드형 시스템 폰트셋 부여
         cameraTimeText.style.fontFamily = 'system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
         cameraTimeText.style.letterSpacing = '-0.3px';
-        cameraTimeText.style.zIndex = '12'; // 🌟 버그 방어막보다 위로 올리기 위해 12로 변경!
+        cameraTimeText.style.zIndex = '12';
         if (cameraPage) {
-            cameraPage.style.position = 'relative'; // 기준점 고정
+            cameraPage.style.position = 'relative';
             cameraPage.appendChild(cameraTimeText);
         }
     }
-
     function updateClock() {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
@@ -85,75 +73,76 @@ function startCameraClock() {
         cameraTimeText.innerText = `${hours}:${minutes}`;
     }
     updateClock();
-    setInterval(updateClock, 1000); // 1초마다 촬영 대기화면 시간 업데이트
+    setInterval(updateClock, 1000);
 }
 
-// 카메라 켜기 (🛠️ 중복 코드 완전 정리본)
+// 📸 카메라 켜기 함수 (사파리 트랙 정지 버그 완전 수정)
 async function startCamera() {
+    // 사파리 버그 방지: 기존 스트림 엘리먼트와 트랙을 완벽하게 초기화
     if (cameraView.srcObject) {
-        cameraView.srcObject.getTracks().forEach(track => track.stop());
+        const tracks = cameraView.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+        cameraView.srcObject = null;
     }
 
     try {
-const stream = await navigator.mediaDevices.getUserMedia({ 
-    video: { facingMode: "environment" },
-    audio: true // 🎤 촬영할 때 마이크 소리도 같이 내보내라는 뜻!
-});
+        // 전면/후면 전환 조건에 맞춰 완벽하게 분기 처리
+        const constraints = {
+            audio: true,
+            video: {
+                facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" }
+            }
+        };
 
-        // 1. 화면 출력용 비디오 태그 설정
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
+
+        // 전역 마이크 트랙 업데이트
+        if (stream.getAudioTracks().length > 0) {
+            globalAudioTrack = stream.getAudioTracks()[0];
+        }
         
-        // 2. 화면엔 거울처럼 보여주기 (CSS)
         if (currentFacingMode === "user") {
             cameraView.style.transform = "scaleX(-1)";
         } else {
             cameraView.style.transform = "scaleX(1)";
         }
 
-        // 🌟 [사파리 일시정지 아이콘 방지] 투명 터치 방어막 레이어 삽입
-let safariShield = document.getElementById('safari-shield');
-if (!safariShield) {
-    safariShield = document.createElement('div');
-    safariShield.id = 'safari-shield';
-    safariShield.style.position = 'absolute';
-    safariShield.style.top = '0';
-    safariShield.style.left = '0';
-    safariShield.style.width = '100%';
-    safariShield.style.height = '100%';
-    safariShield.style.backgroundColor = 'transparent';
-    safariShield.style.zIndex = '1'; // 비디오 바로 위 레벨(낮게 설정)
-    
-    if (cameraView.parentElement) {
-        cameraView.parentElement.style.position = 'relative';
-        
-        // 🛠️ [기존 코드] cameraView.parentElement.appendChild(safariShield);
-        // 🎯 [수정 코드] 비디오(cameraView) 바로 다음 순서로 끼워 넣어 버튼들이 밀리지 않게 방어!
-        cameraView.parentElement.insertBefore(safariShield, cameraView.nextSibling);
-    }
-}
+        let safariShield = document.getElementById('safari-shield');
+        if (!safariShield) {
+            safariShield = document.createElement('div');
+            safariShield.id = 'safari-shield';
+            safariShield.style.position = 'absolute';
+            safariShield.style.top = '0';
+            safariShield.style.left = '0';
+            safariShield.style.width = '100%';
+            safariShield.style.height = '100%';
+            safariShield.style.backgroundColor = 'transparent';
+            safariShield.style.zIndex = '1';
+            
+            if (cameraView.parentElement) {
+                cameraView.parentElement.style.position = 'relative';
+                cameraView.parentElement.insertBefore(safariShield, cameraView.nextSibling);
+            }
+        }
 
-        // 🛠️ 버튼이 원래 CSS 디자인 위치를 유지하면서 방어막 레이어만 뚫고 올라오도록 셋업
         if (recordBtn) recordBtn.style.zIndex = '10';
         if (switchCameraBtn) switchCameraBtn.style.zIndex = '10';
 
-        // 3. 녹화용 캔버스 설정
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // 비디오 메타데이터가 로드되어 '실제 화면 해상도'를 알 수 있을 때 캔버스 크기 세팅
         cameraView.onloadedmetadata = () => {
             canvas.width = cameraView.videoWidth;
             canvas.height = cameraView.videoHeight;
         };
 
-        // 매 프레임마다 캔버스에 그리기
         function drawFrame() {
-            if (cameraView.paused || cameraView.ended || !canvas.width) {
+            if (!cameraView.srcObject || cameraView.paused || cameraView.ended || !canvas.width) {
                 requestAnimationFrame(drawFrame);
                 return;
             }
             
-            // 아이폰 화면 회전 등으로 인해 실시간으로 해상도가 변할 경우 대응
             const vw = cameraView.videoWidth;
             const vh = cameraView.videoHeight;
             if (canvas.width !== vw || canvas.height !== vh) {
@@ -172,12 +161,13 @@ if (!safariShield) {
             requestAnimationFrame(drawFrame);
         }
         
-        // 비디오가 재생될 때 캔버스 드로잉 시작
         cameraView.onplay = drawFrame;
 
-        // 4. 캔버스 스트림을 녹화
+        // 개별 녹화용 스트림 결합 (마이크 소리 포함)
         const canvasStream = canvas.captureStream(30);
-        canvasStream.addTrack(stream.getAudioTracks()[0]);
+        if (globalAudioTrack) {
+            canvasStream.addTrack(globalAudioTrack.clone());
+        }
 
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
@@ -201,11 +191,15 @@ if (!safariShield) {
 
     } catch (error) {
         console.error("카메라 에러:", error);
-        alert("카메라 혹은 마이크 권한을 허용해주세요!");
+        // 사파리에서 {exact: "environment"} 실패 시 차선책으로 일반 전환 유도
+        if (currentFacingMode === "environment") {
+            currentFacingMode = "user";
+            alert("후면 카메라를 일시적으로 불러올 수 없어 전면으로 대체합니다.");
+            startCamera();
+        }
     }
 }
 
-// IndexedDB에 영상을 저장하는 함수 (촬영 시간 데이터 포함)
 function saveVideoToDB(blob, altitude, recordTime) {
     return new Promise((resolve) => {
         const transaction = db.transaction(["videos"], "readwrite");
@@ -215,7 +209,6 @@ function saveVideoToDB(blob, altitude, recordTime) {
     });
 }
 
-// IndexedDB에서 고유 ID로 영상을 삭제하는 함수
 function deleteVideoFromDB(id) {
     return new Promise((resolve) => {
         const transaction = db.transaction(["videos"], "readwrite");
@@ -225,12 +218,10 @@ function deleteVideoFromDB(id) {
     });
 }
 
-// 디비에 저장되어 있던 영상들을 화면에 쭉 로드하는 함수
 function loadSavedVideos() {
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
     const request = store.getAll();
-
     request.onsuccess = function(e) {
         const savedList = e.target.result;
         savedList.forEach(item => {
@@ -239,34 +230,27 @@ function loadSavedVideos() {
     };
 }
 
-// 화면에 비디오 슬라이드 칸을 생성해주는 함수 (🎨 슬라이드 내 시간 자막도 대기화면과 똑같이 미니멀화)
 function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const videoURL = URL.createObjectURL(blob);
-
     const newSlide = document.createElement('div');
     newSlide.className = 'slide-page';
-    newSlide.style.position = 'relative'; // 자막 배치를 위한 기준점 설정
+    newSlide.style.position = 'relative';
 
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
-
-    newVideo.muted = true;
+    newVideo.muted = false; // 🔊 넘겨서 확인할 때 슬라이드 자체 소리는 나도록 복원
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
     newVideo.loop = true;
 
-    // 중앙 고도 자막 레이어
     const newOverlay = document.createElement('div');
     newOverlay.className = 'altitude-overlay';
     newOverlay.innerHTML = `<span>${altitude}</span>`;
 
-    // 🌟 [스타일 수정] 영상 내부 왼쪽 상단 시간 자막 레이어 생성
     const timeOverlay = document.createElement('div');
     timeOverlay.className = 'time-overlay';
-    
-    // 🌟 대기화면 시계와 매커니즘 및 콤팩트 스타일 일치 (구석 밀착 및 크기 축소)
     timeOverlay.style.position = 'absolute';
     timeOverlay.style.top = '14px';
     timeOverlay.style.left = '14px';
@@ -277,7 +261,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     timeOverlay.style.letterSpacing = '-0.3px';
     timeOverlay.style.zIndex = '10';
 
-    // 기존 데이터에 시간이 없으면 현재 시간으로 방어 처리
     const displayTime = recordTime || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
     timeOverlay.innerHTML = `<span>${displayTime}</span>`;
 
@@ -295,16 +278,12 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
 
     deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-
         if (confirm("이 영상을 영구 삭제하시겠습니까?")) {
             await deleteVideoFromDB(id);
-
             const childrenArray = Array.from(sliderWrapper.children);
             const slideIndex = childrenArray.indexOf(newSlide);
-
             newSlide.remove();
             totalSlides--;
-
             if (slideIndex <= currentSlideIndex) {
                 if (currentSlideIndex >= totalSlides) {
                     currentSlideIndex = totalSlides - 1;
@@ -312,14 +291,13 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
                     currentSlideIndex--;
                 }
             }
-
             updateSliderPosition();
         }
     });
 
     newSlide.appendChild(newVideo);
     newSlide.appendChild(newOverlay);
-    newSlide.appendChild(timeOverlay); // 🌟 슬라이드 박스에 시간 자막 추가!
+    newSlide.appendChild(timeOverlay);
     newSlide.appendChild(deleteBtn);
 
     sliderWrapper.style.transition = 'none';
@@ -333,10 +311,8 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
 
-// 슬라이드가 이동할 때 현재 화면의 비디오만 깨워서 재생시키는 로직
 function updateSliderPosition() {
     sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-
     const slides = sliderWrapper.children;
     for (let i = 0; i < slides.length; i++) {
         const video = slides[i].querySelector('.saved-video');
@@ -351,7 +327,6 @@ function updateSliderPosition() {
     }
 }
 
-// 실시간 고도 측정
 function getRealAltitude() {
     navigator.geolocation.getCurrentPosition(async function(position) {
         const lat = position.coords.latitude;
@@ -369,7 +344,6 @@ function getRealAltitude() {
     });
 }
 
-// REC 버튼
 recordBtn.addEventListener('click', () => {
     if (!mediaRecorder || mediaRecorder.state === 'recording') return;
 
@@ -388,16 +362,14 @@ recordBtn.addEventListener('click', () => {
     }, 3000); 
 });
 
-// 카메라 뒤집기 버튼
-switchCameraBtn.addEventListener('click', () => {
+// 📸 카메라 전환 이벤트 리스너 리팩토링
+switchCameraBtn.addEventListener('click', async () => {
     currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
-    startCamera();
+    await startCamera();
 });
 
-// 손가락/마우스 슬라이드 스와이프
 let touchStartX = 0;
 let touchEndX = 0;
-
 document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
 document.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); });
 document.addEventListener('mousedown', e => { touchStartX = e.screenX; });
@@ -405,7 +377,6 @@ document.addEventListener('mouseup', e => { touchEndX = e.screenX; handleSwipe()
 
 function handleSwipe() {
     const swipeDistance = touchStartX - touchEndX;
-
     if (swipeDistance < -50) {
         if (currentSlideIndex > 0) {
             currentSlideIndex--;
@@ -421,7 +392,7 @@ function handleSwipe() {
 }
 
 // ==========================================
-// 비디오 캔버스 병합 인코더 시스템
+// 🎧 사파리 락을 우회하는 비디오+오디오 병합 인코더 시스템
 // ==========================================
 totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 
@@ -449,13 +420,13 @@ async function generateTotalLogVideo() {
         bgImg.src = 'my-background.png';
         await new Promise((resolve) => { bgImg.onload = resolve; });
 
-        // 🎧 [소리 복구 핵심 1] 합성할 때 비디오 소리를 뽑아내기 위해 무음(muted) 해제
+        // 사파리 오디오 락 우회를 위해 백그라운드용 비디오는 안전하게 음소거하되, 
+        // 실제 녹화 데이터 스트림은 전역 오디오 트랙(globalAudioTrack)을 수동 복제하여 결합합니다.
         const hiddenVideo = document.createElement('video');
-        hiddenVideo.muted = false; // 🔊 소리가 나야 오디오 트랙이 캡처됩니다!
+        hiddenVideo.muted = true; 
         hiddenVideo.playsInline = true;
         hiddenVideo.setAttribute('playsinline', ''); 
         
-        // 📱 화면에는 안 보이게 픽셀 구석으로 유령처럼 숨김 처리 유지
         hiddenVideo.style.position = 'fixed';
         hiddenVideo.style.top = '0';
         hiddenVideo.style.left = '-9999px'; 
@@ -465,29 +436,12 @@ async function generateTotalLogVideo() {
         hiddenVideo.style.pointerEvents = 'none';
         document.body.appendChild(hiddenVideo);
 
-        // 🎥 캔버스 그림(그림판) 스트림 가져오기
         const canvasStream = canvas.captureStream(30);
         
-        // 🎧 [소리 복구 핵심 2] 숨겨진 비디오 태그에서 재생되는 오디오 소리 트랙을 통째로 캡처
-        // 사파리 버그 우회 및 크로스 브라우징을 위한 안전망 구축
-        let videoAudioStream;
-        if (hiddenVideo.captureStream) {
-            videoAudioStream = hiddenVideo.captureStream();
-        } else if (hiddenVideo.mozCaptureStream) {
-            videoAudioStream = hiddenVideo.mozCaptureStream();
-        }
-
-        // 🎧 [소리 복구 핵심 3] 캔버스 비디오 스트림에 비디오에서 나오는 소리 트랙을 끈끈하게 결합
-        if (videoAudioStream && videoAudioStream.getAudioTracks().length > 0) {
-            canvasStream.addTrack(videoAudioStream.getAudioTracks()[0]);
-        } else {
-            // 브라우저에 따라 실시간 플레이 중에만 오디오 트랙이 잡히는 경우를 대비한 2차 방어선
-            hiddenVideo.addEventListener('play', () => {
-                const liveStream = hiddenVideo.captureStream ? hiddenVideo.captureStream() : null;
-                if (liveStream && liveStream.getAudioTracks().length > 0 && canvasStream.getAudioTracks().length === 0) {
-                    canvasStream.addTrack(liveStream.getAudioTracks()[0]);
-                }
-            }, { once: true });
+        // 🎧 [소리 완벽 결합 핵심 치트키] 
+        // 사용자가 처음에 승인해 준 활성화된 진짜 마이크 오디오 주파수를 합병 비디오에 믹싱합니다.
+        if (globalAudioTrack) {
+            canvasStream.addTrack(globalAudioTrack.clone());
         }
 
         const encodedChunks = [];
@@ -507,15 +461,11 @@ async function generateTotalLogVideo() {
         }
 
         const downloadMimeType = getDownloadMimeType();
-        
-        // 🎧 [소리 복구 핵심 4] 비디오 코덱 뒤에 반드시 오디오 코덱(opus 혹은 mp4 오디오)이 굽히도록 사전 정의
         let recorderOptions = {};
-        if (downloadMimeType) {
-            if (downloadMimeType.includes('webm')) {
-                recorderOptions = { mimeType: 'video/webm;codecs=vp9,opus' };
-            } else {
-                recorderOptions = { mimeType: downloadMimeType };
-            }
+        if (downloadMimeType && downloadMimeType.includes('webm')) {
+            recorderOptions = { mimeType: 'video/webm;codecs=vp9,opus' };
+        } else if (downloadMimeType) {
+            recorderOptions = { mimeType: downloadMimeType };
         }
 
         const canvasRecorder = new MediaRecorder(canvasStream, recorderOptions);
@@ -538,20 +488,12 @@ async function generateTotalLogVideo() {
             const finalVideoURL = URL.createObjectURL(finalBlob);
 
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0'); 
-            const day = String(now.getDate()).padStart(2, '0');
-            const formattedDate = `${year}.${month}.${day}`;
+            const formattedDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
 
             const downloadAnchor = document.createElement('a');
             downloadAnchor.href = finalVideoURL;
-            
             downloadAnchor.download = `${formattedDate} 등산log.${extension}`;
             downloadAnchor.click();
-
-            if (extension === 'webm') {
-                alert("⚠️ 현재 브라우저가 MP4 녹화를 지원하지 않아 WebM으로 다운로드되었습니다. 맥북 QuickTime 대신 Chrome 브라우저나 VLC 플레이어를 이용해 주세요.");
-            }
 
             totalDownloadBtn.disabled = false;
             totalDownloadBtn.innerHTML = `
@@ -564,10 +506,7 @@ async function generateTotalLogVideo() {
 
         for (const item of savedList) {
             hiddenVideo.src = URL.createObjectURL(item.videoBlob);
-
-            await new Promise((resolve) => {
-                hiddenVideo.onloadeddata = resolve; 
-            });
+            await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
             await hiddenVideo.play();
 
             let isCurrentVideoPlaying = true;
@@ -583,7 +522,6 @@ async function generateTotalLogVideo() {
 
                 const drawWidth = containerWidth;
                 const drawHeight = containerWidth * (hiddenVideo.videoHeight / hiddenVideo.videoWidth);
-                
                 const offsetX = videoX;
                 const offsetY = videoY - (drawHeight - containerHeight) / 2;
 
@@ -591,19 +529,16 @@ async function generateTotalLogVideo() {
                 ctx.beginPath();
                 ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
                 ctx.clip(); 
-                
                 ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
                 ctx.fillStyle = "white"; 
-
                 ctx.font = "600 22px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
                 
                 const timeX = videoX + 18; 
                 const timeY = videoY + 18; 
-                
                 const displayTime = item.recordTime || "00:00";
                 ctx.fillText(displayTime, timeX, timeY);
 
@@ -635,13 +570,11 @@ async function generateTotalLogVideo() {
     };
 }
 
-// 앱 시작 초기화
 async function initApp() {
     await initDatabase();
     loadSavedVideos();
     await startCamera();
     startCameraClock(); 
-
     altitudeText.innerText = "⛰️ 초기 고도 측정 중...";
     getRealAltitude();
 }
