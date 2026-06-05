@@ -74,7 +74,7 @@ function startCameraClock() {
     setInterval(updateClock, 1000);
 }
 
-// 📸 카메라 켜기 함수 (소리 완벽 유지 + 전면 좌우반전 버그 완전 박멸)
+// 📸 카메라 켜기 함수 (유령 방어막 제거 버전)
 async function startCamera() {
     if (cameraView.srcObject) {
         cameraView.srcObject.getTracks().forEach(track => track.stop());
@@ -92,35 +92,17 @@ async function startCamera() {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
         
-        // 프리뷰 거울 모드 정렬
         if (currentFacingMode === "user") {
             cameraView.style.transform = "scaleX(-1)";
         } else {
             cameraView.style.transform = "scaleX(1)";
         }
 
-        let safariShield = document.getElementById('safari-shield');
-        if (!safariShield) {
-            safariShield = document.createElement('div');
-            safariShield.id = 'safari-shield';
-            safariShield.style.position = 'absolute';
-            safariShield.style.top = '0';
-            safariShield.style.left = '0';
-            safariShield.style.width = '100%';
-            safariShield.style.height = '100%';
-            safariShield.style.backgroundColor = 'transparent';
-            safariShield.style.zIndex = '1';
-            
-            if (cameraView.parentElement) {
-                cameraView.parentElement.style.position = 'relative';
-                cameraView.parentElement.insertBefore(safariShield, cameraView.nextSibling);
-            }
-        }
+        // ❌ 버튼 클릭을 방해하던 투명 'safariShield' 생성 코드를 완벽하게 도려내어 버튼을 활성화했습니다!
 
-        if (recordBtn) recordBtn.style.zIndex = '10';
-        if (switchCameraBtn) switchCameraBtn.style.zIndex = '10';
+        if (recordBtn) recordBtn.style.zIndex = '30';
+        if (switchCameraBtn) switchCameraBtn.style.zIndex = '30';
 
-        // 🎨 [핵심 변경] 녹화할 비디오 프레임을 좌우 반전 처리할 내부 실시간 캔버스
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -143,7 +125,6 @@ async function startCamera() {
             }
 
             ctx.save();
-            // 🔄 전면 카메라일 때만 녹화 데이터도 좌우반전(거울 모드) 처리하여 캔버스에 굽습니다!
             if (currentFacingMode === "user") {
                 ctx.scale(-1, 1);
                 ctx.drawImage(cameraView, -vw, 0, vw, vh);
@@ -156,12 +137,9 @@ async function startCamera() {
         
         cameraView.onplay = drawFrame;
 
-        // 🎛️ [사파리 우회용 하이브리드 스트림 결합]
-        // 1. 좌우 반전 처리가 완료된 캔버스에서 '비디오 트랙'만 추출
         const canvasStream = canvas.captureStream(30);
         const flippedVideoTrack = canvasStream.getVideoTracks()[0];
 
-        // 2. 사파리 마이크 락을 깨부술 원본 하드웨어 스트림에서 '오디오 트랙' 추출
         const combinedStream = new MediaStream();
         combinedStream.addTrack(flippedVideoTrack);
 
@@ -169,7 +147,6 @@ async function startCamera() {
             combinedStream.addTrack(stream.getAudioTracks()[0]);
         }
 
-        // 3. 결합된 하이브리드 스트림을 미디어레코더에 바인딩
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
         mediaRecorder = new MediaRecorder(combinedStream, options);
