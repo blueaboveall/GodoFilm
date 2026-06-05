@@ -368,7 +368,7 @@ function handleSwipe() {
 }
 
 // ==========================================
-// 🚀 다운로드 시스템 (사파리 친화형 무음 무오류 인코더)
+// 🚀 다운로드 시스템 (아이폰 17용 위아래 크롭 비율 완벽 보정 버전)
 // ==========================================
 totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 
@@ -388,6 +388,7 @@ async function generateTotalLogVideo() {
         totalDownloadBtn.innerText = "⏳ 등산 log 제작 중...";
 
         const canvas = document.createElement('canvas');
+        // 🎯 최종 결과물은 깔끔한 정석 9:16 비율(720x1280)로 고정합니다.
         canvas.width = 720;
         canvas.height = 1280;
         const ctx = canvas.getContext('2d');
@@ -457,6 +458,13 @@ async function generateTotalLogVideo() {
 
         canvasRecorder.start();
 
+        // 🎯 [핵심 수식] 길쭉한 원본 이미지에서 인스타용 9:16 구역만 크롭하기 위한 계산
+        const targetRatio = 1280 / 720; 
+        const sourceWidth = bgImg.width;
+        const sourceHeight = sourceWidth * targetRatio; 
+        const sourceX = 0;
+        const sourceY = (bgImg.height - sourceHeight) / 2; // 중앙 정렬로 위아래 자르기
+
         for (const item of savedList) {
             hiddenVideo.src = URL.createObjectURL(item.videoBlob);
             await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
@@ -466,7 +474,8 @@ async function generateTotalLogVideo() {
             hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
 
             while (isCurrentVideoPlaying) {
-                ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+                // ✂️ 이 부분이 핵심입니다! 강제로 압축하지 않고 위아래를 크롭해서 9:16을 채웁니다.
+                ctx.drawImage(bgImg, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
 
                 const containerWidth = canvas.width * 0.85; 
                 const containerHeight = containerWidth * (9 / 16); 
