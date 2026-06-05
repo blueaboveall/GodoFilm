@@ -74,7 +74,7 @@ function startCameraClock() {
     setInterval(updateClock, 1000);
 }
 
-// 📸 카메라 켜기 함수 (웹 슬라이드 소리 100% 복구 버전)
+// 📸 카메라 켜기 함수 (소리 완벽 유지 + 전면 좌우반전 버그 완전 박멸)
 async function startCamera() {
     if (cameraView.srcObject) {
         cameraView.srcObject.getTracks().forEach(track => track.stop());
@@ -82,7 +82,6 @@ async function startCamera() {
     }
 
     try {
-        // 🔊 오디오 트랙을 완벽하게 켜서 원본 하드웨어 권한을 가져옵니다.
         const constraints = {
             audio: true, 
             video: {
@@ -93,6 +92,7 @@ async function startCamera() {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
         
+        // 프리뷰 거울 모드 정렬
         if (currentFacingMode === "user") {
             cameraView.style.transform = "scaleX(-1)";
         } else {
@@ -120,6 +120,7 @@ async function startCamera() {
         if (recordBtn) recordBtn.style.zIndex = '10';
         if (switchCameraBtn) switchCameraBtn.style.zIndex = '10';
 
+        // 🎨 [핵심 변경] 녹화할 비디오 프레임을 좌우 반전 처리할 내부 실시간 캔버스
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
@@ -142,6 +143,7 @@ async function startCamera() {
             }
 
             ctx.save();
+            // 🔄 전면 카메라일 때만 녹화 데이터도 좌우반전(거울 모드) 처리하여 캔버스에 굽습니다!
             if (currentFacingMode === "user") {
                 ctx.scale(-1, 1);
                 ctx.drawImage(cameraView, -vw, 0, vw, vh);
@@ -154,13 +156,23 @@ async function startCamera() {
         
         cameraView.onplay = drawFrame;
 
-        // 🔊 [소리 복구 절대 치트키] 
-        // 미디어 레코더가 사파리를 자극하는 무거운 캔버스 스트림 대신, 
-        // 카메라와 마이크의 '순수 원본 스트림'을 그대로 캡처하도록 변경합니다.
-        // 이렇게 하면 오디오 락이 절대 걸리지 않아 슬라이드에서 소리가 무조건 정상 출력됩니다!
+        // 🎛️ [사파리 우회용 하이브리드 스트림 결합]
+        // 1. 좌우 반전 처리가 완료된 캔버스에서 '비디오 트랙'만 추출
+        const canvasStream = canvas.captureStream(30);
+        const flippedVideoTrack = canvasStream.getVideoTracks()[0];
+
+        // 2. 사파리 마이크 락을 깨부술 원본 하드웨어 스트림에서 '오디오 트랙' 추출
+        const combinedStream = new MediaStream();
+        combinedStream.addTrack(flippedVideoTrack);
+
+        if (stream.getAudioTracks().length > 0) {
+            combinedStream.addTrack(stream.getAudioTracks()[0]);
+        }
+
+        // 3. 결합된 하이브리드 스트림을 미디어레코더에 바인딩
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
-        mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder = new MediaRecorder(combinedStream, options);
 
         mediaRecorder.ondataavailable = function(event) {
             if (event.data.size > 0) {
@@ -227,7 +239,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
-    newVideo.muted = false; // 🔊 소리 활성화!
+    newVideo.muted = false; // 🔊 웹 슬라이드 확인 화면 소리 정상 출력!
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
@@ -350,7 +362,6 @@ recordBtn.addEventListener('click', () => {
     }, 3000); 
 });
 
-// 📸 [카메라 스위칭 강제 고정]
 switchCameraBtn.addEventListener('click', async () => {
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
     await startCamera();
@@ -380,7 +391,7 @@ function handleSwipe() {
 }
 
 // ==========================================
-// 🚀 다운로드 기능 리팩토링 (사파리 보안 자극 요소를 완벽 제거한 가벼운 렌더러)
+// 🚀 다운로드 시스템 (사파리 친화형 무음 무오류 인코더)
 // ==========================================
 totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 
@@ -422,7 +433,6 @@ async function generateTotalLogVideo() {
         hiddenVideo.style.pointerEvents = 'none';
         document.body.appendChild(hiddenVideo);
 
-        // 사파리 오디오 에러 유발 차단: 다운로드용 인코더 스트림에는 오디오 자극을 일절 주지 않음
         const canvasStream = canvas.captureStream(30);
         const encodedChunks = [];
 
