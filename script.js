@@ -71,7 +71,7 @@ function startCameraClock() {
         // 🌟 각진 기본 폰트 대신, 기기별 가장 둥글고 세련된 라운드형 시스템 폰트셋 부여
         cameraTimeText.style.fontFamily = 'system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
         cameraTimeText.style.letterSpacing = '-0.3px';
-        cameraTimeText.style.zIndex = '12'; // 🌟 버그 방어막(zIndex: 11)보다 위로 올리기 위해 12로 변경!
+        cameraTimeText.style.zIndex = '12'; // 🌟 버그 방어막보다 위로 올리기 위해 12로 변경!
         if (cameraPage) {
             cameraPage.style.position = 'relative'; // 기준점 고정
             cameraPage.appendChild(cameraTimeText);
@@ -88,7 +88,7 @@ function startCameraClock() {
     setInterval(updateClock, 1000); // 1초마다 촬영 대기화면 시간 업데이트
 }
 
-// 카메라 켜기
+// 카메라 켜기 (🛠️ 중복 코드 완전 정리본)
 async function startCamera() {
     if (cameraView.srcObject) {
         cameraView.srcObject.getTracks().forEach(track => track.stop());
@@ -121,7 +121,7 @@ async function startCamera() {
             safariShield.style.width = '100%';
             safariShield.style.height = '100%';
             safariShield.style.backgroundColor = 'transparent';
-            safariShield.style.zIndex = '11'; // 비디오 태그(기본) 바로 위에 얹음
+            safariShield.style.zIndex = '1'; // 비디오 바로 위에 낮게 배치
             
             if (cameraView.parentElement) {
                 cameraView.parentElement.style.position = 'relative';
@@ -129,16 +129,9 @@ async function startCamera() {
             }
         }
 
-        // 🛠️ [레이어 클릭 차단 버그 튜닝]
-        // 방어막(zIndex: 11)이 버튼들을 가리지 않도록, 주요 조작 버튼들의 레이어 순위를 방어막 위로 강제 인양합니다.
-        if (recordBtn) {
-            if (!recordBtn.style.position || recordBtn.style.position === 'static') recordBtn.style.position = 'relative';
-            recordBtn.style.zIndex = '12';
-        }
-        if (switchCameraBtn) {
-            if (!switchCameraBtn.style.position || switchCameraBtn.style.position === 'static') switchCameraBtn.style.position = 'relative';
-            switchCameraBtn.style.zIndex = '12';
-        }
+        // 🛠️ 버튼이 원래 CSS 디자인 위치를 유지하면서 방어막 레이어만 뚫고 올라오도록 셋업
+        if (recordBtn) recordBtn.style.zIndex = '10';
+        if (switchCameraBtn) switchCameraBtn.style.zIndex = '10';
 
         // 3. 녹화용 캔버스 설정
         const canvas = document.createElement('canvas');
@@ -181,7 +174,6 @@ async function startCamera() {
 
         // 4. 캔버스 스트림을 녹화
         const canvasStream = canvas.captureStream(30);
-        // 오디오 트랙 추가 (캔버스 스트림에는 오디오가 없으므로)
         canvasStream.addTrack(stream.getAudioTracks()[0]);
 
         const mimeType = getSupportedMimeType();
@@ -438,7 +430,6 @@ async function generateTotalLogVideo() {
     request.onsuccess = async function(e) {
         const savedList = e.target.result.sort((a, b) => a.id - b.id);
         if (savedList.length === 0) {
-            // 🌟 백업본 원본 문구 유지: "아직 촬영된 등산 추억 영상이 없습니다!..."
             alert("아직 촬영된 등산 추억 영상이 없습니다! 먼저 영상을 녹화해 주세요.");
             return;
         }
@@ -460,7 +451,6 @@ async function generateTotalLogVideo() {
         hiddenVideo.playsInline = true;
         hiddenVideo.setAttribute('playsinline', ''); 
         
-        // 🌟 아이폰 필수 세팅 유지
         hiddenVideo.style.position = 'fixed';
         hiddenVideo.style.top = '0';
         hiddenVideo.style.left = '-9999px'; 
@@ -536,7 +526,7 @@ async function generateTotalLogVideo() {
             hiddenVideo.src = URL.createObjectURL(item.videoBlob);
 
             await new Promise((resolve) => {
-                hiddenVideo.onloadeddata = resolve; // 🌟 원본 백업본의 onloadeddata 적용 완료
+                hiddenVideo.onloadeddata = resolve; 
             });
             await hiddenVideo.play();
 
@@ -546,37 +536,30 @@ async function generateTotalLogVideo() {
             while (isCurrentVideoPlaying) {
                 ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
 
-                // 1. 영상이 위치할 박스 틀 설정
                 const containerWidth = canvas.width * 0.85; 
                 const containerHeight = containerWidth * (9 / 16); 
                 const videoX = (canvas.width - containerWidth) / 2;
                 const videoY = (canvas.height - containerHeight) / 2;
 
-                // 2. 강제 크롭 핵심 수식
                 const drawWidth = containerWidth;
                 const drawHeight = containerWidth * (hiddenVideo.videoHeight / hiddenVideo.videoWidth);
                 
-                // 3. 중앙 정렬 계산
                 const offsetX = videoX;
                 const offsetY = videoY - (drawHeight - containerHeight) / 2;
 
-                // 4. 둥근 모서리 틀 자르기
                 ctx.save();
                 ctx.beginPath();
                 ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
                 ctx.clip(); 
                 
-                // 5. 영상 그리기
                 ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
                 ctx.restore();
 
-                // 🌟 원본 백업본에 존재하던 그림자 효과 세팅 (완벽 보존)
                 ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
                 ctx.shadowBlur = 4;
                 ctx.shadowOffsetX = 1;
                 ctx.shadowOffsetY = 1;
 
-                // 🌟 원본 백업본의 가독성 클리어용 초기화 코드 순서 보존
                 ctx.shadowColor = "transparent";
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetX = 0;
@@ -584,7 +567,6 @@ async function generateTotalLogVideo() {
                 
                 ctx.fillStyle = "white"; 
 
-                // 6. 시간 자막 (원본 백업본 수치: 22px, 여백 18 적용)
                 ctx.font = "600 22px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif";
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
@@ -595,7 +577,6 @@ async function generateTotalLogVideo() {
                 const displayTime = item.recordTime || "00:00";
                 ctx.fillText(displayTime, timeX, timeY);
 
-                // 7. 고도 자막 (원본 백업본 수치: 27px, fixedEmojiWidth: 31 적용)
                 ctx.font = "bold 27px -apple-system, Apple SD Gothic Neo, Malgun Gothic, sans-serif"; 
                 ctx.textBaseline = "middle";
                 ctx.textAlign = "left"; 
@@ -615,7 +596,6 @@ async function generateTotalLogVideo() {
                 ctx.fillText(emojiStr, startX, centerY);
                 ctx.fillText(cleanText, startX + fixedEmojiWidth + gap, centerY);
 
-                // 🌟 다음 프레임을 위한 렌더링 대기
                 await new Promise(requestAnimationFrame);
             }
         }
