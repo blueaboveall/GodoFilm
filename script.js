@@ -11,9 +11,8 @@ let recordedChunks = [];
 let currentSlideIndex = 0;
 let totalSlides = 1;
 
-let currentFacingMode = "user";
+let currentFacingMode = "user"; // "user"(전면) 또는 "environment"(후면)
 let db;
-let globalAudioTrack = null; // 🎤 마이크 오디오 트랙을 전역으로 안전하게 보관할 보관함
 
 function getSupportedMimeType() {
     const types = [
@@ -76,32 +75,27 @@ function startCameraClock() {
     setInterval(updateClock, 1000);
 }
 
-// 📸 카메라 켜기 함수 (사파리 트랙 정지 버그 완전 수정)
+// 📸 카메라 켜기 함수 (오디오 제거 및 사파리 전/후면 전환 완벽 튜닝)
 async function startCamera() {
-    // 사파리 버그 방지: 기존 스트림 엘리먼트와 트랙을 완벽하게 초기화
+    // 🛠️ 핵심 수정: 다음 카메라를 요청하기 전에 기존 카메라를 완벽하게 물리적으로 OFF
     if (cameraView.srcObject) {
-        const tracks = cameraView.srcObject.getTracks();
-        tracks.forEach(track => track.stop());
+        cameraView.srcObject.getTracks().forEach(track => track.stop());
         cameraView.srcObject = null;
     }
 
     try {
-        // 전면/후면 전환 조건에 맞춰 완벽하게 분기 처리
+        // 🎧 리스크 원천 차단: 오디오를 false로 설정하여 마이크 권한 충돌 및 사파리 인코딩 에러 방지
         const constraints = {
-            audio: true,
+            audio: false, 
             video: {
-                facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" }
+                facingMode: currentFacingMode
             }
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
-
-        // 전역 마이크 트랙 업데이트
-        if (stream.getAudioTracks().length > 0) {
-            globalAudioTrack = stream.getAudioTracks()[0];
-        }
         
+        // 거울 모드 정렬
         if (currentFacingMode === "user") {
             cameraView.style.transform = "scaleX(-1)";
         } else {
@@ -163,11 +157,8 @@ async function startCamera() {
         
         cameraView.onplay = drawFrame;
 
-        // 개별 녹화용 스트림 결합 (마이크 소리 포함)
+        // 개별 녹화용 비디오 스트림 추출
         const canvasStream = canvas.captureStream(30);
-        if (globalAudioTrack) {
-            canvasStream.addTrack(globalAudioTrack.clone());
-        }
 
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
@@ -190,13 +181,7 @@ async function startCamera() {
         };
 
     } catch (error) {
-        console.error("카메라 에러:", error);
-        // 사파리에서 {exact: "environment"} 실패 시 차선책으로 일반 전환 유도
-        if (currentFacingMode === "environment") {
-            currentFacingMode = "user";
-            alert("후면 카메라를 일시적으로 불러올 수 없어 전면으로 대체합니다.");
-            startCamera();
-        }
+        console.error("카메라 작동 에러:", error);
     }
 }
 
@@ -239,7 +224,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
-    newVideo.muted = false; // 🔊 넘겨서 확인할 때 슬라이드 자체 소리는 나도록 복원
+    newVideo.muted = true; // 발표용 전용: 음소거로 안전하게 고정
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
@@ -362,9 +347,10 @@ recordBtn.addEventListener('click', () => {
     }, 3000); 
 });
 
-// 📸 카메라 전환 이벤트 리스너 리팩토링
+// 📸 [카메라 전/후면 완전히 강제 스위칭] 
 switchCameraBtn.addEventListener('click', async () => {
-    currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+    // 사파리 특화: facingMode 문자열을 완벽하게 교체 후 재시작
+    currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
     await startCamera();
 });
 
@@ -392,7 +378,7 @@ function handleSwipe() {
 }
 
 // ==========================================
-// 🎧 사파리 락을 우회하는 비디오+오디오 병합 인코더 시스템
+// 비디오 캔버스 병합 인코더 시스템 (발표 최적화 무음 버전)
 // ==========================================
 totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 
@@ -420,8 +406,6 @@ async function generateTotalLogVideo() {
         bgImg.src = 'my-background.png';
         await new Promise((resolve) => { bgImg.onload = resolve; });
 
-        // 사파리 오디오 락 우회를 위해 백그라운드용 비디오는 안전하게 음소거하되, 
-        // 실제 녹화 데이터 스트림은 전역 오디오 트랙(globalAudioTrack)을 수동 복제하여 결합합니다.
         const hiddenVideo = document.createElement('video');
         hiddenVideo.muted = true; 
         hiddenVideo.playsInline = true;
@@ -437,13 +421,6 @@ async function generateTotalLogVideo() {
         document.body.appendChild(hiddenVideo);
 
         const canvasStream = canvas.captureStream(30);
-        
-        // 🎧 [소리 완벽 결합 핵심 치트키] 
-        // 사용자가 처음에 승인해 준 활성화된 진짜 마이크 오디오 주파수를 합병 비디오에 믹싱합니다.
-        if (globalAudioTrack) {
-            canvasStream.addTrack(globalAudioTrack.clone());
-        }
-
         const encodedChunks = [];
 
         function getDownloadMimeType() {
@@ -461,14 +438,7 @@ async function generateTotalLogVideo() {
         }
 
         const downloadMimeType = getDownloadMimeType();
-        let recorderOptions = {};
-        if (downloadMimeType && downloadMimeType.includes('webm')) {
-            recorderOptions = { mimeType: 'video/webm;codecs=vp9,opus' };
-        } else if (downloadMimeType) {
-            recorderOptions = { mimeType: downloadMimeType };
-        }
-
-        const canvasRecorder = new MediaRecorder(canvasStream, recorderOptions);
+        const canvasRecorder = new MediaRecorder(canvasStream, downloadMimeType ? { mimeType: downloadMimeType } : {});
 
         canvasRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) encodedChunks.push(event.data);
