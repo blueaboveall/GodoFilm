@@ -75,27 +75,26 @@ function startCameraClock() {
     setInterval(updateClock, 1000);
 }
 
-// 📸 카메라 켜기 함수 (오디오 제거 및 사파리 전/후면 전환 완벽 튜닝)
+// 📸 카메라 켜기 함수 (웹 슬라이드 소리 복구 + 사파리 카메라 스위칭 버그 킬러)
 async function startCamera() {
-    // 🛠️ 핵심 수정: 다음 카메라를 요청하기 전에 기존 카메라를 완벽하게 물리적으로 OFF
     if (cameraView.srcObject) {
         cameraView.srcObject.getTracks().forEach(track => track.stop());
         cameraView.srcObject = null;
     }
 
     try {
-        // 🎧 리스크 원천 차단: 오디오를 false로 설정하여 마이크 권한 충돌 및 사파리 인코딩 에러 방지
+        // 🎧 [소리 복구 핵심] audio를 다시 true로 설정하여 웹 내 녹화에 소리가 담기게 만듭니다!
+        // 📸 [카메라 전환 핵심] 사파리가 에러를 뿜지 않도록 엄격한(exact) 매칭 규칙 적용
         const constraints = {
-            audio: false, 
+            audio: true, 
             video: {
-                facingMode: currentFacingMode
+                facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" }
             }
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
         
-        // 거울 모드 정렬
         if (currentFacingMode === "user") {
             cameraView.style.transform = "scaleX(-1)";
         } else {
@@ -157,8 +156,11 @@ async function startCamera() {
         
         cameraView.onplay = drawFrame;
 
-        // 개별 녹화용 비디오 스트림 추출
+        // 🎧 웹 슬라이드 확인용 오디오 트랙을 캔버스 녹화기에 강제 바인딩
         const canvasStream = canvas.captureStream(30);
+        if (stream.getAudioTracks().length > 0) {
+            canvasStream.addTrack(stream.getAudioTracks()[0]);
+        }
 
         const mimeType = getSupportedMimeType();
         const options = mimeType ? { mimeType } : {};
@@ -182,6 +184,12 @@ async function startCamera() {
 
     } catch (error) {
         console.error("카메라 작동 에러:", error);
+        // 혹시 모를 사파리 기기 특성 에러 방어선
+        if (currentFacingMode === "environment") {
+            currentFacingMode = "user";
+            alert("후면 카메라 진입에 실패하여 전면으로 대체 구동합니다.");
+            startCamera();
+        }
     }
 }
 
@@ -224,7 +232,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime) {
     const newVideo = document.createElement('video');
     newVideo.src = videoURL;
     newVideo.className = 'saved-video';
-    newVideo.muted = false;
+    newVideo.muted = false; // 🔊 웹에서 밀어서 볼 때는 소리가 빵빵하게 나오도록 설정!
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
     newVideo.controls = true;
@@ -347,9 +355,8 @@ recordBtn.addEventListener('click', () => {
     }, 3000); 
 });
 
-// 📸 [카메라 전/후면 완전히 강제 스위칭] 
+// 📸 [사파리 전용 카메라 스위칭 이벤트 리스너]
 switchCameraBtn.addEventListener('click', async () => {
-    // 사파리 특화: facingMode 문자열을 완벽하게 교체 후 재시작
     currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
     await startCamera();
 });
