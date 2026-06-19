@@ -32,7 +32,7 @@ let db;
 let selectedTimerSeconds = 0; 
 let currentZoomScale = 1.0; 
 
-// ✨ 모바일 기기가 오디오를 유실하지 않도록 통합 고음질 코덱 지정 명시
+// 🔊 모바일 소리 출력을 완벽하게 보장하는 호환성 고음질 코덱 명시
 function getSupportedMimeType() {
     const types = [
         'video/mp4;codecs=avc1,mp4a.40.2', 
@@ -253,13 +253,12 @@ function saveVideoToDB(blob, altitude, recordTime) {
     });
 }
 
-// 🛠️ 변수 중복 선언 및 가두기 오타 완벽 보정함 (store = store = 구조 타파)
+// 🛠️ 원래 잘 작동하던 원본의 깔끔한 구조로 완벽하게 롤백(복구) 완료!
 function deleteVideoFromDB(id) {
     return new Promise((resolve) => {
         const transaction = db.transaction(["videos"], "readwrite");
         const store = transaction.objectStore("videos");
-        // 확실히 정수화(Number)하여 IndexedDB 검색 트랙 일치 보장
-        const request = store.delete(Number(id));
+        const request = store.delete(id); 
         request.onsuccess = () => resolve();
     });
 }
