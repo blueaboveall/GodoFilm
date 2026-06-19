@@ -18,6 +18,7 @@ const zoomBtn = document.getElementById('zoom-btn');
 const zoomMenu = document.getElementById('zoom-menu');
 const zoomBtnText = document.getElementById('zoom-btn-text');
 const zoomOptionBtns = document.querySelectorAll('.zoom-option-btn');
+const zoom05Btn = document.getElementById('zoom-05-btn'); 
 
 let mediaRecorder;
 let recordedChunks = [];
@@ -97,6 +98,17 @@ async function startCamera() {
         cameraView.srcObject = null;
     }
 
+    // 전면 카메라일 때는 0.5x 옵션 숨기기 & 선택되어 있었다면 1x로 강제 초기화
+    if (currentFacingMode === "user") {
+        zoom05Btn.classList.add('hide-option');
+        if (currentZoomScale === 0.5) {
+            currentZoomScale = 1.0;
+            zoomBtnText.innerText = '1x';
+        }
+    } else {
+        zoom05Btn.classList.remove('hide-option');
+    }
+
     try {
         const constraints = {
             audio: true, 
@@ -108,7 +120,6 @@ async function startCamera() {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
         
-        // 물리 줌 지원 적용
         applyHardwareZoom(stream, currentZoomScale);
         updateCameraTransformStyle();
 
@@ -138,15 +149,12 @@ async function startCamera() {
 
             ctx.save();
             
-            // ✨ [보완] 0.5배일 때 화면이 쪼그라들며 여백이 생기는 현상을 캔버스 레벨에서 원천 방지
-            // 배율이 1보다 작아질 때는 크롭을 하지 않고 화면 전체를 그리되 박스에 맞춤 채움 처리
             let sw = vw;
             let sh = vh;
             let sx = 0;
             let sy = 0;
 
             if (currentZoomScale > 1.0) {
-                // 2배 확대 시 중심점 크롭 연산
                 sw = vw / currentZoomScale;
                 sh = vh / currentZoomScale;
                 sx = (vw - sw) / 2;
@@ -156,7 +164,6 @@ async function startCamera() {
             if (currentFacingMode === "user") {
                 ctx.scale(-1, 1);
                 if (currentZoomScale < 1.0) {
-                    // 0.5배 축소 시 여백 없이 꽉 차게 강제 드로잉 처리
                     ctx.drawImage(cameraView, 0, 0, vw, vh, -vw, 0, vw, vh);
                 } else {
                     ctx.drawImage(cameraView, sx, sy, sw, sh, -vw, 0, vw, vh);
@@ -214,7 +221,6 @@ async function startCamera() {
     }
 }
 
-// 하드웨어 물리 줌 조절 제어
 function applyHardwareZoom(stream, zoomValue) {
     const videoTrack = stream.getVideoTracks()[0];
     if (videoTrack && typeof videoTrack.getCapabilities === 'function') {
@@ -227,12 +233,10 @@ function applyHardwareZoom(stream, zoomValue) {
     }
 }
 
-// 프리뷰 화면 트랜스폼 스타일 새로고침
 function updateCameraTransformStyle() {
     let baseScaleX = (currentFacingMode === "user") ? -1 : 1;
-    // ✨ 노트북 등 하드웨어 미지원 기기에서 0.5배 지정 시 줌아웃 여백 현상을 화면 레벨에서 제어
     let visualScale = currentZoomScale;
-    if (currentZoomScale < 1.0) visualScale = 1.0; // CSS 단축으로 쪼그라드는 연출 보정
+    if (currentZoomScale < 1.0) visualScale = 1.0; 
     
     cameraView.style.transform = `scale(${baseScaleX * visualScale}, ${visualScale})`;
 }
@@ -381,14 +385,12 @@ function getRealAltitude() {
     });
 }
 
-// 타이머 클릭 이벤트
 timerBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     zoomMenu.classList.remove('open'); 
     timerMenu.classList.toggle('open');
 });
 
-// 배율 클릭 이벤트 리스너
 zoomBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     timerMenu.classList.remove('open'); 
@@ -400,7 +402,6 @@ document.addEventListener('click', () => {
     zoomMenu.classList.remove('open');
 });
 
-// 타이머 옵션 세팅 
 timerOptionBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -419,7 +420,6 @@ timerOptionBtns.forEach(btn => {
     });
 });
 
-// 배율 옵션 선택 시 실행 로직
 zoomOptionBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -437,7 +437,6 @@ zoomOptionBtns.forEach(btn => {
     });
 });
 
-// 진짜 녹화 실행 래퍼
 function executionRecord() {
     mediaRecorder.start();
     recordBtn.innerText = "녹화중";
