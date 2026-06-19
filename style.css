@@ -67,11 +67,13 @@ body, html {
     transition: transform 0.3s ease-out;
 }
 
+/* 🎯 배율 확대 시 옆 슬라이드 화면을 침범하지 않도록 완벽 차단 */
 .slide-page {
     flex: 0 0 100%;
     width: 100%;
     height: 100%;
     position: relative;
+    overflow: hidden !important; 
 }
 
 #camera-view, .saved-video {
