@@ -111,12 +111,16 @@ async function startCamera() {
     }
 
     try {
-        const constraints = {
-            audio: true, 
-            video: {
-                facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" }
-            }
-        };
+const constraints = {
+    audio: {
+        echoCancellation: false,  // 에코 캔슬링(통화필터) 끄기
+        noiseSuppression: false,  // 노이즈 캔슬링(통화필터) 끄기
+        autoGainControl: false    // 자동 음량 조절 끄기 -> 고음질로 녹음됨!
+    }, 
+    video: {
+        facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" }
+    }
+};
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraView.srcObject = stream;
@@ -689,3 +693,22 @@ async function initApp() {
 }
 
 initApp();
+
+// 사용자가 앱을 나가거나 탭을 전환하면 마이크와 카메라를 완전히 꺼버리는 안전장치
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // 앱에서 나갔을 때: 하드웨어 트랙 모두 강제 종료
+        if (cameraView.srcObject) {
+            cameraView.srcObject.getTracks().forEach(track => track.stop());
+            cameraView.srcObject = null;
+        }
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        }
+    } else {
+        // 앱으로 다시 돌아왔을 때: 카메라 다시 안전하게 켜기
+        if (!cameraView.srcObject) {
+            startCamera();
+        }
+    }
+});
