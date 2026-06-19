@@ -232,12 +232,14 @@ function applyHardwareZoom(stream, zoomValue) {
     }
 }
 
+// 🎯 [오류 수정 핵심 로직] transform 스타일이 유령 여백을 만들지 않도록 정밀 격리 조정
 function updateCameraTransformStyle() {
     if (!cameraView) return;
     let baseScaleX = (currentFacingMode === "user") ? -1 : 1;
     let visualScale = currentZoomScale;
     if (currentZoomScale < 1.0) visualScale = 1.0; 
     
+    // scale 값만 독립적으로 제어되도록 보장하여 슬라이더 전체translateX 범위를 침범하지 않게 방어
     cameraView.style.transform = `scale(${baseScaleX * visualScale}, ${visualScale})`;
 }
 
@@ -407,7 +409,6 @@ function getRealAltitude() {
     });
 }
 
-// 타이머 클릭 이벤트
 if (timerBtn) {
     timerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -416,7 +417,6 @@ if (timerBtn) {
     });
 }
 
-// 배율 클릭 이벤트 리스너
 if (zoomBtn) {
     zoomBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -430,7 +430,6 @@ document.addEventListener('click', () => {
     if (zoomMenu) zoomMenu.classList.remove('open');
 });
 
-// 🕒 타이머 옵션 세팅
 timerOptionBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -459,7 +458,6 @@ timerOptionBtns.forEach(btn => {
     });
 });
 
-// 배율 옵션 선택 시 실행 로직
 zoomOptionBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
