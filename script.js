@@ -12,6 +12,7 @@ const timerMenu = document.getElementById('timer-menu');
 const timerIconSvg = document.getElementById('timer-icon-svg');
 const timerBtnText = document.getElementById('timer-btn-text');
 const timerOptionBtns = document.querySelectorAll('.timer-option-btn');
+const timerClearBtn = document.getElementById('timer-clear-btn'); // ✨ 해제 버튼 가져오기
 
 // 배율 관련 DOM
 const zoomBtn = document.getElementById('zoom-btn');
@@ -385,12 +386,14 @@ function getRealAltitude() {
     });
 }
 
+// 타이머 클릭 이벤트
 timerBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     zoomMenu.classList.remove('open'); 
     timerMenu.classList.toggle('open');
 });
 
+// 배율 클릭 이벤트 리스너
 zoomBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     timerMenu.classList.remove('open'); 
@@ -402,6 +405,7 @@ document.addEventListener('click', () => {
     zoomMenu.classList.remove('open');
 });
 
+// 🕒 타이머 옵션 세팅 (해제 기능 및 가로폭 유기적 제어 추가)
 timerOptionBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -409,17 +413,22 @@ timerOptionBtns.forEach(btn => {
         selectedTimerSeconds = secs;
 
         if (secs === 0) {
+            // '해제'를 눌렀을 때 기본 상태로 복원
             timerIconSvg.style.display = 'block';
             timerBtnText.style.display = 'none';
+            timerClearBtn.classList.add('hide-option'); // 기본 상태이므로 해제 버튼 다시 숨김
         } else {
+            // 5초나 10초가 설정되었을 때
             timerIconSvg.style.display = 'none';
             timerBtnText.innerText = `${secs}s`;
             timerBtnText.style.display = 'block';
+            timerClearBtn.classList.remove('hide-option'); // 타이머가 작동 중이므로 다음 오픈 때 '해제' 노출
         }
         timerMenu.classList.remove('open');
     });
 });
 
+// 배율 옵션 선택 시 실행 로직
 zoomOptionBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.stopPropagation();
