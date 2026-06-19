@@ -24,7 +24,7 @@ const zoom05Btn = document.getElementById('zoom-05-btn');
 let mediaRecorder;
 let recordedChunks = [];
 let currentSlideIndex = 0;
-let totalSlides = 1; // 기본 카메라 페이지(1개)
+let totalSlides = 1; 
 
 let currentFacingMode = "user"; 
 let db;
@@ -92,7 +92,6 @@ function startCameraClock() {
     setInterval(updateClock, 1000);
 }
 
-// 📸 카메라 켜기 함수
 async function startCamera() {
     if (cameraView.srcObject) {
         cameraView.srcObject.getTracks().forEach(track => track.stop());
@@ -275,7 +274,6 @@ function loadSavedVideos() {
     });
 }
 
-// autoMove 파라미터를 추가해 초기 로딩 시 슬라이더 포지션이 꼬이지 않게 함
 function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true) {
     const videoURL = URL.createObjectURL(blob);
     const newSlide = document.createElement('div');
@@ -288,10 +286,9 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true) {
     newVideo.muted = false; 
     newVideo.playsInline = true;
     newVideo.setAttribute('playsinline', '');
-    newVideo.controls = false; // 🎯 터치 오작동을 유발하는 브라우저 기본 컨트롤러 제거
+    newVideo.controls = false; 
     newVideo.loop = true;
 
-    // 🎯 화면 어디든 터치/클릭하면 직관적으로 재생/일시정지가 토글되도록 변경
     newVideo.addEventListener('click', (e) => {
         e.stopPropagation();
         if (newVideo.paused) {
@@ -304,7 +301,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true) {
     const newOverlay = document.createElement('div');
     newOverlay.className = 'altitude-overlay';
     newOverlay.innerHTML = `<span>${altitude}</span>`;
-    newOverlay.style.pointerEvents = 'none'; // 터치 방해 금지
+    newOverlay.style.pointerEvents = 'none'; 
 
     const timeOverlay = document.createElement('div');
     timeOverlay.className = 'time-overlay';
@@ -317,7 +314,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true) {
     timeOverlay.style.fontFamily = 'system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
     timeOverlay.style.letterSpacing = '-0.3px';
     timeOverlay.style.zIndex = '10';
-    timeOverlay.style.pointerEvents = 'none'; // 터치 방해 금지
+    timeOverlay.style.pointerEvents = 'none'; 
 
     const displayTime = recordTime || `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
     timeOverlay.innerHTML = `<span>${displayTime}</span>`;
@@ -338,7 +335,7 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true) {
         e.stopPropagation();
         e.preventDefault();
         
-        newVideo.pause(); // 컨펌 전 일시정지하여 꼬임 방지
+        newVideo.pause(); 
 
         if (confirm("이 영상을 영구 삭제하시겠습니까?")) {
             await deleteVideoFromDB(id);
@@ -552,7 +549,6 @@ function handleSwipe() {
     const swipeDistanceX = touchStartX - touchEndX;
     const swipeDistanceY = touchStartY - touchEndY;
     
-    // 단순 클릭을 터치 스와이프로 감지해 버리는 현상 방어 완비
     if (Math.abs(swipeDistanceX) < 40 || Math.abs(swipeDistanceY) > 60) return;
 
     if (swipeDistanceX < -50) {
@@ -728,7 +724,6 @@ async function generateTotalLogVideo() {
     };
 }
 
-// 🛠️ 초기 구동 시스템 순서 완벽 정렬
 async function initApp() {
     if (timerClearBtn) {
         timerClearBtn.classList.add('hide-option');
@@ -736,16 +731,16 @@ async function initApp() {
     }
 
     await initDatabase();
-    await loadSavedVideos(); // 1. 먼저 저장된 비디오를 정직하게 로드하고
+    await loadSavedVideos(); 
     
-    currentSlideIndex = totalSlides - 1; // 2. 현재 활성화 슬라이드 번호를 카메라 페이지로 정확히 맞춤
+    currentSlideIndex = totalSlides - 1; 
     
-    await startCamera(); // 3. 그 다음에 카메라를 완전 구동
+    await startCamera(); 
     startCameraClock(); 
     
     if (sliderWrapper) {
         sliderWrapper.style.transition = 'none';
-        updateSliderPosition(); // 4. 슬라이더 위치를 까만 화면이 아닌 카메라 페이지로 픽스
+        updateSliderPosition(); 
         sliderWrapper.offsetHeight;
         sliderWrapper.style.transition = 'transform 0.3s ease-out';
     }
