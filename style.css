@@ -13,7 +13,6 @@ body, html {
     font-family: sans-serif;
 }
 
-/* ✨ 최신 폰 위아래 빈 여백에 노란 종이 질감을 채워주는 진짜 바닥 도화지 */
 .full-screen-bg {
     width: 100vw;
     height: 100vh;
@@ -24,7 +23,7 @@ body, html {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    z-index: -2; /* 👈 아차산 배경보다 무조건 한참 뒤로 보냅니다 */
+    z-index: -2;
 }
 
 .background-container {
@@ -39,7 +38,7 @@ body, html {
     justify-content: center;
     align-items: center;
     position: relative;
-    z-index: 1; /* 👈 노란 배경보다 위에 배치 */
+    z-index: 1;
 }
 
 .app-container {
@@ -78,6 +77,7 @@ body, html {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.2s ease-out; /* 🔍 배율 변경 시 부드럽게 화면 이동 효과 */
 }
 
 .altitude-overlay {
@@ -106,7 +106,7 @@ body, html {
     font-weight: bold;
     font-size: 12px;
     cursor: pointer;
-    z-index: 20; /* 👈 유령 막보다 위로 번쩍 들어 올림! */
+    z-index: 20;
 }
 
 #switch-camera-btn {
@@ -121,7 +121,7 @@ body, html {
     color: white;
     padding: 6px;
     cursor: pointer;
-    z-index: 20; /* 👈 유령 막보다 위로 번쩍 들어 올림! */
+    z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,6 +129,89 @@ body, html {
 #switch-camera-btn svg {
     width: 100%;
     height: 100%;
+}
+
+/* 🕒 타이머 컨테이너 위치 정렬 */
+.timer-container {
+    position: absolute;
+    bottom: 54px; /* 전환 버튼 위쪽 */
+    right: 12px;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+}
+
+/* 🔍 [추가] 배율 컨테이너 (타이머 컨테이너 위에 정확히 적층) */
+.zoom-container {
+    position: absolute;
+    bottom: 96px; /* 타이머 버튼 위쪽 */
+    right: 12px;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+}
+
+/* 슬라이드식 슬롯 메뉴 공통 스타일 */
+.timer-menu, .zoom-menu {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    margin-right: 0;
+    transition: width 0.3s ease-out, opacity 0.2s ease-out, padding 0.3s ease-out, margin-right 0.3s ease-out;
+}
+
+/* 활성화 상태 클래스 */
+.timer-menu.open, .zoom-menu.open {
+    width: 125px;
+    opacity: 1;
+    padding: 4px 8px;
+    margin-right: 6px;
+}
+
+/* 메뉴 내부 옵션 버튼들 공통 */
+.timer-option-btn, .zoom-option-btn {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 2px 4px;
+    transition: color 0.2s;
+}
+.timer-option-btn:hover, .zoom-option-btn:hover {
+    color: white;
+}
+
+/* 메인 동그라미 아이콘들 공통 정의 */
+#timer-btn, #zoom-btn {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#timer-btn svg {
+    width: 65%;
+    height: 65%;
+}
+
+/* 배율 버튼 내부 글자 스타일 */
+#zoom-btn-text {
+    font-size: 11px;
+    font-weight: bold;
 }
 
 .delete-btn {
