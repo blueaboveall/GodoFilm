@@ -13,19 +13,7 @@ body, html {
     font-family: sans-serif;
 }
 
-/* ✨ 최신 폰 위아래 빈 여백에 노란 종이 질감을 채워주는 진짜 바닥 도화지 */
-.full-screen-bg {
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background-image: url('bg-pattern.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    z-index: -2;
-}
+
 
 .background-container {
     width: 100%;
