@@ -13,7 +13,6 @@ body, html {
     font-family: sans-serif;
 }
 
-/* ✨ 최신 폰 위아래 빈 여백에 노란 종이 질감을 채워주는 진짜 바닥 도화지 */
 .full-screen-bg {
     width: 100vw;
     height: 100vh;
@@ -78,7 +77,7 @@ body, html {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.2s ease-out; /* 🔍 배율 변경 시 부드럽게 화면 이동 효과 */
+    transition: transform 0.2s ease-out;
 }
 
 .altitude-overlay {
@@ -132,27 +131,24 @@ body, html {
     height: 100%;
 }
 
-/* 🕒 타이머 컨테이너 위치 정렬 */
 .timer-container {
     position: absolute;
-    bottom: 54px; /* 전환 버튼 위쪽 */
+    bottom: 54px; 
     right: 12px;
     display: flex;
     align-items: center;
     z-index: 20;
 }
 
-/* 🔍 배율 컨테이너 (타이머 컨테이너 위에 정확히 적층) */
 .zoom-container {
     position: absolute;
-    bottom: 96px; /* 타이머 버튼 위쪽 */
+    bottom: 96px; 
     right: 12px;
     display: flex;
     align-items: center;
     z-index: 20;
 }
 
-/* 🛠️ 슬라이드식 슬롯 메뉴 공통 스타일 보완 (PC/모바일 강제 노출 버그 해결) */
 .timer-menu, .zoom-menu {
     max-width: 0;
     opacity: 0;
@@ -160,7 +156,7 @@ body, html {
     background-color: rgba(0, 0, 0, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
-    display: inline-flex; /* flex !important 대신 안정적인 inline-flex 사용 */
+    display: inline-flex;
     flex-direction: row;
     justify-content: flex-end; 
     align-items: center;
@@ -168,27 +164,19 @@ body, html {
     padding: 0;
     margin-right: 0;
     white-space: nowrap;
-    pointer-events: none; /* 닫혀있을 때는 클릭 안 되게 방지 */
+    pointer-events: none;
     transition: max-width 0.3s ease-out, opacity 0.2s ease-out, padding 0.3s ease-out, margin-right 0.3s ease-out;
 }
 
-/* 🛠️ 메뉴 활성화 상태 클래스 (텍스트 양에 맞게 폭이 쏙 줄어들도록 셋팅) */
 .timer-menu.open, .zoom-menu.open {
     width: max-content !important;
-    max-width: 160px; /* 해제가 떴을 때 늘어날 수 있는 충분한 임계값 */
+    max-width: 160px;
     opacity: 1;
     padding: 6px 10px !important;
     margin-right: 6px;
-    pointer-events: auto; /* 열렸을 때만 클릭 허용 */
+    pointer-events: auto;
 }
 
-/* 전면카메라 0.5x 및 타이머 '해제' 연동 제어 클래스 */
-.zoom-option-btn.hide-option,
-.timer-option-btn.hide-option {
-    display: none !important;
-}
-
-/* 메뉴 내부 옵션 버튼들 공통 */
 .timer-option-btn, .zoom-option-btn {
     background: transparent;
     border: none;
@@ -203,7 +191,6 @@ body, html {
     color: white;
 }
 
-/* 메인 동그라미 아이콘들 공통 정의 */
 #timer-btn, #zoom-btn {
     width: 36px;
     height: 36px;
@@ -221,7 +208,6 @@ body, html {
     height: 65%;
 }
 
-/* 배율 버튼 내부 글자 스타일 */
 #zoom-btn-text {
     font-size: 11px;
     font-weight: bold;
@@ -302,7 +288,7 @@ body > div[class*="Safari"] #total-download-btn,
     pointer-events: none !important;
 }
 
-/* ✨ 전면 카메라일 때 0.5x 버튼을 완전히 제거하여 공간을 차지하지 않게 함 */
-.zoom-option-btn.hide-option {
+.zoom-option-btn.hide-option,
+.timer-option-btn.hide-option {
     display: none !important;
 }
