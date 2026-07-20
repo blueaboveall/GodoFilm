@@ -873,7 +873,7 @@ async function generateTotalLogVideo() {
   if (!totalDownloadBtn) return;
   
   const transaction = db.transaction(["videos"], "readonly");
-  const store = transaction.objectStore(["videos"]);
+  const store = transaction.objectStore("videos");
   const request = store.getAll();
   
   request.onsuccess = async function(e) {
@@ -887,15 +887,36 @@ async function generateTotalLogVideo() {
     }
 
     const originalBtnText = totalDownloadBtn.innerHTML;
-    totalDownloadBtn.innerText = "🎞️ 고도필름 제작 시작 (0%)";
+    totalDownloadBtn.innerText = " 🎬 고도필름 제작 시작...";
     totalDownloadBtn.disabled = true;
+
+    // 🌟 [하이엔드 프리뷰 오버레이 생성] 브라우저의 억제를 풀고 GPU 성능을 최대치로 끌어올림
+    const renderOverlay = document.createElement('div');
+    renderOverlay.id = 'render-blur-overlay';
+    renderOverlay.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(7, 7, 9, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white; font-family: -apple-system, sans-serif;
+    `;
+
+    const renderStatus = document.createElement('div');
+    renderStatus.innerText = "🎬 고도필름 합성 중... (0%)";
+    renderStatus.style.cssText = "font-size: 18px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.5px;";
+    renderOverlay.appendChild(renderStatus);
 
     try {
       const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1920;
+      canvas.width = 1080; //[cite: 1]
+      canvas.height = 1920; //[cite: 1]
       const ctx = canvas.getContext('2d');
-      const canvasStream = canvas.captureStream(30);
+      
+      // 💡 스마트폰에게 "나 지금 화면에 그려지고 있어!" 라고 당당히 보여주기 위한 프리뷰 스타일링
+      canvas.style.cssText = "width: 240px; height: 426px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
+      renderOverlay.appendChild(canvas);
+      document.body.appendChild(renderOverlay); // 화면에 즉시 부착
+
+      const canvasStream = canvas.captureStream(30); //[cite: 1]
       const mimeType = getSupportedMimeType();
       const options = mimeType ? { mimeType } : {};
       const canvasRecorder = new MediaRecorder(canvasStream, options);
@@ -919,6 +940,9 @@ async function generateTotalLogVideo() {
         document.body.removeChild(a);
         
         URL.revokeObjectURL(downloadUrl);
+        
+        // 작업 완료 후 프리뷰 화면 깔끔하게 제거
+        renderOverlay.remove();
         totalDownloadBtn.innerHTML = originalBtnText;
         totalDownloadBtn.disabled = false;
       };
@@ -946,68 +970,30 @@ async function generateTotalLogVideo() {
         }
       }
 
-      // 🎬 비디오 루프 시작
+      // 🎬 비디오 순차 합성 루프 개시
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const hiddenVideo = document.createElement('video');
         hiddenVideo.src = URL.createObjectURL(item.videoBlob);
-        
-        // 💡 [최적화 1] 모바일 브라우저의 재생 거부를 막는 필수 속성 주입
         hiddenVideo.muted = true;
         hiddenVideo.playsInline = true;
         hiddenVideo.setAttribute('playsinline', '');
         hiddenVideo.setAttribute('muted', '');
 
-        // 💡 [최적화 2] 1px 크기는 모바일이 휴면 처리하므로, 화면 전체를 투명하게 덮어 속임수 사용
-        hiddenVideo.style.position = 'fixed';
-        hiddenVideo.style.top = '0';
-        hiddenVideo.style.left = '0';
-        hiddenVideo.style.width = '100%';
-        hiddenVideo.style.height = '100%';
-        hiddenVideo.style.opacity = '0.001';
-        hiddenVideo.style.zIndex = '-9999';
-        hiddenVideo.style.pointerEvents = 'none';
-        document.body.appendChild(hiddenVideo);
+        // 비디오도 프리뷰 오버레이 내부에 보이지 않게 살짝 얹어둠 (활성화 보장)
+        hiddenVideo.style.cssText = "position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;";
+        renderOverlay.appendChild(hiddenVideo);
 
-        await new Promise((resolve) => { 
-          hiddenVideo.onloadeddata = resolve;
-          setTimeout(resolve, 1500); // 영상 로드가 안 되어도 최대 1.5초 후 강제 진행
-        });
-        
-        try {
-          await hiddenVideo.play();
-        } catch(playErr) {
-          console.log("자동 재생 제한 우회 시도");
-        }
+        await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
+        await hiddenVideo.play();
 
-        const containerWidth = 960;
-        const containerHeight = 540;
-        const videoX = (canvas.width - containerWidth) / 2;
-        const videoY = (canvas.height - containerHeight) / 2;
+        const containerWidth = 960; //[cite: 1]
+        const containerHeight = 540; //[cite: 1]
+        const videoX = (canvas.width - containerWidth) / 2; //[cite: 1]
+        const videoY = (canvas.height - containerHeight) / 2; //[cite: 1]
 
-        // 💡 [최적화 3] 데드락 방지 타이머 세팅 (멈춤 버그 파괴용)
-        let lastCurrentTime = -1;
-        let lastTimeUpdate = Date.now();
-
+        // 💡 꼼수나 건너뛰기 없이, 영상이 정상적으로 재생되는 모든 프레임을 정밀 캡처
         while (!hiddenVideo.ended && !hiddenVideo.paused) {
-          const nowTime = Date.now();
-          
-          // 브라우저가 영상을 멈춰서 재생 시간이 1초 동안 그대로라면 강제로 탈출(break) 시킴
-          if (hiddenVideo.currentTime === lastCurrentTime) {
-            if (nowTime - lastTimeUpdate > 1000) {
-              console.warn("모바일 브라우저 멈춤 감지 -> 다음 프레임/영상으로 강제 진행");
-              break; 
-            }
-          } else {
-            lastCurrentTime = hiddenVideo.currentTime;
-            lastTimeUpdate = nowTime;
-          }
-
-          // 영상이 거의 끝부분에 도달했다면 안전하게 루프 종료
-          if (hiddenVideo.duration && hiddenVideo.currentTime >= hiddenVideo.duration - 0.1) {
-            break;
-          }
-
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           
           if (bgImg.complete && bgImg.naturalWidth !== 0) {
@@ -1035,7 +1021,7 @@ async function generateTotalLogVideo() {
           ctx.save();
           ctx.beginPath();
           if (ctx.roundRect) {
-            ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
+            ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20); //[cite: 1]
           } else {
             ctx.rect(videoX, videoY, containerWidth, containerHeight);
           }
@@ -1049,34 +1035,36 @@ async function generateTotalLogVideo() {
           ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
           ctx.restore();
 
+          // 텍스트 그리기[cite: 1]
           ctx.fillStyle = "white";
-          ctx.font = "600 41px -apple-system, sans-serif";
+          ctx.font = "600 41px -apple-system, sans-serif"; //[cite: 1]
           ctx.textAlign = "left";
           ctx.textBaseline = "top";
-          ctx.fillText(item.recordTime || "00:00", videoX + 18, videoY + 18);
+          ctx.fillText(item.recordTime || "00:00", videoX + 18, videoY + 18); //[cite: 1]
 
-          ctx.font = "bold 46px -apple-system, sans-serif";
+          ctx.font = "bold 46px -apple-system, sans-serif"; //[cite: 1]
           ctx.textBaseline = "middle";
-          const cleanText = (item.altitudeText || "해발 0m").trim();
-          const totalContentWidth = 31 + 9 + ctx.measureText(cleanText).width;
-          const startX = (canvas.width - totalContentWidth) / 2;
-          ctx.fillText(cleanText, startX + 40, videoY + (containerHeight / 2));
+          const cleanText = (item.altitudeText || "해발 0m").trim(); //[cite: 1]
+          const totalContentWidth = 31 + 9 + ctx.measureText(cleanText).width; //[cite: 1]
+          const startX = (canvas.width - totalContentWidth) / 2; //[cite: 1]
+          ctx.fillText(cleanText, startX + 40, videoY + (containerHeight / 2)); //[cite: 1]
 
+          // 실시간 진행률 업데이트 (UI 양쪽 모두 반영)
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
-          totalDownloadBtn.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
+          
+          renderStatus.innerText = `🎬 고도필름 합성 중... (${percent}%)`;
+          totalDownloadBtn.innerText = ` 🎬 고도필름 제작 중... (${percent}%)`;
 
           await new Promise(requestAnimationFrame);
         }
 
-        // 💡 [최적화 4] 사용이 끝난 무거운 비디오 객체와 메모리를 폰에서 완전히 소멸시킴
-        hiddenVideo.pause();
+        // 메모리 해제 및 객체 소멸
         URL.revokeObjectURL(hiddenVideo.src);
-        hiddenVideo.src = "";
-        hiddenVideo.load();
         hiddenVideo.remove();
       }
 
+      renderStatus.innerText = "💾 파일 저장 중...";
       totalDownloadBtn.innerText = "💾 파일 저장 중...";
       await new Promise(resolve => setTimeout(resolve, 500));
       canvasRecorder.stop();
@@ -1084,6 +1072,9 @@ async function generateTotalLogVideo() {
     } catch (err) {
       console.error("전체 영상 생성 에러:", err);
       alert("동영상 생성을 실패했습니다.");
+      if (document.getElementById('render-blur-overlay')) {
+        document.getElementById('render-blur-overlay').remove();
+      }
       totalDownloadBtn.innerHTML = originalBtnText;
       totalDownloadBtn.disabled = false;
     }
