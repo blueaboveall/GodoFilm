@@ -1042,6 +1042,7 @@ if (totalDownloadBtn) {
 // ==========================================
 // 4. 앱 초기화 및 구동
 // ==========================================
+// JavaScript 파일 맨 아래에 있는 이 부분을 찾아 숫자를 바꿔줍니다.
 async function initApp() {
   await initDatabase();
   await loadSavedVideos("");
@@ -1051,13 +1052,13 @@ async function initApp() {
     window.refreshProjectGrid();
   }
 
-  // ✨ [스플래시 제거 조건]: 애니메이션이 충분히 상영(1.5초)된 후 인트로막 걷어내기
+  // ✨ 애니메이션 시청 시간 보장 (1초 대기 + 1.2초 무빙 + 여운) 후 스플래시 닫기
   setTimeout(() => {
     const splash = document.getElementById('splash-screen');
     if (splash) {
       splash.classList.add('fade-out');
     }
-  }, 1600); 
+  }, 2800); /* 1600에서 2800밀리초(2.8초)로 변경 */
 }
 
 initApp();
