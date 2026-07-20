@@ -735,7 +735,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   position: relative;
   width: 210px;  /* 화면 크기에 따른 로고 전체 크기 설정 */
   height: 210px;
-  margin-bottom: 50px;
+  margin-bottom: 70px;
 }
 
 /* 두 사진을 정중앙에 완벽히 겹쳐서 시작 */
