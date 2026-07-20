@@ -890,7 +890,7 @@ async function generateTotalLogVideo() {
     totalDownloadBtn.innerText = " 🎬 고도필름 제작 시작...";
     totalDownloadBtn.disabled = true;
 
-    // 🌟 [하이엔드 프리뷰 오버레이 생성] 브라우저의 억제를 풀고 GPU 성능을 최대치로 끌어올림
+    // 🌟 멋진 프리뷰 오버레이 화면 생성 (유지)
     const renderOverlay = document.createElement('div');
     renderOverlay.id = 'render-blur-overlay';
     renderOverlay.style.cssText = `
@@ -901,22 +901,21 @@ async function generateTotalLogVideo() {
     `;
 
     const renderStatus = document.createElement('div');
-    renderStatus.innerText = "🎬 고도필름 합성 중... (0%)";
+    renderStatus.innerText = "🎞️ 고도필름 제작 중... (0%)";
     renderStatus.style.cssText = "font-size: 18px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.5px;";
     renderOverlay.appendChild(renderStatus);
 
     try {
       const canvas = document.createElement('canvas');
-      canvas.width = 1080; //[cite: 1]
-      canvas.height = 1920; //[cite: 1]
+      canvas.width = 1080;
+      canvas.height = 1920;
       const ctx = canvas.getContext('2d');
       
-      // 💡 스마트폰에게 "나 지금 화면에 그려지고 있어!" 라고 당당히 보여주기 위한 프리뷰 스타일링
       canvas.style.cssText = "width: 240px; height: 426px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
       renderOverlay.appendChild(canvas);
-      document.body.appendChild(renderOverlay); // 화면에 즉시 부착
+      document.body.appendChild(renderOverlay);
 
-      const canvasStream = canvas.captureStream(30); //[cite: 1]
+      const canvasStream = canvas.captureStream(30);
       const mimeType = getSupportedMimeType();
       const options = mimeType ? { mimeType } : {};
       const canvasRecorder = new MediaRecorder(canvasStream, options);
@@ -940,8 +939,6 @@ async function generateTotalLogVideo() {
         document.body.removeChild(a);
         
         URL.revokeObjectURL(downloadUrl);
-        
-        // 작업 완료 후 프리뷰 화면 깔끔하게 제거
         renderOverlay.remove();
         totalDownloadBtn.innerHTML = originalBtnText;
         totalDownloadBtn.disabled = false;
@@ -970,30 +967,34 @@ async function generateTotalLogVideo() {
         }
       }
 
+      // 💡 [과거 코드 핵심 복원 1] 비디오 엘리먼트는 루프 바깥에서 딱 "하나만" 생성해서 평생 재사용합니다.
+      const hiddenVideo = document.createElement('video');
+      hiddenVideo.muted = true;
+      hiddenVideo.playsInline = true;
+      hiddenVideo.setAttribute('playsinline', '');
+      hiddenVideo.setAttribute('muted', '');
+      hiddenVideo.style.cssText = "position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;";
+      renderOverlay.appendChild(hiddenVideo);
+
       // 🎬 비디오 순차 합성 루프 개시
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        const hiddenVideo = document.createElement('video');
-        hiddenVideo.src = URL.createObjectURL(item.videoBlob);
-        hiddenVideo.muted = true;
-        hiddenVideo.playsInline = true;
-        hiddenVideo.setAttribute('playsinline', '');
-        hiddenVideo.setAttribute('muted', '');
-
-        // 비디오도 프리뷰 오버레이 내부에 보이지 않게 살짝 얹어둠 (활성화 보장)
-        hiddenVideo.style.cssText = "position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;";
-        renderOverlay.appendChild(hiddenVideo);
+        const videoObjectUrl = URL.createObjectURL(item.videoBlob);
+        hiddenVideo.src = videoObjectUrl;
 
         await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
         await hiddenVideo.play();
 
-        const containerWidth = 960; //[cite: 1]
-        const containerHeight = 540; //[cite: 1]
-        const videoX = (canvas.width - containerWidth) / 2; //[cite: 1]
-        const videoY = (canvas.height - containerHeight) / 2; //[cite: 1]
+        // 💡 [과거 코드 핵심 복원 2] 사파리 데드락을 원천 차단하는 이벤트 기반 제어 플래그
+        let isCurrentVideoPlaying = true;
+        hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
 
-        // 💡 꼼수나 건너뛰기 없이, 영상이 정상적으로 재생되는 모든 프레임을 정밀 캡처
-        while (!hiddenVideo.ended && !hiddenVideo.paused) {
+        const containerWidth = 960;
+        const containerHeight = 540;
+        const videoX = (canvas.width - containerWidth) / 2;
+        const videoY = (canvas.height - containerHeight) / 2;
+
+        while (isCurrentVideoPlaying) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           
           if (bgImg.complete && bgImg.naturalWidth !== 0) {
@@ -1021,7 +1022,7 @@ async function generateTotalLogVideo() {
           ctx.save();
           ctx.beginPath();
           if (ctx.roundRect) {
-            ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20); //[cite: 1]
+            ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
           } else {
             ctx.rect(videoX, videoY, containerWidth, containerHeight);
           }
@@ -1035,34 +1036,39 @@ async function generateTotalLogVideo() {
           ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
           ctx.restore();
 
-          // 텍스트 그리기[cite: 1]
+          // 텍스트 그리기
           ctx.fillStyle = "white";
-          ctx.font = "600 41px -apple-system, sans-serif"; //[cite: 1]
+          ctx.font = "600 41px -apple-system, sans-serif";
           ctx.textAlign = "left";
           ctx.textBaseline = "top";
-          ctx.fillText(item.recordTime || "00:00", videoX + 18, videoY + 18); //[cite: 1]
+          ctx.fillText(item.recordTime || "00:00", videoX + 18, videoY + 18);
 
-          ctx.font = "bold 46px -apple-system, sans-serif"; //[cite: 1]
+          ctx.font = "bold 46px -apple-system, sans-serif";
           ctx.textBaseline = "middle";
-          const cleanText = (item.altitudeText || "해발 0m").trim(); //[cite: 1]
-          const totalContentWidth = 31 + 9 + ctx.measureText(cleanText).width; //[cite: 1]
-          const startX = (canvas.width - totalContentWidth) / 2; //[cite: 1]
-          ctx.fillText(cleanText, startX + 40, videoY + (containerHeight / 2)); //[cite: 1]
+          const cleanText = (item.altitudeText || "해발 0m").trim();
+          const totalContentWidth = 31 + 9 + ctx.measureText(cleanText).width;
+          const startX = (canvas.width - totalContentWidth) / 2;
+          ctx.fillText(cleanText, startX + 40, videoY + (containerHeight / 2));
 
-          // 실시간 진행률 업데이트 (UI 양쪽 모두 반영)
+          // 실시간 진행률 계산 및 표기
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
           
-          renderStatus.innerText = `🎬 고도필름 합성 중... (${percent}%)`;
-          totalDownloadBtn.innerText = ` 🎬 고도필름 제작 중... (${percent}%)`;
+          renderStatus.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
+          totalDownloadBtn.innerText = ` 🎞️ 고도필름 제작 중... (${percent}%)`;
 
           await new Promise(requestAnimationFrame);
         }
 
-        // 메모리 해제 및 객체 소멸
-        URL.revokeObjectURL(hiddenVideo.src);
-        hiddenVideo.remove();
+        // 블롭 메모리 즉시 해제 (비디오 객체는 유지하되 주소만 청소)
+        URL.revokeObjectURL(videoObjectUrl);
       }
+
+      // 모든 영상 처리가 완벽히 끝나면 비디오 소멸
+      hiddenVideo.pause();
+      hiddenVideo.src = "";
+      hiddenVideo.load();
+      hiddenVideo.remove();
 
       renderStatus.innerText = "💾 파일 저장 중...";
       totalDownloadBtn.innerText = "💾 파일 저장 중...";
