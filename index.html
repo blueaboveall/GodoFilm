@@ -1,117 +1,132 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>고도필름</title>
-<link rel="stylesheet" href="style.css">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고도필름</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 </head>
 <body>
-<div class="full-screen-bg"></div>
-<div class="background-container home-mode" id="main-container">
-<div id="home-view" class="main-view">
-<div class="project-grid"></div>
-<button id="open-modal-btn" class="create-project-btn" aria-label="새 프로젝트 생성">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-<circle cx="12" cy="12" r="10"></circle>
-<line x1="12" y1="8" x2="12" y2="16"></line>
-<line x1="8" y1="12" x2="16" y2="12"></line>
-</svg>
-<span>새 프로젝트 생성</span>
-</button>
-<div id="project-modal" class="modal-overlay" style="display: none;">
-<div class="modal-content">
-<div class="modal-header">
-<h3>새 프로젝트 생성</h3>
-<button id="close-modal-btn" class="modal-close-x">&times;</button>
-</div>
-<div class="modal-field">
-<label>프로젝트 이름 설정</label>
-<input type="text" id="project-name-input" placeholder="이름을 입력하세요" class="modal-input-box">
-</div>
-<div class="modal-field">
-<label>산 선택</label>
-<div class="custom-select-trigger" id="mountain-trigger">산 선택하기</div>
-<div class="custom-options-popup" id="mountain-options">
-<div class="option-item" data-value="소래산">소래산</div>
-<div class="option-item" data-value="배봉산">배봉산</div>
-<div class="option-item" data-value="수락산">수락산</div>
-<div class="option-item" data-value="구름산">구름산</div>
-<div class="option-item" data-value="미륵산">미륵산</div>
-</div>
-</div>
-<div class="modal-field">
-  <label>디자인 선택</label>
-  <div class="custom-select-trigger" id="design-trigger">배경 선택하기</div>
-  <div class="custom-options-popup" id="design-options">
-    <div class="option-item" data-value="산 정상">산 정상</div>
-    <div class="option-item" data-value="크래프트 (영어)">크래프트 (영어)</div>
-    <div class="option-item" data-value="크래프트 (한글)">크래프트 (한글)</div>
+  <div class="full-screen-bg"></div>
+  <div class="background-container home-mode" id="main-container">
+    <div id="home-view" class="main-view">
+      <div class="project-grid"></div>
+      
+      <button id="open-modal-btn" class="create-project-btn" aria-label="새 프로젝트 생성">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        <span>새 프로젝트 생성</span>
+      </button>
+
+      <!-- 모달창 영역 -->
+      <div id="project-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>새 프로젝트 생성</h3>
+            <button id="close-modal-btn" class="modal-close-x">&times;</button>
+          </div>
+          
+          <div class="modal-field">
+            <label>프로젝트 이름 설정</label>
+            <input type="text" id="project-name-input" placeholder="이름을 입력하세요" class="modal-input-box">
+          </div>
+          
+          <div class="modal-field">
+            <label>산 선택</label>
+            <div class="custom-select-trigger" id="mountain-trigger">산 선택하기</div>
+            <div class="custom-options-popup" id="mountain-options">
+              <div class="option-item" data-value="소래산">소래산</div>
+              <div class="option-item" data-value="배봉산">배봉산</div>
+              <div class="option-item" data-value="수락산">수락산</div>
+              <div class="option-item" data-value="구름산">구름산</div>
+              <div class="option-item" data-value="미륵산">미륵산</div>
+            </div>
+          </div>
+          
+          <div class="modal-field">
+            <label>디자인 선택</label>
+            <div class="custom-select-trigger" id="design-trigger">배경 선택하기</div>
+            <div class="custom-options-popup" id="design-options">
+              <div class="option-item" data-value="산 정상">산 정상</div>
+              <div class="option-item" data-value="크래프트 (영어)">크래프트 (영어)</div>
+              <div class="option-item" data-value="크래프트 (한글)">크래프트 (한글)</div>
+            </div>
+          </div>
+          
+          <button id="create-project-submit-btn" class="modal-submit-btn">프로젝트 생성하기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카메라 화면 뷰 -->
+    <div id="camera-page-view" class="main-view" style="display: none;">
+      <div class="app-container">
+        <button id="back-to-home-btn" aria-label="초기 화면으로 나가기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        
+        <div class="phone-screen">
+          <div id="slider-wrapper" class="slider-wrapper"> 
+            <div class="slide-page" id="camera-page">
+              <video id="camera-view" autoplay playsinline></video>
+              <div class="altitude-overlay" id="altitude-text">⛰ 초기 고도 측정중...</div>
+              <button id="record-btn">REC</button>
+              <div class="swipe-guide" id="swipe-guide">▶ 밀어서 이전 영상 확인</div>
+              
+              <button id="switch-camera-btn" aria-label="카메라 전환">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 4v6h-6M1 20v-6h6M21.34 15.57a10 10 0 1 1-.57-8.38 15.67 15.67 0 0 1 .57 8.38"/>
+                </svg>
+              </button>
+              
+              <div class="timer-container">
+                <div class="timer-menu" id="timer-menu">
+                  <button class="timer-option-btn hide-option" id="timer-clear-btn" data-secs="0" style="display: none;">해제</button>
+                  <button class="timer-option-btn" data-secs="5">5s</button>
+                  <button class="timer-option-btn" data-secs="10">10s</button>
+                </div>
+                <button id="timer-btn" aria-label="타이머 설정">
+                  <svg id="timer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span id="timer-btn-text" style="display: none;"></span>
+                </button>
+              </div>
+              
+              <div class="zoom-container">
+                <div class="zoom-menu" id="zoom-menu">
+                  <button class="zoom-option-btn" id="zoom-05-btn" data-zoom="0.5">0.5x</button>
+                  <button class="zoom-option-btn" data-zoom="1.0">1x</button>
+                  <button class="zoom-option-btn" data-zoom="1.5">1.5x</button>
+                </div>
+                <button id="zoom-btn">
+                  <span id="zoom-btn-text">1x</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button id="total-download-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/> 
+          </svg>
+          <span>고도필름 다운로드</span>
+        </button>
+      </div>
+    </div>
   </div>
-</div>
-<button id="create-project-submit-btn" class="modal-submit-btn">프로젝트 생성하기</button>
-</div>
-</div>
-</div>
-<div id="camera-page-view" class="main-view" style="display: none;">
-<div class="app-container">
-<button id="back-to-home-btn" aria-label="초기 화면으로 나가기">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-<line x1="19" y1="12" x2="5" y2="12"></line>
-<polyline points="12 19 5 12 12 5"></polyline>
-</svg>
-</button>
-<div class="phone-screen">
-<div id="slider-wrapper" class="slider-wrapper">
-<div class="slide-page" id="camera-page">
-<video id="camera-view" autoplay playsinline></video>
-<div class="altitude-overlay" id="altitude-text">⛰️ 초기 고도 측정중...</div>
-<button id="record-btn">REC</button>
-<div class="swipe-guide" id="swipe-guide">▶ 밀어서 이전 영상 확인</div>
-<button id="switch-camera-btn" aria-label="카메라 전환">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-<path d="M23 4v6h-6M1 20v-6h6M21.34 15.57a10 10 0 1 1-.57-8.38 15.67 15.67 0 0 1 .57 8.38"/>
-</svg>
-</button>
-<div class="timer-container">
-<div class="timer-menu" id="timer-menu">
-<button class="timer-option-btn hide-option" id="timer-clear-btn" data-secs="0" style="display: none;">해제</button>
-<button class="timer-option-btn" data-secs="5">5s</button>
-<button class="timer-option-btn" data-secs="10">10s</button>
-</div>
-<button id="timer-btn" aria-label="타이머 설정">
-<svg id="timer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-<circle cx="12" cy="12" r="10"></circle>
-<polyline points="12 6 12 12 16 14"></polyline>
-</svg>
-<span id="timer-btn-text" style="display: none;"></span>
-</button>
-</div>
-<div class="zoom-container">
-<div class="zoom-menu" id="zoom-menu">
-<button class="zoom-option-btn" id="zoom-05-btn" data-zoom="0.5">0.5x</button>
-<button class="zoom-option-btn" data-zoom="1.0">1x</button>
-<button class="zoom-option-btn" data-zoom="1.5">1.5x</button>
-</div>
-<button id="zoom-btn">
-<span id="zoom-btn-text">1x</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-<button id="total-download-btn">
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-</svg>
-<span>고도필름 다운로드</span>
-</button>
-</div>
-</div>
-</div>
-<script src="script.js"></script>
+  
+  <script src="script.js"></script>
 </body>
 </html>
