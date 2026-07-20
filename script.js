@@ -894,75 +894,77 @@ document.body.appendChild(a);
  totalDownloadBtn.disabled = false;
  };
  canvasRecorder.start();
- const bgImg = new Image();
- let logBgUrl = "my-background.png";
- if (currentProject && availableDesigns[currentProject.mountain] && availableDesigns[currentProject.mountain][currentProject.design]) {
- logBgUrl = availableDesigns[currentProject.mountain][currentProject.design];
- }
- bgImg.src = logBgUrl;
- await new Promise((resolve) => {
- bgImg.onload = resolve;
- bgImg.onerror = resolve;
- });
+const bgImg = new Image(); // 변수명을 bgImg로 통일
+let logBgUrl = "my-background.png";
 
- // 🔥 [추가] 이미지의 원본 비율을 유지하며 9:16 캔버스에 맞추기 위한 Crop 좌표 계산
-let bgSx = 0, bgSy = 0, bgSw = bglmg.naturalWidth, bgSh = bglmg.naturalHeight;
-if (bglmg.complete && bglmg.naturalWidth !== 0) {
+if (currentProject && availableDesigns[currentProject.mountain] && availableDesigns[currentProject.mountain][currentProject.design]) {
+    logBgUrl = availableDesigns[currentProject.mountain][currentProject.design];
+}
+bgImg.src = logBgUrl;
+await new Promise((resolve) => {
+    bgImg.onload = resolve;
+    bgImg.onerror = resolve;
+});
+
+// 🔥 [수정] 변수명을 bgImg로 완벽히 통일한 Crop 좌표 계산
+let bgSx = 0, bgSy = 0, bgSw = bgImg.naturalWidth, bgSh = bgImg.naturalHeight;
+if (bgImg.complete && bgImg.naturalWidth !== 0) {
     const canvasRatio = canvas.width / canvas.height; // 1080 / 1920 = 0.5625
-    const imgRatio = bglmg.naturalWidth / bglmg.naturalHeight;
+    const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
 
     if (imgRatio > canvasRatio) {
         // 이미지가 캔버스 비율보다 가로로 더 넓은 경우 (좌우를 잘라냄)
-        bgSw = bglmg.naturalHeight * canvasRatio;
-        bgSx = (bglmg.naturalWidth - bgSw) / 2;
+        bgSw = bgImg.naturalHeight * canvasRatio;
+        bgSx = (bgImg.naturalWidth - bgSw) / 2;
     } else {
         // 이미지가 캔버스 비율보다 세로로 더 긴 경우 (위아래를 잘라냄 - 현재 케이스)
-        bgSh = bglmg.naturalWidth / canvasRatio;
-        bgSy = (bglmg.naturalHeight - bgSh) / 2;
+        bgSh = bgImg.naturalWidth / canvasRatio;
+        bgSy = (bgImg.naturalHeight - bgSh) / 2;
     }
 }
 
- for (let i = 0; i < items.length; i++) {
- const item = items[i];
- const hiddenVideo = document.createElement('video');
- hiddenVideo.src = URL.createObjectURL(item.videoBlob);
- hiddenVideo.muted = true;
- hiddenVideo.playsInline = true;
- await new Promise((resolve) => {
- hiddenVideo.onloadeddata = resolve;
- });
- await hiddenVideo.play();
- const containerWidth = 960;
- const containerHeight = 540;
- const videoX = (canvas.width - containerWidth) / 2;
- const videoY = (canvas.height - containerHeight) / 2;
- while (!hiddenVideo.ended && !hiddenVideo.paused) {
- ctx.clearRect(0, 0, canvas.width, canvas.height);
- // 🔥 [수정] 강제로 늘리지 않고, 계산된 영역만큼만 잘라서 캔버스에 꽉 채워 그림
-        if (bglmg.complete && bglmg.naturalWidth !== 0) {
-            ctx.drawImage(bglmg, bgSx, bgSy, bgSw, bgSh, 0, 0, canvas.width, canvas.height);
+for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const hiddenVideo = document.createElement('video');
+    hiddenVideo.src = URL.createObjectURL(item.videoBlob);
+    hiddenVideo.muted = true;
+    hiddenVideo.playsInline = true;
+    
+    await new Promise((resolve) => {
+        hiddenVideo.onloadeddata = resolve;
+    });
+    await hiddenVideo.play();
+    
+    const containerWidth = 960;
+    const containerHeight = 540;
+    const videoX = (canvas.width - containerWidth) / 2;
+    const videoY = (canvas.height - containerHeight) / 2;
+    
+    while (!hiddenVideo.ended && !hiddenVideo.paused) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 🔥 [수정] 강제로 늘리는 중복 코드를 삭제하고 정상적인 Crop 코드만 유지
+        if (bgImg.complete && bgImg.naturalWidth !== 0) {
+            ctx.drawImage(bgImg, bgSx, bgSy, bgSw, bgSh, 0, 0, canvas.width, canvas.height);
         } else {
             ctx.fillStyle = "#1c1c1e";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
- if (bgImg.complete && bgImg.naturalWidth !== 0) {
- ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
- } else {
- ctx.fillStyle = "#1c1c1e";
- ctx.fillRect(0, 0, canvas.width, canvas.height);
- }  
- const targetRatio = containerWidth / containerHeight;
- const videoRatio = hiddenVideo.videoWidth / hiddenVideo.videoHeight;
- let drawWidth, drawHeight;
- if (videoRatio > targetRatio) {
- drawHeight = containerHeight;
- drawWidth = containerHeight * videoRatio;
- } else {
- drawWidth = containerWidth;
- drawHeight = containerWidth / videoRatio;
- }
- const offsetX = videoX - (drawWidth - containerWidth) / 2;
- const offsetY = videoY - (drawHeight - containerHeight) / 2;
+        
+        const targetRatio = containerWidth / containerHeight;
+        const videoRatio = hiddenVideo.videoWidth / hiddenVideo.videoHeight;
+        let drawWidth, drawHeight;
+        
+        if (videoRatio > targetRatio) {
+            drawHeight = containerHeight;
+            drawWidth = containerHeight * videoRatio;
+        } else {
+            drawWidth = containerWidth;
+            drawHeight = containerWidth / videoRatio;
+        }
+        
+        const offsetX = videoX - (drawWidth - containerWidth) / 2;
+        const offsetY = videoY - (drawHeight - containerHeight) / 2;
  
  ctx.save();
  ctx.beginPath();
