@@ -763,7 +763,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 @keyframes moveCameraO {
   0% { transform: translateX(0); }
   /* 💡 겹침 증상 해결! 오른쪽으로 확실하게 밀어줍니다 (여백에 따라 110px~130px 사이 조절 가능) */
-  100% { transform: translateX(85px); } 
+  100% { transform: translateX(82px); } 
 }
 
 /* 🎬 애니메이션 2: GOD 글자 모션 (O가 움직일 때 같이 왼쪽으로 슬라이딩하며 닦이듯 등장) */
@@ -787,7 +787,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   100% { 
     opacity: 1;
     /* 왼쪽 최종 위치로 안착하면서 완벽한 GODO 비율 완성 */
-    transform: translateX(-60px); 
+    transform: translateX(-57px); 
     /* 가림막을 완전히 제거해서 G, O, D 순서대로 전면 노출 */
     clip-path: inset(0 0 0 0%); 
   }
