@@ -909,7 +909,7 @@ async function generateTotalLogVideo() {
         const resultBlob = new Blob(chunks, { type: canvasRecorder.mimeType || 'video/mp4' });
         const downloadUrl = URL.createObjectURL(resultBlob);
         const now = new Date();
-        const fileName = `\${now.getFullYear()}년 \${now.getMonth() + 1}월 \${now.getDate()}일의 고도필름.mp4`;
+        const fileName = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일의 고도필름.mp4`;
         
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -1031,7 +1031,7 @@ async function generateTotalLogVideo() {
           // 📊 [실시간 퍼센트 계산] 전체 영상 개수 대비 현재 진행률 계산식
           const currentProgress = hiddenVideo.currentTime / (hiddenVideo.duration || 1);
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
-          totalDownloadBtn.innerText = `🎞️고도필름 제작 중... (\${percent}%)`;
+          totalDownloadBtn.innerText = `🎞️고도필름 제작 중... (${percent}%)`;
 
           await new Promise(requestAnimationFrame);
         }
