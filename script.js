@@ -83,10 +83,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const pictureBox = document.createElement("div");
       pictureBox.className = "mountain-pic-box";
 
-      const mountainTag = document.createElement("div");
-      mountainTag.className = "mountain-tag";
-      mountainTag.innerText = proj.mountain;
-      pictureBox.appendChild(mountainTag);
+      // 프로젝트 데이터에 저장된 비디오 URL이 있는지 확인
+      // (※ 만약 비디오 주소를 다른 변수명으로 저장했다면 proj.videoUrl을 그 이름으로 바꿔줘)
+      if (proj.videoUrl) {
+        const videoThumbnail = document.createElement("video");
+        videoThumbnail.src = proj.videoUrl; 
+        videoThumbnail.preload = "metadata"; // 첫 프레임만 가볍게 로드
+        videoThumbnail.muted = true;
+        videoThumbnail.playsInline = true; // 모바일 브라우저 전체화면 방지 (JS는 camelCase 필수)
+        
+        pictureBox.appendChild(videoThumbnail);
+      } else {
+        // 영상이 없을 때는 기존 기본값 (하얀 배경 + 산 이름 글자)
+        const mountainTag = document.createElement("div");
+        mountainTag.className = "mountain-tag";
+        mountainTag.innerText = proj.mountain;
+        
+        pictureBox.appendChild(mountainTag);
+      }
 
       const info = document.createElement("div");
       info.className = "project-info";
