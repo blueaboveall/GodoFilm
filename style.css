@@ -711,3 +711,101 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* ==========================================
+   스플래시 화면 (모션 그래픽 인트로) 스타일
+   ========================================== */
+#splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #1c1c1e; /* 앱 테마와 맞춘 고급스러운 어두운 배경 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* 그 어떤 카메라 UI보다 위에 뜨도록 설정 */
+  transition: opacity 0.4s ease-in-out, visibility 0.4s;
+}
+
+/* 로고들을 감싸는 정사각형 컨테이너 (그려오신 캔버스 비율 유지) */
+.splash-logo-wrapper {
+  position: relative;
+  width: 280px;  /* 화면 크기에 맞춰 로고 전체 크기 조절 가능 */
+  height: 280px;
+  margin-bottom: 40px;
+}
+
+/* 두 사진을 정중앙에 완벽히 겹쳐놓기 */
+.splash-god-box, .splash-camera-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.splash-god-box img, .splash-camera-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 🎬 애니메이션 1: 카메라 O 모션 (중앙 -> 오른쪽 쫀득하게 이동) */
+.anim-camera {
+  animation: moveCameraO 1.2s cubic-bezier(0.25, 1, 0.3, 1) forwards;
+  animation-delay: 0.3s; /* 0.3초간 머물다가 출발 */
+}
+
+@keyframes moveCameraO {
+  0% { transform: translateX(0); }
+  /* 💡 그려오신 그림 여백에 따라 글자와 O가 딱 붙도록 아래 px 수치를 살짝 조절해 보세요! */
+  100% { transform: translateX(55px); } 
+}
+
+/* 🎬 애니메이션 2: GOD 글자 모션 (왼쪽으로 밀리면서 O 뒤에서 뽑혀 나오는 효과) */
+.anim-god {
+  opacity: 0;
+  animation: revealGodText 1.2s cubic-bezier(0.25, 1, 0.3, 1) forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes revealGodText {
+  0% { 
+    opacity: 0;
+    transform: translateX(0);
+    /* 글자 오른쪽 끝만 살짝 보이게 마스킹 시작 */
+    clip-path: inset(0 0 0 100%); 
+  }
+  15% { opacity: 1; }
+  100% { 
+    opacity: 1;
+    /* 💡 카메라가 오른쪽으로 간 만큼, 글자도 왼쪽으로 살짝 가며 정렬 (수치 조절 가능) */
+    transform: translateX(-45px); 
+    /* 마스킹을 완전히 해제하여 글자 전체 노출 */
+    clip-path: inset(0 0 0 0); 
+  }
+}
+
+/* 🔄 하단 원형 로딩 스피너 */
+.splash-loader {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(255, 255, 255, 0.13);
+  border-top: 2.5px solid #ffffff;
+  border-radius: 50%;
+  animation: spinLoader 0.8s linear infinite;
+}
+
+@keyframes spinLoader {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 앱 준비 완료 시 스플래시 서서히 사라짐 */
+#splash-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
