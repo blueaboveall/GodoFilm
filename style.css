@@ -777,7 +777,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   0% { 
     opacity: 0;
     /* 💡 기존 40px -> 70px로 변경: 카메라가 더 우측에서 출발하므로, 글자가 닦이기 시작하는 지점도 우측으로 밀어 맞췄습니다. */
-    transform: translateX(70px); 
+    transform: translateX(40px); 
     clip-path: inset(0 0 0 100%); 
   }
   1% {
@@ -786,7 +786,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   100% { 
     opacity: 1;
     /* 💡 기존 -70px -> -35px로 변경: 글자가 왼쪽으로 너무 멀리 가던 현상을 잡아주어 전체 로고를 화면 중앙에 정렬합니다. */
-    transform: translateX(-35px); 
+    transform: translateX(-40px); 
     clip-path: inset(0 0 0 0%); 
   }
 }
