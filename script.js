@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // ✨ 프로젝트 완전 삭제 로직 (찌꺼기 비디오까지 싹 제거)
         deleteItem.addEventListener("click", async (e) => {
           e.stopPropagation();
-          if (confirm("프로젝트를 삭제하시겠습니까? 관련 영상도 모두 완전히 삭제됩니다.")) {
+          if (confirm("프로젝트를 삭제하시겠습니까? \n관련 영상도 모두 완전히 삭제됩니다.")) {
             const targetProjectId = projects[originalIndex].id;
 
             projects.splice(originalIndex, 1);
