@@ -28,9 +28,8 @@ let currentFacingMode = "user";
 let db;
 let selectedTimerSeconds = 0;
 let currentZoomScale = 1.0;
-let currentProject = null; // 현재 입장한 방(프로젝트) 정보
+let currentProject = null; 
 
-// 준비된 산 및 디자인 매핑 정보
 const availableDesigns = {
     "소래산": { "산 정상": "bg-sorae-peak.png" },
     "배봉산": { "크래프트 (영어)": "bg-baebong-craft-english.png" },
@@ -61,28 +60,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let projects = JSON.parse(localStorage.getItem("climbingProjects")) || [];
 
-  // 프로젝트 목록 렌더링 (IndexedDB 연동 버전)
   function renderProjects() {
     if (!projectGrid) return;
     projectGrid.innerHTML = "";
 
-    // 1. IndexedDB가 아직 연결되지 않았다면 영상 없이 기본 카드만 렌더링
     if (!db) {
       renderCards([]);
       return;
     }
 
-    // 2. IndexedDB의 'videos' 스토어에서 저장된 모든 영상 데이터를 가져옴
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
     const request = store.getAll();
 
     request.onsuccess = function (e) {
       const allVideos = e.target.result || [];
-      renderCards(allVideos); // 영상을 성공적으로 가져오면 카드 그리기 시작
+      renderCards(allVideos);
     };
 
-    // 실제 카드를 화면에 그리는 내부 함수
     function renderCards(allVideos) {
       const latestProjects = [...projects].reverse();
       latestProjects.forEach((proj, index) => {
@@ -93,38 +88,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const pictureBox = document.createElement("div");
         pictureBox.className = "mountain-pic-box";
 
-        // 해당 프로젝트 ID와 일치하는 영상들을 필터링
         const projectVideos = allVideos.filter(item => item.projectid === proj.id);
 
         if (projectVideos.length > 0) {
-          // 촬영된 영상이 있다면, 가장 첫 번째로 촬영된 영상(index 0)을 가져옴
           const firstVideo = projectVideos[0];
           const safeBlob = new Blob([firstVideo.videoBlob], { type: firstVideo.videoBlob.type || 'video/mp4' });
           const videoURL = URL.createObjectURL(safeBlob);
 
-          // 비디오 태그 생성 및 첫 프레임 썸네일 설정
           const videoThumbnail = document.createElement("video");
           videoThumbnail.src = videoURL;
-          videoThumbnail.preload = "metadata"; // 첫 프레임만 가볍게 로드
+          videoThumbnail.preload = "metadata";
           videoThumbnail.muted = true;
           videoThumbnail.playsInline = true;
           
-          // ✨ [요청 반영] 16:9 비율의 영상 박스를 빈틈없이 꽉 채우도록 CSS 스타일 명시
           videoThumbnail.style.width = "100%";
           videoThumbnail.style.height = "100%";
           videoThumbnail.style.objectFit = "cover";
-          
-          // ✨ [렌더링 트릭] 모바일 브라우저에서 첫 프레임이 검은색 화면으로 멈추는 현상 방지
           videoThumbnail.currentTime = 0.1; 
 
-          // ✨ [디테일 추가] 전면 카메라로 찍은 영상 조각이라면 썸네일도 보기 좋게 좌우 반전 처리
           if ((firstVideo.facingMode || "user") === "user") {
             videoThumbnail.style.transform = "scaleX(-1)";
           }
 
           pictureBox.appendChild(videoThumbnail);
         } else {
-          // 영상이 없을 때는 기존 기본값 (하얀 배경 + 산 이름 글자)
           const mountainTag = document.createElement("div");
           mountainTag.className = "mountain-tag";
           mountainTag.innerText = proj.mountain;
@@ -176,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         titleElement.addEventListener("blur", saveEditing);
 
-        // 더보기 버튼 및 팝업 메뉴
         const menuTrigger = document.createElement("div");
         menuTrigger.className = "menu-trigger";
         menuTrigger.innerHTML = '&#8942;'; 
@@ -209,26 +195,20 @@ document.addEventListener("DOMContentLoaded", () => {
           startEditing();
         });
 
-        // 🔄 교체할 코드: 프로젝트 삭제 시 관련된 영상 데이터도 함께 날려버림
+        // ✨ 프로젝트 완전 삭제 로직 (찌꺼기 비디오까지 싹 제거)
         deleteItem.addEventListener("click", async (e) => {
           e.stopPropagation();
-          if (confirm("프로젝트를 삭제하시겠습니까? \n관련 영상도 모두 완전히 삭제됩니다.")) {
-            // 삭제하려는 방의 ID 미리 기억해두기
+          if (confirm("프로젝트를 삭제하시겠습니까? 관련 영상도 모두 완전히 삭제됩니다.")) {
             const targetProjectId = projects[originalIndex].id;
 
-            // 1. localStorage에서 프로젝트 '껍데기' 삭제
             projects.splice(originalIndex, 1);
             localStorage.setItem("climbingProjects", JSON.stringify(projects));
 
-            // 2. ✨ 방금 만든 함수 호출: IndexedDB에서 주인을 잃을 '무거운 영상 파일'들 싹 다 삭제
             await deleteProjectVideos(targetProjectId);
-
-            // 3. 깨끗해진 상태로 홈 화면 다시 그리기
             renderProjects();
           }
         });
 
-        // 카드 클릭 시 방 입장
         card.addEventListener("click", (e) => {
           if (e.target.closest(".menu-trigger")) return;
           if (e.target.closest(".project-menu-popup")) return;
@@ -261,17 +241,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 외부(initApp)에서 호출할 수 있도록 글로벌 윈도우 객체에 바인딩
   window.refreshProjectGrid = renderProjects;
 
-  // 모달 열기
   if (openModalBtn) {
     openModalBtn.addEventListener("click", () => {
       if (projectModal) projectModal.style.display = "flex";
     });
   }
 
-  // 모달 닫기
   if (closeModalBtn) {
     closeModalBtn.addEventListener("click", () => {
       if (projectModal) projectModal.style.display = "none";
@@ -280,7 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 홈으로 돌아가기
   if (backToHomeBtn) {
     backToHomeBtn.addEventListener("click", () => {
       if (cameraView && cameraView.srcObject) {
@@ -294,12 +270,10 @@ document.addEventListener("DOMContentLoaded", () => {
         mainContainer.classList.add("home-mode");
         currentProject = null;
       }
-      // ✨ [수정] 카메라 페이지에서 촬영 후 홈으로 돌아왔을 때 최신 썸네일을 즉시 반영하여 다시 그립니다.
       renderProjects();
     });
   }
 
-  // 산 드롭다운 토글
   if (mountainTrigger) {
     mountainTrigger.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -308,7 +282,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 디자인 드롭다운 토글
   if (designTrigger) {
     designTrigger.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -317,7 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 디자인 옵션 업데이트
   function updateDesignOptions(selectedMountain) {
     if (!designOptions) return;
     designOptions.innerHTML = "";
@@ -341,7 +313,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 산 선택 처리
   if (mountainOptions) {
     mountainOptions.querySelectorAll(".option-item").forEach(item => {
       item.addEventListener("click", (e) => {
@@ -355,7 +326,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 외부 클릭 시 드롭다운 닫기
   document.addEventListener("click", () => {
     if (mountainOptions) mountainOptions.classList.remove("show");
     if (designOptions) designOptions.classList.remove("show");
@@ -364,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 새 프로젝트 완료 버튼 클릭 시
   if (createProjectSubmitBtn) {
     createProjectSubmitBtn.addEventListener("click", () => {
       const name = projectNameInput ? projectNameInput.value.trim() : "";
@@ -438,7 +407,6 @@ function startCameraClock() {
     cameraTimeText.style.fontSize = '15px';
     cameraTimeText.style.fontWeight = '600';
     cameraTimeText.style.zIndex = '12';
-    cameraTimeText.style.fontFamily = 'system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
     if (cameraPage) {
       cameraPage.style.position = 'relative';
       cameraPage.appendChild(cameraTimeText);
@@ -546,27 +514,22 @@ function deleteVideoFromDB(id) {
   });
 }
 
-// ✨ 새로 추가: 특정 프로젝트(방)에 속한 모든 영상을 DB에서 완전히 삭제하는 함수
+// ✨ 프로젝트(방) 삭제 시 관련 영상을 DB에서 일괄 제거하는 클리닝 함수
 function deleteProjectVideos(projectId) {
   return new Promise((resolve) => {
-    if (!db) {
-      resolve();
-      return;
-    }
+    if (!db) { resolve(); return; }
     const transaction = db.transaction(["videos"], "readwrite");
     const store = transaction.objectStore("videos");
-    const request = store.openCursor(); // 커서를 이용해 데이터를 하나씩 순회
+    const request = store.openCursor();
 
     request.onsuccess = function(e) {
       const cursor = e.target.result;
       if (cursor) {
-        // 영상의 projectid가 삭제하려는 프로젝트의 id와 같다면 완전 삭제
         if (cursor.value.projectid === projectId) {
           cursor.delete();
         }
-        cursor.continue(); // 다음 영상으로 이동
+        cursor.continue();
       } else {
-        // 모든 검색/삭제가 끝나면 완료 처리
         resolve();
       }
     };
@@ -582,10 +545,7 @@ function loadSavedVideos(projectid) {
  sliderWrapper.style.transform = 'translateX(0px)';
  }
  return new Promise((resolve) => {
- if (!db) {
- resolve();
- return;
- }
+ if (!db) { resolve(); return; }
  const transaction = db.transaction(["videos"], "readonly");
  const store = transaction.objectStore("videos");
  const request = store.getAll();
@@ -846,7 +806,6 @@ zoomOptionBtns.forEach(btn => {
   });
 });
 
-// 터치/스와이프 처리
 let touchStartX = 0, touchEndX = 0, touchStartY = 0, touchEndY = 0;
 document.addEventListener('touchstart', e => {
   touchStartX = e.changedTouches[0].screenX;
@@ -910,7 +869,6 @@ function updateSliderPosition() {
   });
 }
 
-// 전체 합병 동영상 다운로드
 async function generateTotalLogVideo() {
     if (!totalDownloadBtn) return;
     const transaction = db.transaction(["videos"], "readonly");
@@ -1081,17 +1039,25 @@ if (totalDownloadBtn) {
   totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 }
 
-// 앱 실행 및 초기화
+// ==========================================
+// 4. 앱 초기화 및 구동
+// ==========================================
 async function initApp() {
   await initDatabase();
-  // 최초 로드 시에는 공백으로 호출
   await loadSavedVideos("");
   startCameraClock();
   
-  // ✨ [수정] 비동기로 IndexedDB 연결이 완벽히 끝난 후, 초기화면 프로젝트 썸네일을 최신 상태로 새로고침합니다.
   if (window.refreshProjectGrid) {
     window.refreshProjectGrid();
   }
+
+  // ✨ [스플래시 제거 조건]: 애니메이션이 충분히 상영(1.5초)된 후 인트로막 걷어내기
+  setTimeout(() => {
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+      splash.classList.add('fade-out');
+    }
+  }, 1600); 
 }
 
 initApp();
