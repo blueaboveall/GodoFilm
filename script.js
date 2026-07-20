@@ -959,11 +959,11 @@ document.body.appendChild(a);
  ctx.restore();
  
  ctx.fillStyle = "white";
- ctx.font = "600 36px -apple-system, sans-serif";
+ ctx.font = "600 39px -apple-system, sans-serif";
  ctx.textAlign = "left";
  ctx.textBaseline = "top";
  ctx.fillText(item.recordTime || "00:00", videoX + 18, videoY + 18);
- ctx.font = "bold 41px -apple-system, sans-serif";
+ ctx.font = "bold 44px -apple-system, sans-serif";
  ctx.textBaseline = "middle";
  const cleanText = (item.altitudeText || "해발 0m").trim();
  const totalContentWidth = 31 + 9 + ctx.measureText(cleanText).width;
