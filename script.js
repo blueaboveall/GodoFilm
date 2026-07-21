@@ -907,12 +907,12 @@ async function generateTotalLogVideo() {
 
     try {
       const canvas = document.createElement('canvas');
-      // 🎯 [핵심 수정] 배경지 원본 해상도(1290x2622)로 정확히 지정
+      // 배경지 원본 해상도
       canvas.width = 1290;
       canvas.height = 2622;
       const ctx = canvas.getContext('2d');
       
-      // 🎯 화면에 보이는 프리뷰 캔버스도 1290x2622 비율(약 1:2.03)에 맞춰 스타일 조정
+      // 프리뷰 캔버스 (화면용)
       canvas.style.cssText = "width: 210px; height: 427px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
       renderOverlay.appendChild(canvas);
       document.body.appendChild(renderOverlay);
@@ -969,7 +969,6 @@ async function generateTotalLogVideo() {
         }
       }
 
-      // 비디오 엘리먼트는 루프 바깥에서 딱 하나만 생성해서 재사용
       const hiddenVideo = document.createElement('video');
       hiddenVideo.muted = true;
       hiddenVideo.playsInline = true;
@@ -990,9 +989,9 @@ async function generateTotalLogVideo() {
         let isCurrentVideoPlaying = true;
         hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
 
-        const containerWidth = 960;
-        const containerHeight = 540;
-        // 새로 바뀐 1290x2622 높이에 맞춰 중앙에 자동으로 비디오를 정렬합니다.
+        // 🎯 [핵심 수정] 캔버스가 커진 만큼 영상 박스의 너비, 높이도 스케일업! (960x540 -> 1146x645)
+        const containerWidth = 1146;
+        const containerHeight = 645;
         const videoX = (canvas.width - containerWidth) / 2;
         const videoY = (canvas.height - containerHeight) / 2;
 
@@ -1024,7 +1023,8 @@ async function generateTotalLogVideo() {
           ctx.save();
           ctx.beginPath();
           if (ctx.roundRect) {
-            ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 20);
+            // 모서리 둥글기도 20에서 24로 커진 박스에 맞게 자연스럽게 스케일업
+            ctx.roundRect(videoX, videoY, containerWidth, containerHeight, 24);
           } else {
             ctx.rect(videoX, videoY, containerWidth, containerHeight);
           }
@@ -1038,19 +1038,19 @@ async function generateTotalLogVideo() {
           ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
           ctx.restore();
 
-          // 텍스트 그리기
+          // 🎯 텍스트 및 여백도 커진 박스 비율에 맞춰 스케일업! (41px -> 49px, 46px -> 55px)
           ctx.fillStyle = "white";
-          ctx.font = "600 41px -apple-system, sans-serif";
+          ctx.font = "600 49px -apple-system, sans-serif";
           ctx.textAlign = "left";
           ctx.textBaseline = "top";
-          ctx.fillText(item.recordTime || "00:00", videoX + 18, videoY + 18);
+          ctx.fillText(item.recordTime || "00:00", videoX + 22, videoY + 22);
 
-          ctx.font = "bold 46px -apple-system, sans-serif";
+          ctx.font = "bold 55px -apple-system, sans-serif";
           ctx.textBaseline = "middle";
           const cleanText = (item.altitudeText || "해발 0m").trim();
-          const totalContentWidth = 31 + 9 + ctx.measureText(cleanText).width;
+          const totalContentWidth = 48 + ctx.measureText(cleanText).width; 
           const startX = (canvas.width - totalContentWidth) / 2;
-          ctx.fillText(cleanText, startX + 40, videoY + (containerHeight / 2));
+          ctx.fillText(cleanText, startX + 48, videoY + (containerHeight / 2));
 
           // 실시간 진행률 계산 및 표기
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
@@ -1062,7 +1062,6 @@ async function generateTotalLogVideo() {
           await new Promise(requestAnimationFrame);
         }
 
-        // 블롭 메모리 즉시 해제
         URL.revokeObjectURL(videoObjectUrl);
       }
 
