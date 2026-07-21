@@ -907,11 +907,13 @@ async function generateTotalLogVideo() {
 
     try {
       const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1920;
+      // 🎯 [핵심 수정] 배경지 원본 해상도(1290x2622)로 정확히 지정
+      canvas.width = 1290;
+      canvas.height = 2622;
       const ctx = canvas.getContext('2d');
       
-      canvas.style.cssText = "width: 240px; height: 426px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
+      // 🎯 화면에 보이는 프리뷰 캔버스도 1290x2622 비율(약 1:2.03)에 맞춰 스타일 조정
+      canvas.style.cssText = "width: 210px; height: 427px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
       renderOverlay.appendChild(canvas);
       document.body.appendChild(renderOverlay);
 
@@ -967,7 +969,7 @@ async function generateTotalLogVideo() {
         }
       }
 
-      // 💡 [과거 코드 핵심 복원 1] 비디오 엘리먼트는 루프 바깥에서 딱 "하나만" 생성해서 평생 재사용합니다.
+      // 비디오 엘리먼트는 루프 바깥에서 딱 하나만 생성해서 재사용
       const hiddenVideo = document.createElement('video');
       hiddenVideo.muted = true;
       hiddenVideo.playsInline = true;
@@ -985,12 +987,12 @@ async function generateTotalLogVideo() {
         await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
         await hiddenVideo.play();
 
-        // 💡 [과거 코드 핵심 복원 2] 사파리 데드락을 원천 차단하는 이벤트 기반 제어 플래그
         let isCurrentVideoPlaying = true;
         hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
 
         const containerWidth = 960;
         const containerHeight = 540;
+        // 새로 바뀐 1290x2622 높이에 맞춰 중앙에 자동으로 비디오를 정렬합니다.
         const videoX = (canvas.width - containerWidth) / 2;
         const videoY = (canvas.height - containerHeight) / 2;
 
@@ -1060,11 +1062,10 @@ async function generateTotalLogVideo() {
           await new Promise(requestAnimationFrame);
         }
 
-        // 블롭 메모리 즉시 해제 (비디오 객체는 유지하되 주소만 청소)
+        // 블롭 메모리 즉시 해제
         URL.revokeObjectURL(videoObjectUrl);
       }
 
-      // 모든 영상 처리가 완벽히 끝나면 비디오 소멸
       hiddenVideo.pause();
       hiddenVideo.src = "";
       hiddenVideo.load();
@@ -1094,7 +1095,6 @@ if (totalDownloadBtn) {
 // ==========================================
 // 4. 앱 초기화 및 구동
 // ==========================================
-// JavaScript 파일 맨 아래에 있는 이 부분을 찾아 숫자를 바꿔줍니다.
 async function initApp() {
   await initDatabase();
   await loadSavedVideos("");
@@ -1104,13 +1104,12 @@ async function initApp() {
     window.refreshProjectGrid();
   }
 
-  // ✨ 애니메이션 시청 시간 보장 (1초 대기 + 1.2초 무빙 + 여운) 후 스플래시 닫기
   setTimeout(() => {
     const splash = document.getElementById('splash-screen');
     if (splash) {
       splash.classList.add('fade-out');
     }
-  }, 2800); /* 1600에서 2800밀리초(2.8초)로 변경 */
+  }, 2800);
 }
 
 initApp();
