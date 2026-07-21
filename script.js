@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!name) { alert("프로젝트 이름을 입력해주세요!"); return; }
       if (mountain === "산 선택하기") { alert("등산하실 산을 선택해주세요!"); return; }
-      if (design === "배경 선택하기") { alert("디자인 배경을 선택해주세요!"); return; }
+      if (design === "배경 선택하기") { alert("배경 디자인을 선택해주세요!"); return; }
 
       const today = new Date();
       const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
@@ -463,7 +463,7 @@ async function startCamera() {
         console.error("카메라 작동 에러:", error);
         if (currentFacingMode === "environment") {
             currentFacingMode = "user";
-            alert("후면 카메라 진입 제한으로 전면으로 우회 구동합니다.");
+            alert("후면 카메라 진입 제한으로 전면으로 우회 구동합니다. \n다시 한번 시도해 주세요.");
             startCamera();
         }
     }
@@ -887,7 +887,7 @@ async function generateTotalLogVideo() {
     }
 
     const originalBtnText = totalDownloadBtn.innerHTML;
-    totalDownloadBtn.innerText = " 🎬 고도필름 제작 시작...";
+    totalDownloadBtn.innerText = "고도필름 제작 시작...";
     totalDownloadBtn.disabled = true;
 
     // 🌟 멋진 프리뷰 오버레이 화면 생성 (유지)
@@ -1077,7 +1077,7 @@ async function generateTotalLogVideo() {
 
     } catch (err) {
       console.error("전체 영상 생성 에러:", err);
-      alert("동영상 생성을 실패했습니다.");
+      alert("필름 현상에 실패했습니다.");
       if (document.getElementById('render-blur-overlay')) {
         document.getElementById('render-blur-overlay').remove();
       }
