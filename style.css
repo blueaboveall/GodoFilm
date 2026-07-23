@@ -1011,3 +1011,59 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #4C4C52;
   font-weight: 400;
 }
+
+/* ========================================================
+   [가로 스크롤 선택 셀 (Cell) 스타일]
+   ======================================================== */
+
+/* 가로 스크롤 컨테이너 */
+.horizontal-cell-group {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
+  scroll-behavior: smooth;
+}
+
+/* Chrome, Safari 스크롤바 숨기기 */
+.horizontal-cell-group::-webkit-scrollbar {
+  display: none;
+}
+
+/* 개별 선택 셀 (Cell) */
+.select-cell {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background-color: #FFFFFF;
+  border: 1.5px solid #ECE7DF;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555555;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* 셀 호버/터치 반응 */
+.select-cell:active {
+  transform: scale(0.95);
+}
+
+.cell-icon {
+  font-size: 15px;
+}
+
+/* 선택된 셀 상태 (Active) */
+.select-cell.active {
+  background-color: #232A2C !important;
+  border-color: #232A2C !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 16px rgba(35, 42, 44, 0.2);
+}
