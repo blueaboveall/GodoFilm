@@ -70,9 +70,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  let projects = JSON.parse(localStorage.getItem("climbingProjects")) || [];
-
+  // ------------------------------------------
   // 프로젝트 목록 리렌더링 함수
+  // ------------------------------------------
   function renderProjects() {
     if (!projectGrid) return;
     projectGrid.innerHTML = "";
@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.refreshProjectGrid = renderProjects;
 
-  // 1) 새 프로젝트 생성 버튼 클릭 시 모달 열기
+  // 1) 모달 열기
   if (openModalBtn) {
     openModalBtn.addEventListener("click", () => {
       if (projectModal) {
@@ -265,31 +265,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 2) 닫기(X) 버튼 클릭 시 모달 닫기
+  // 2) 모달 닫기
   if (closeModalBtn) {
     closeModalBtn.addEventListener("click", () => {
       if (projectModal) {
         projectModal.classList.remove("show");
         projectModal.style.display = "none";
       }
-      if (mountainOptions) mountainOptions.classList.remove("show");
-      if (designOptions) designOptions.classList.remove("show");
     });
   }
 
-  // 3) 모달 바깥 어두운 배경 클릭 시 닫기
+  // 3) 모달 바깥 배경 클릭 시 닫기
   if (projectModal) {
     projectModal.addEventListener("click", (e) => {
       if (e.target === projectModal) {
         projectModal.classList.remove("show");
         projectModal.style.display = "none";
-        if (mountainOptions) mountainOptions.classList.remove("show");
-        if (designOptions) designOptions.classList.remove("show");
       }
     });
   }
 
-  // 4) 카메라 상단 뒤로가기 버튼
+  // 4) 뒤로가기 버튼
   if (backToHomeBtn) {
     backToHomeBtn.addEventListener("click", () => {
       if (cameraView && cameraView.srcObject) {
@@ -307,71 +303,34 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 5) 산 선택 카드 클릭 & 항목 선택
-  if (mountainTrigger && mountainOptions) {
-    mountainTrigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (designOptions) designOptions.classList.remove("show");
-      mountainOptions.classList.toggle("show");
-    });
-
-    mountainOptions.querySelectorAll(".option-item").forEach((item) => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const value = item.getAttribute("data-value") || item.textContent;
-        if (selectedMountainText) {
-          selectedMountainText.innerText = value;
-          selectedMountainText.style.color = "#283030";
-        }
-        mountainOptions.classList.remove("show");
-      });
-    });
-  }
-
-  // 6) 디자인 선택 카드 클릭 & 항목 선택
-  if (designTrigger && designOptions) {
-    designTrigger.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (mountainOptions) mountainOptions.classList.remove("show");
-      designOptions.classList.toggle("show");
-    });
-
-    designOptions.querySelectorAll(".option-item").forEach((item) => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const value = item.getAttribute("data-value") || item.textContent;
-        if (selectedDesignText) {
-          selectedDesignText.innerText = value;
-          selectedDesignText.style.color = "#283030";
-        }
-        designOptions.classList.remove("show");
-      });
-    });
-  }
-
-  // 7) 바깥 클릭시 드롭다운 및 메뉴 팝업 닫기
-  document.addEventListener("click", (e) => {
-    if (mountainOptions && mountainTrigger && !mountainTrigger.contains(e.target)) {
-      mountainOptions.classList.remove("show");
-    }
-    if (designOptions && designTrigger && !designTrigger.contains(e.target)) {
-      designOptions.classList.remove("show");
-    }
+  // 5) 팝업 바깥 클릭 시 닫기
+  document.addEventListener("click", () => {
     document.querySelectorAll(".project-menu-popup").forEach(menu => {
       menu.style.display = "none";
     });
   });
 
-  // 8) 프로젝트 생성 제출
+  // 6) 프로젝트 생성 버튼 클릭 이벤트 (선택한 셀 값 읽어오기)
   if (createProjectSubmitBtn) {
     createProjectSubmitBtn.addEventListener("click", () => {
       const name = projectNameInput ? projectNameInput.value.trim() : "";
-      const mountain = selectedMountainText ? selectedMountainText.innerText.trim() : "";
-      const design = selectedDesignText ? selectedDesignText.innerText.trim() : "";
+      
+      const activeCells = document.querySelectorAll('.horizontal-cell-group .select-cell.active');
+      let mountain = "";
+      let design = "";
+
+      activeCells.forEach(cell => {
+        const text = cell.innerText.trim();
+        if (["소래산", "배봉산", "수락산", "구름산", "미륵산"].includes(text)) {
+          mountain = text;
+        } else {
+          design = text;
+        }
+      });
 
       if (!name) { alert("프로젝트 이름을 입력해주세요!"); return; }
-      if (mountain === "등산할 산을 선택해주세요" || !mountain) { alert("등산하실 산을 선택해주세요!"); return; }
-      if (design === "영상에 적용할 디자인을 선택해주세요" || !design) { alert("배경 디자인을 선택해주세요!"); return; }
+      if (!mountain) { alert("등산하실 산을 선택해주세요!"); return; }
+      if (!design) { alert("배경 디자인을 선택해주세요!"); return; }
 
       const today = new Date();
       const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
@@ -388,27 +347,18 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.setItem("climbingProjects", JSON.stringify(projects));
 
       if (projectNameInput) projectNameInput.value = "";
-      
-      if (selectedMountainText) {
-        selectedMountainText.innerText = "등산할 산을 선택해주세요";
-        selectedMountainText.style.color = "#888888";
-      }
-      if (selectedDesignText) {
-        selectedDesignText.innerText = "영상에 적용할 디자인을 선택해주세요";
-        selectedDesignText.style.color = "#888888";
-      }
+      document.querySelectorAll('.select-cell.active').forEach(cell => cell.classList.remove('active'));
 
       if (projectModal) {
         projectModal.classList.remove("show");
         projectModal.style.display = "none";
       }
-      if (mountainOptions) mountainOptions.classList.remove("show");
-      if (designOptions) designOptions.classList.remove("show");
 
       renderProjects();
     });
   }
 
+  // 초기 프로젝트 목록 렌더링
   renderProjects();
 });
 
