@@ -1157,3 +1157,38 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   transform: scale(0.98);
   background-color: #1c2222;
 }
+
+/* 1번, 2번, 3번, 4번 수정 반영 */
+
+/* 안내 문구 전체 박스를 아래로 내리고 가운데 정렬 및 글자 색상 조절 */
+.empty-project-message, 
+.project-empty-state { /* 프로젝트가 없을 때 뜨는 부모 컨테이너 선택자명에 맞게 조절 */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 3번: 가운데 정렬 */
+  justify-content: center;
+  text-align: center;
+  margin-top: 80px; /* 2번: 위치를 더 아래로 내림 (원하시는 만큼 수치 조절 가능) */
+}
+
+/* 1번: 산 그림 영역을 ⛰️ 이모지로 대체하고 크기 및 스타일 조정 */
+.empty-mountain-icon {
+  font-size: 48px; /* 이모지 크기 조절 */
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+/* 메인 타이틀 ('아직 프로젝트가 없어요') */
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1c1c1e;
+  margin-bottom: 8px;
+}
+
+/* 4번: '첫 고도 필름을 만들어 보세요' 색상 (위에 타이틀 색상에서 채도를 살짝 뺀 물 빠진 색) */
+.empty-subtitle {
+  font-size: 14px;
+  color: #8e8e93; /* 위에 글자보다 채도가 빠진 은은한 회보라/회색빛 톤 */
+  font-weight: 400;
+}
