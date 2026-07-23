@@ -69,7 +69,7 @@
     <!-- 상단 드래그 바 핸들 -->
     <div class="sheet-handle"></div>
 
-    <!-- 수정된 깔끔한 X 표시 닫기 버튼 -->
+    <!-- X 닫기 버튼 -->
     <button id="close-modal-btn" class="sheet-close-btn" aria-label="닫기">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -83,9 +83,9 @@
       <p class="sheet-subtitle">나만의 산행 영상을 만들어보세요.</p>
     </div>
 
-    <!-- 입력 및 선택 영역 -->
+    <!-- 입력 및 셀 선택 영역 -->
     <div class="sheet-body">
-      <!-- 프로젝트 이름 입력 -->
+      <!-- 1. 프로젝트 이름 입력 -->
       <div class="input-group">
         <label class="input-label">프로젝트 이름</label>
         <div class="input-box-wrapper">
@@ -97,55 +97,49 @@
         </div>
       </div>
 
-      <!-- 산 선택 영역 -->
-      <div class="select-field-wrapper" style="position: relative;">
-        <div class="select-card custom-select-trigger" id="mountain-trigger">
-          <div class="card-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 3l4 8 5-5 5 15H2L8 3z"/>
-            </svg>
-          </div>
-          <div class="card-text-box">
-            <span class="card-title">산 선택</span>
-            <span class="card-desc" id="selected-mountain-text">등산할 산을 선택해주세요</span>
-          </div>
-          <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </div>
-        <div class="custom-options-popup" id="mountain-options">
-          <div class="option-item" data-value="소래산">소래산</div>
-          <div class="option-item" data-value="배봉산">배봉산</div>
-          <div class="option-item" data-value="수락산">수락산</div>
-          <div class="option-item" data-value="구름산">구름산</div>
-          <div class="option-item" data-value="미륵산">미륵산</div>
+      <!-- 2. 산 선택 (가로 스크롤 셀) -->
+      <div class="input-group">
+        <label class="input-label">산 선택</label>
+        <div class="horizontal-cell-group" id="mountain-cells">
+          <button type="button" class="select-cell active" data-value="소래산">
+            <span class="cell-icon">⛰️</span>
+            <span>소래산</span>
+          </button>
+          <button type="button" class="select-cell" data-value="배봉산">
+            <span class="cell-icon">⛰️</span>
+            <span>배봉산</span>
+          </button>
+          <button type="button" class="select-cell" data-value="수락산">
+            <span class="cell-icon">⛰️</span>
+            <span>수락산</span>
+          </button>
+          <button type="button" class="select-cell" data-value="구름산">
+            <span class="cell-icon">⛰️</span>
+            <span>구름산</span>
+          </button>
+          <button type="button" class="select-cell" data-value="미륵산">
+            <span class="cell-icon">⛰️</span>
+            <span>미륵산</span>
+          </button>
         </div>
       </div>
 
-      <!-- 디자인 선택 영역 -->
-      <div class="select-field-wrapper" style="position: relative;">
-        <div class="select-card custom-select-trigger" id="design-trigger">
-          <div class="card-icon-box">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <path d="M2 8h20"/>
-              <path d="M6 4l2 4"/>
-              <path d="M12 4l2 4"/>
-              <path d="M18 4l2 4"/>
-            </svg>
-          </div>
-          <div class="card-text-box">
-            <span class="card-title">디자인 선택</span>
-            <span class="card-desc" id="selected-design-text">영상에 적용할 디자인을 선택해주세요</span>
-          </div>
-          <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </div>
-        <div class="custom-options-popup" id="design-options">
-          <div class="option-item" data-value="산 정상">산 정상</div>
-          <div class="option-item" data-value="크래프트 (영어)">크래프트 (영어)</div>
-          <div class="option-item" data-value="크래프트 (한글)">크래프트 (한글)</div>
+      <!-- 3. 디자인 선택 (가로 스크롤 셀) -->
+      <div class="input-group">
+        <label class="input-label">디자인 선택</label>
+        <div class="horizontal-cell-group" id="design-cells">
+          <button type="button" class="select-cell active" data-value="산 정상">
+            <span class="cell-icon">🎬</span>
+            <span>산 정상</span>
+          </button>
+          <button type="button" class="select-cell" data-value="크래프트 (영어)">
+            <span class="cell-icon">🎬</span>
+            <span>크래프트 (영어)</span>
+          </button>
+          <button type="button" class="select-cell" data-value="크래프트 (한글)">
+            <span class="cell-icon">🎬</span>
+            <span>크래프트 (한글)</span>
+          </button>
         </div>
       </div>
     </div>
