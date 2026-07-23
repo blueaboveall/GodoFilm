@@ -1008,6 +1008,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 /* 4번: '첫 고도 필름을 만들어 보세요' 색상 (상단 타이틀에서 채도를 약간 뺀 은은한 톤) */
 .empty-subtitle {
   font-size: 14px;
-  color: #3E3E42;
+  color: #4C4C52;
   font-weight: 400;
 }
