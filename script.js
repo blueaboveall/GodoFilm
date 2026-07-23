@@ -58,6 +58,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const homeView = document.getElementById("home-view");
   const cameraPageView = document.getElementById("camera-page-view");
   const backToHomeBtn = document.getElementById("back-to-home-btn");
+  const cellGroups = document.querySelectorAll('.horizontal-cell-group');
+  cellGroups.forEach(group => {
+    group.addEventListener('click', (e) => {
+      const targetCell = e.target.closest('.select-cell');
+      if (!targetCell) return;
+
+      group.querySelectorAll('.select-cell').forEach(cell => {
+        cell.classList.remove('active');
+      });
+      targetCell.classList.add('active');
+    });
+  });
+});  
 
   let projects = JSON.parse(localStorage.getItem("climbingProjects")) || [];
 
