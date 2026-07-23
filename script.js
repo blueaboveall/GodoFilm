@@ -35,7 +35,7 @@ const availableDesigns = {
   "소래산": { "산 정상": "bg-sorae-peak.png" },
   "배봉산": { "크래프트 (영어)": "bg-baebong-craft-english.png" },
   "수락산": { "산 정상": "bg-surak-peak.png" },
-  "구름산": { "크래프트 (한글)": "bg-gooreum-craft-korean.png" },
+  "구름산": { "산 정상": "bg-gooreum-craft-korean.png" },
   "미륵산": { "산 정상": "bg-mireuk-peak.png" }
 };
 
@@ -44,7 +44,7 @@ const mountainDesignMap = {
   "소래산": "산 정상",
   "배봉산": "크래프트 (영어)",
   "수락산": "산 정상",
-  "구름산": "크래프트 (한글)",
+  "구름산": "산 정상",
   "미륵산": "산 정상"
 };
 
@@ -54,6 +54,17 @@ function cleanEmojiText(text) {
     .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
     .replace(/\(준비 중\)/g, '')
     .trim();
+}
+
+// 셀 기본 스타일(크기 유지, 가운데 정렬, 그림자 제거) 강제 적용 함수
+function applyCellLayoutStyles(cell) {
+  cell.style.display = "flex";
+  cell.style.alignItems = "center";
+  cell.style.justifyContent = "center";
+  cell.style.textAlign = "center";
+  cell.style.boxShadow = "none";
+  cell.style.webkitBoxShadow = "none";
+  cell.style.filter = "none";
 }
 
 // ==========================================
@@ -72,14 +83,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
   // ------------------------------------------
-  // 셀 초기화 (이모티콘 제거 및 원본 텍스트 데이터 저장)
+  // 셀 초기화 (이모티콘 제거, 크기 유지, 중앙 정렬, 그림자 제거)
   // ------------------------------------------
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
+    applyCellLayoutStyles(cell);
     const baseName = cleanEmojiText(cell.innerText);
     cell.setAttribute('data-base-name', baseName);
     cell.innerText = baseName;
-    cell.style.textAlign = "center";
   });
 
   // ------------------------------------------
@@ -94,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const allowedDesign = mountainDesignMap[selectedMountain];
 
     designCells.forEach(cell => {
+      applyCellLayoutStyles(cell);
       const baseName = cell.getAttribute('data-base-name') || cleanEmojiText(cell.innerText);
 
       if (baseName === allowedDesign) {
@@ -101,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.remove('disabled');
         cell.style.opacity = '1';
         cell.style.pointerEvents = 'auto';
-        cell.classList.add('active'); // 활성화 가능한 디자인 자동 선택
+        cell.classList.add('active');
       } else {
         cell.innerText = `${baseName} (준비 중)`;
         cell.classList.add('disabled');
@@ -123,8 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       group.querySelectorAll('.select-cell').forEach(cell => {
         cell.classList.remove('active');
+        applyCellLayoutStyles(cell);
       });
+      
       targetCell.classList.add('active');
+      applyCellLayoutStyles(targetCell);
 
       // 산(첫 번째 그룹)을 클릭했을 때 디자인 셀 동기화
       if (groupIndex === 0) {
@@ -139,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
                               document.querySelector('.horizontal-cell-group:first-child .select-cell');
   if (defaultMountainCell) {
     defaultMountainCell.classList.add('active');
+    applyCellLayoutStyles(defaultMountainCell);
     const defaultMountain = defaultMountainCell.getAttribute('data-base-name') || cleanEmojiText(defaultMountainCell.innerText);
     updateDesignOptions(defaultMountain);
   }
@@ -335,7 +351,6 @@ document.addEventListener("DOMContentLoaded", () => {
         projectModal.style.display = "flex";
         projectModal.classList.add("show");
 
-        // 모달을 열었을 때 현재 선택된 산 상태에 맞게 디자인 동기화
         const activeMtn = document.querySelector('.horizontal-cell-group:first-child .select-cell.active');
         if (activeMtn) {
           const mountainName = activeMtn.getAttribute('data-base-name') || cleanEmojiText(activeMtn.innerText);
