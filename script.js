@@ -39,10 +39,10 @@ const availableDesigns = {
 };
 
 // ==========================================
-// 2. DOMContentLoaded (초기화 및 UI 이벤트)
+// 2. DOMContentLoaded (UI 초기화 및 이벤트)
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-  // 사용 중인 UI 요소들
+  // DOM 요소 참조
   const openModalBtn = document.getElementById("open-modal-btn");
   const closeModalBtn = document.getElementById("close-modal-btn");
   const projectModal = document.getElementById("project-modal");
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
   // ------------------------------------------
-  // [신규] 가로 셀 선택 클릭 이벤트
+  // 가로 셀 선택 클릭 이벤트 (산 / 디자인 선택)
   // ------------------------------------------
   const cellGroups = document.querySelectorAll('.horizontal-cell-group');
   cellGroups.forEach(group => {
@@ -69,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
       targetCell.classList.add('active');
     });
   });
-});
 
   let projects = JSON.parse(localStorage.getItem("climbingProjects")) || [];
 
