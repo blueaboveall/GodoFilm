@@ -429,6 +429,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   white-space: nowrap;
   z-index: 1;
 }
+
 .project-info {
   margin-top: 8px;
   padding: 0 4px;
@@ -709,7 +710,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   display: flex !important;
 }
 
-/* CSS의 .bottom-sheet-content 부분을 아래처럼 수정/점검해 주세요 */
 .bottom-sheet-content {
   width: 100%;
   max-width: 430px;
@@ -724,14 +724,8 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
-  
-  /* 애니메이션 키프레임 대신 transform 성능 최적화 옵션 추가 */
+  transform: translateY(100%);
   will-change: transform;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
 }
 
 .sheet-drag-zone {
@@ -960,9 +954,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   justify-content: center;
   gap: 8px;
   height: 52px;
-
   padding: 0 20px;
-
   background-color: #FFFFFF;
   border: 1.5px solid #ECE7DF;
   border-radius: 18px;
@@ -973,8 +965,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
   user-select: none;
-
-  
   line-height: 1;
 }
 
