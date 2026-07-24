@@ -102,69 +102,77 @@ document.addEventListener("DOMContentLoaded", () => {
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
 // ------------------------------------------
-// 바텀시트 드래그로 닫기 (스와이프 다운)
-// ------------------------------------------
-const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
-const sheetHandle = projectModal ? projectModal.querySelector('.sheet-handle') : null;
+  // 바텀시트 드래그로 닫기 (스와이프 다운)
+  // ------------------------------------------
+  const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
+  const sheetHandle = projectModal ? projectModal.querySelector('.sheet-handle') : null;
 
-if (projectModal && bottomSheetContent && sheetHandle) {
-  let startY = 0;
-  let dragY = 0;
-  let isDragging = false;
+  if (projectModal && bottomSheetContent && sheetHandle) {
+    let startY = 0;
+    let dragY = 0;
+    let isDragging = false;
 
-  function onDragStart(clientY) {
-    isDragging = true;
-    startY = clientY;
-    bottomSheetContent.style.transition = 'none';
-  }
-
-  function onDragMove(clientY) {
-    if (!isDragging) return;
-    dragY = clientY - startY;
-    if (dragY < 0) dragY = 0; // 위로는 안 끌리게
-    bottomSheetContent.style.transform = `translateY(${dragY}px)`;
-  }
-
-  function onDragEnd() {
-    if (!isDragging) return;
-    isDragging = false;
-    bottomSheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-
-    const closeThreshold = 120; // 이만큼 이상 끌어내리면 닫힘
-    if (dragY > closeThreshold) {
-      closeSheetWithAnimation();
-    } else {
-      bottomSheetContent.style.transform = 'translateY(0px)';
+    function onDragStart(clientY) {
+      isDragging = true;
+      startY = clientY;
+      bottomSheetContent.style.transition = 'none';
     }
-    dragY = 0;
+
+    function onDragMove(clientY) {
+      if (!isDragging) return;
+      dragY = clientY - startY;
+      if (dragY < 0) dragY = 0;
+      bottomSheetContent.style.transform = `translateY(${dragY}px)`;
+    }
+
+    function onDragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      bottomSheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+
+      const closeThreshold = 120;
+      if (dragY > closeThreshold) {
+        closeSheetWithAnimation();
+      } else {
+        bottomSheetContent.style.transform = 'translateY(0px)';
+      }
+      dragY = 0;
+    }
+
+    function closeSheetWithAnimation() {
+      bottomSheetContent.style.transition = 'transform 0.28s cubic-bezier(0.4, 0, 1, 1)';
+      bottomSheetContent.style.transform = 'translateY(100%)';
+
+      setTimeout(() => {
+        projectModal.classList.remove('show');
+        projectModal.style.display = 'none';
+        bottomSheetContent.style.transform = '';
+        bottomSheetContent.style.transition = '';
+      }, 280);
+    }
+
+    sheetHandle.addEventListener('touchstart', (e) => {
+      onDragStart(e.touches[0].clientY);
+    }, { passive: true });
+
+    sheetHandle.addEventListener('touchmove', (e) => {
+      onDragMove(e.touches[0].clientY);
+    }, { passive: true });
+
+    sheetHandle.addEventListener('touchend', onDragEnd);
+
+    sheetHandle.addEventListener('mousedown', (e) => {
+      onDragStart(e.clientY);
+      const onMouseMove = (ev) => onDragMove(ev.clientY);
+      const onMouseUp = () => {
+        onDragEnd();
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
   }
-
-  function closeSheetWithAnimation() {
-    bottomSheetContent.style.transition = 'transform 0.28s cubic-bezier(0.4, 0, 1, 1)';
-    bottomSheetContent.style.transform = 'translateY(100%)';
-
-    setTimeout(() => {
-      projectModal.classList.remove('show');
-      projectModal.style.display = 'none';
-      bottomSheetContent.style.transform = '';
-      bottomSheetContent.style.transition = '';
-    }, 280);
-  }
-
-  // 터치 이벤트 (아이폰 실기기용)
-  sheetHandle.addEventListener('touchstart', (e) => {
-    onDragStart(e.touches[0].clientY);
-  }, { passive: true });
-
-  sheetHandle.addEventListener('touchmove', (e) => {
-    onDragMove(e.touches[0].clientY);
-  }, { passive: true });
-
-  sheetHandle.addEventListener('touchend', onDragEnd);
-
-  // 마우스 이벤트 (사파리 데스크탑/개발자도구 테스트용)
-  sheetHandle.addEventListener('mousedown', (e) => {
-    onDragStart(e.clientY);
     const onMouseMove = (ev) => onDragMove(ev.clientY);
     const onMouseUp = () => {
       onDragEnd();
