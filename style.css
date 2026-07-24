@@ -10,11 +10,9 @@ body, html {
   background: transparent !important;
   display: flex;
   justify-content: center;
-  /* 깔끔하고 부드러운 최신 웹 폰트 스타일 적용 */
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans KR', sans-serif;
 }
 
-/* 앱을 감싸는 기본 컨테이너 틀 */
 .background-container {
   width: 100%;
   max-width: 430px;
@@ -28,19 +26,16 @@ body, html {
   z-index: 1;
 }
 
-/* 홈화면 모드일 때 전체 배경화면 처리 */
 .background-container.home-mode {
   background-image: url('home-background.png') !important;
   background-size: cover;
 }
 
-/* 촬영 모드일 때 전체 배경화면 처리 */
 .background-container:not(.home-mode) {
   background-image: url('my-background.png');
   background-size: contain;
 }
 
-/* 홈 화면과 촬영 화면 페이지를 분리하여 얹어두기 위한 공통 뷰 스타일 */
 .main-view {
   width: 100%;
   height: 100%;
@@ -52,13 +47,11 @@ body, html {
   z-index: 5;
 }
 
-/* 초기화면 전용 패딩 및 스크롤 설정 */
 #home-view {
   padding: 30px 24px;
   overflow-y: auto;
 }
 
-/* 촬영 화면 전용 정렬 */
 #camera-page-view {
   display: flex;
   justify-content: center;
@@ -90,7 +83,6 @@ body, html {
   transition: transform 0.3s ease-out;
 }
 
-/* 배율 확대 시 옆 슬라이드 화면을 침범하지 않도록 완벽 차단 */
 .slide-page {
   flex: 0 0 100%;
   width: 100%;
@@ -117,7 +109,7 @@ body, html {
   white-space: nowrap;
   z-index: 10;
   display: flex;
-  align-items: center;  
+  align-items: center;
   gap: 4px;
 }
 
@@ -168,7 +160,7 @@ body, html {
   display: flex;
   align-items: center;
   z-index: 20;
-} 
+}
 
 .zoom-container {
   position: absolute;
@@ -275,8 +267,8 @@ body, html {
 
 #total-download-btn {
   position: absolute;
-  bottom: -35px;
-  right: 0; 
+  bottom: 35px;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,7 +317,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   pointer-events: none !important;
 }
 
-/* 프로젝트 그리드 레이아웃 (2열 배열) */
 .project-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -342,6 +333,10 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   position: relative;
   transition: transform 0.1s ease;
   overflow: visible !important;
+}
+
+.project-card:active {
+  transform: scale(0.96);
 }
 
 .menu-trigger {
@@ -389,7 +384,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 
 .menu-item:hover {
   background: #f0f8ff;
-} 
+}
 
 .menu-icon {
   width: 20px;
@@ -401,15 +396,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   white-space: nowrap;
 }
 
-.menu-item:last-child {
-  border-bottom: none;
-}
-
-.project-card:active {
-  transform: scale(0.96);
-}
-
-/* 1. 하얀 영상 박스 (부모) - 예전 성공 코드의 Flex 정중앙 정렬 복원 */
 .mountain-pic-box {
   width: 100%;
   aspect-ratio: 16/9;
@@ -423,7 +409,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   position: relative;
 }
 
-/* 썸네일 비디오가 들어올 경우 (기존 유지) */
 .mountain-pic-box video {
   width: 100%;
   height: 100%;
@@ -433,16 +418,16 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   left: 0;
 }
 
-/* 2. 글자 태그 - absolute 및 100% 크기 지우고 순수 글자 속성만 유지 */
 .mountain-tag {
   color: #87CEEA;
   font-size: 20px;
   font-weight: bold;
-  line-height: 1; /* 모바일 웹킷 폰트 상하 여백 치우침 방지 */
+  line-height: 1;
   margin: 0;
   padding: 0;
   z-index: 1;
 }
+
 .project-info {
   margin-top: 8px;
   padding: 0 4px;
@@ -452,7 +437,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
-  white-space: nowrap;  
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: text;
@@ -470,45 +455,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   font-size: 11px;
   font-weight: 300;
   margin-top: 2px;
-}
-
-/* ========================================================
-   [모달창 화이트 스킨 & 네이버 디자인]
-   ======================================================== */
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-  padding: 20px;
-}
-
-.modal-content {
-  width: 90%;
-  background-color: #ffffff;
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-  border: 1px solid #e5e5e5;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #222222;
-  border-bottom: 1px solid #f5f5f5;
-  padding-bottom: 12px;
 }
 
 .modal-header h3 {
@@ -529,7 +475,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   flex-direction: column;
   gap: 6px;
   position: relative;
-} 
+}
 
 .modal-field label {
   color: #333333;
@@ -588,7 +534,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 #back-to-home-btn {
   position: absolute;
   top: -300px;
-  left: 0; 
+  left: 0;
   width: 40px;
   height: 40px;
   background-color: rgba(0, 0, 0, 0.5);
@@ -601,7 +547,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   cursor: pointer;
   z-index: 99;
   transition: background-color 0.2s ease;
-} 
+}
 
 #back-to-home-btn:hover {
   background-color: rgba(0, 0, 0, 0.8);
@@ -620,9 +566,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   pointer-events: none;
 }
 
-/* ==========================================
-   스플래시 화면 (모션 그래픽 인트로) 스타일
-   ========================================== */
 #splash-screen {
   position: fixed;
   top: 0;
@@ -667,28 +610,28 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 
 @keyframes moveCameraO {
   0% { transform: translateX(0); }
-  100% { transform: translateX(101px); } 
+  100% { transform: translateX(101px); }
 }
 
 .anim-god {
   opacity: 0;
   animation: revealGodText 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: 1s; 
+  animation-delay: 1s;
 }
 
 @keyframes revealGodText {
-  0% { 
+  0% {
     opacity: 0;
-    transform: translateX(40px); 
-    clip-path: inset(0 100% 0 0); 
+    transform: translateX(40px);
+    clip-path: inset(0 100% 0 0);
   }
   20% {
-    opacity: 1; 
-  }
-  100% { 
     opacity: 1;
-    transform: translateX(-40px); 
-    clip-path: inset(0 0 0 0); 
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-40px);
+    clip-path: inset(0 0 0 0);
   }
 }
 
@@ -711,11 +654,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   visibility: hidden;
 }
 
-/* ========================================================
-   [감성 바텀시트 & 플로팅 버튼 스타일 (원상복구 및 디자인 수정)]
-   ======================================================== */
-
-/* 1. '새 프로젝트 생성' 버튼 (PDF 원본 스타일 복원) */
 .create-project-btn {
   position: absolute;
   bottom: 45px;
@@ -751,7 +689,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #333333;
 }
 
-/* 2. 바텀 시트 오버레이 및 창 높이 (Image 4 반영) */
 .bottom-sheet-overlay {
   position: fixed;
   top: 0;
@@ -774,8 +711,8 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 .bottom-sheet-content {
   width: 100%;
   max-width: 430px;
-  height: 76vh; /* 화면 높이의 약 76%까지 올라오도록 설정 */
-  background-color: #FAF8F5; /* 따뜻한 미색 배경 */
+  height: 76vh;
+  background-color: #FAF8F5;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
   padding: 16px 24px 36px 24px;
@@ -793,7 +730,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   to { transform: translateY(0); }
 }
 
-/* 상단 드래그 영역 (바 + 여백 전체가 드래그 가능) */
 .sheet-drag-zone {
   width: 100%;
   padding: 10px 0 20px 0;
@@ -801,7 +737,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   align-items: center;
   justify-content: center;
   cursor: grab;
-  touch-action: none; /* 사파리 기본 스크롤/바운스 방지 */
+  touch-action: none;
   margin-bottom: -12px;
 }
 
@@ -809,17 +745,14 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   cursor: grabbing;
 }
 
-/* 시트 상단 드래그 핸들 바 (시각적 표시용) */
 .sheet-handle {
   width: 40px;
   height: 4px;
   background-color: #E2DDD5;
   border-radius: 2px;
-  pointer-events: none; /* 터치는 부모 drag-zone이 전담 */
+  pointer-events: none;
 }
 
-
-/* 시트 헤더 & 타이틀 */
 .sheet-header {
   margin-top: 4px;
 }
@@ -836,7 +769,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #8A8A8E;
 }
 
-/* 입력 필드 레이아웃 */
 .sheet-body {
   display: flex;
   flex-direction: column;
@@ -887,7 +819,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   pointer-events: none;
 }
 
-/* 선택 카드리스트 (산 선택 / 디자인 선택) */
 .select-card {
   display: flex;
   align-items: center;
@@ -947,7 +878,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   flex-shrink: 0;
 }
 
-/* 하단 제출 버튼 */
 .sheet-submit-btn {
   width: 100%;
   height: 54px;
@@ -967,37 +897,31 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   transform: scale(0.98);
   background-color: #171C1E;
 }
-/* ========================================================
-   [요청하신 1~4번 수정사항 통합 반영]
-   ======================================================== */
 
-/* 2번, 3번: 안내 문구 전체 박스를 아래로 내리고(margin-top) 완벽한 정중앙 정렬 */
 .empty-state,
-.empty-project-message, 
+.empty-project-message,
 .project-empty-state {
   display: flex;
   flex-direction: column;
-  align-items: center;    /* 3번: 가운데 정렬 */
+  align-items: center;
   justify-content: center;
-  text-align: center;     /* 3번: 텍스트 가운데 정렬 */
+  text-align: center;
   width: 100%;
-  margin-top: 100px;      /* 2번: 충분히 아래로 내려가도록 설정 (원하는 높이에 따라 100px ~ 150px 조절) */
+  margin-top: 100px;
   padding: 20px;
 }
 
-/* 1번: 산 그림 영역을 ⛰️ 이모지로 대체하고 크기 및 간격 설정 */
 .empty-mountain-icon,
 .empty-icon-wrapper {
   font-size: 48px;
   margin-bottom: 16px;
   line-height: 1;
-  background: none !important; /* 이전의 네모난 배경 제거 */
+  background: none !important;
   box-shadow: none !important;
   width: auto !important;
   height: auto !important;
 }
 
-/* 메인 타이틀 ('아직 프로젝트가 없어요') */
 .empty-title {
   font-size: 18px;
   font-weight: 600;
@@ -1005,34 +929,26 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   margin-bottom: 8px;
 }
 
-/* 4번: '첫 고도 필름을 만들어 보세요' 색상 (상단 타이틀에서 채도를 약간 뺀 은은한 톤) */
 .empty-subtitle {
   font-size: 14px;
   color: #4C4C52;
   font-weight: 400;
 }
 
-/* ========================================================
-   [가로 스크롤 선택 셀 (Cell) 스타일]
-   ======================================================== */
-
-/* 가로 스크롤 컨테이너 */
 .horizontal-cell-group {
   display: flex;
   gap: 10px;
   overflow-x: auto;
   padding: 4px 2px 8px 2px;
-  -ms-overflow-style: none; /* IE, Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   scroll-behavior: smooth;
 }
 
-/* Chrome, Safari 스크롤바 숨기기 */
 .horizontal-cell-group::-webkit-scrollbar {
   display: none;
 }
 
-/* 개별 선택 셀 (Cell) */
 .select-cell {
   flex: 0 0 auto;
   display: flex;
@@ -1051,7 +967,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   user-select: none;
 }
 
-/* 셀 호버/터치 반응 */
 .select-cell:active {
   transform: scale(0.95);
 }
@@ -1060,7 +975,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   font-size: 15px;
 }
 
-/* 선택된 셀 상태 (Active) */
 .select-cell.active {
   background-color: #232A2C !important;
   border-color: #232A2C !important;
@@ -1080,5 +994,3 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 .modal-content {
   will-change: transform;
 }
-
-
