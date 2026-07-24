@@ -102,12 +102,13 @@ document.addEventListener("DOMContentLoaded", () => {
  const designCells = designGroup.querySelectorAll('.select-cell');
  
  const allowedDesign = selectedMountain ? mountainDesignMap[selectedMountain] : null;
- console.log('selectedMountain:', JSON.stringify(selectedMountain), 'allowedDesign:', allowedDesign);
+console.log('selectedMountain:', JSON.stringify(selectedMountain), 'allowedDesign:', allowedDesign);
 
+const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;   // ← 이 줄 추가!
 
-    // 선택된 산의 허용 디자인 목록 찾아오기
-    let allowedDesigns = [];
-    if (cleanSelectedMountain) {
+// 선택된 산의 허용 디자인 목록 찾아오기
+let allowedDesigns = [];
+if (cleanSelectedMountain) {
       for (const [mName, designs] of Object.entries(mountainDesignMap)) {
         if (normalizeText(mName) === cleanSelectedMountain) {
           allowedDesigns = designs.map(d => normalizeText(d));
