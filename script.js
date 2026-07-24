@@ -176,40 +176,20 @@ document.addEventListener("DOMContentLoaded", () => {
     let dragY = 0;
     let isDragging = false;
 
-    // 모달 내부에서 '나만의 고도필름을 만들어보세요' 글자 엘리먼트 찾기
-    const findTitleElement = () => {
-      const allElements = bottomSheetContent.querySelectorAll('*');
-      for (let el of allElements) {
-        if (el.children.length === 0 && el.textContent.includes('나만의 고도필름을 만들어보세요')) {
-          return el;
-        }
-      }
-      return null;
-    };
-
-    // 터치한 위치가 Title 글자의 Top Y좌표보다 상단인지 검사
-    const checkInDragZone = (clientY) => {
-      const titleEl = findTitleElement();
-      if (titleEl) {
-        const rect = titleEl.getBoundingClientRect();
-        return clientY <= rect.top; // 글자 시작 Y좌표보다 위 영역
-      }
-      // fallback: 글자를 못 찾은 경우 상단 80px 영역
-      const sheetRect = bottomSheetContent.getBoundingClientRect();
-      return clientY <= (sheetRect.top + 80);
-    };
-
     const onDragStart = (clientY, target) => {
-      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button')) {
-        return;
-      }
-      if (checkInDragZone(clientY)) {
-        isDragging = true;
-        startY = clientY;
-        dragY = 0;
-        bottomSheetContent.style.transition = 'none';
-      }
-    };
+  // 입력창/버튼은 드래그 대상에서 제외 (타이핑, 클릭 방해 방지)
+  if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button')) {
+    return;
+  }
+  // 가로 스크롤 셀 영역(산 선택, 디자인 선택)도 제외 (좌우 스와이프와 충돌 방지)
+  if (target.closest('.horizontal-cell-group')) {
+    return;
+  }
+  isDragging = true;
+  startY = clientY;
+  dragY = 0;
+  bottomSheetContent.style.transition = 'none';
+};
 
     const onDragMove = (clientY) => {
       if (!isDragging) return;
