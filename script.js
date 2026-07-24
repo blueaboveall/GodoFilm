@@ -411,28 +411,29 @@ function renderProjects() {
       const projectVideos = allVideos.filter(item => item.projectid === proj.id);
 
       if (projectVideos.length > 0) {
-        const firstVideo = projectVideos[0];
-        const safeBlob = new Blob([firstVideo.videoBlob], { type: firstVideo.videoBlob.type || 'video/mp4' });
-        const videoURL = URL.createObjectURL(safeBlob);
-        const videoThumbnail = document.createElement("video");
-        videoThumbnail.src = videoURL;
-        videoThumbnail.preload = "metadata";
-        videoThumbnail.muted = true;
-        videoThumbnail.playsInline = true;
-        videoThumbnail.style.width = "100%";
-        videoThumbnail.style.height = "100%";
-        videoThumbnail.style.objectFit = "cover";
-        videoThumbnail.currentTime = 0.1;
-        if ((firstVideo.facingMode || "user") === "user") {
-          videoThumbnail.style.transform = "scaleX(-1)";
-        }
-        pictureBox.appendChild(videoThumbnail);
-      }
-
-      const mountainTag = document.createElement("div");
-      mountainTag.className = "mountain-tag";
-      mountainTag.innerText = proj.mountain;
-      pictureBox.appendChild(mountainTag);
+  const firstVideo = projectVideos[0];
+  const safeBlob = new Blob([firstVideo.videoBlob], { type: firstVideo.videoBlob.type || 'video/mp4' });
+  const videoURL = URL.createObjectURL(safeBlob);
+  const videoThumbnail = document.createElement("video");
+  videoThumbnail.src = videoURL;
+  videoThumbnail.preload = "metadata";
+  videoThumbnail.muted = true;
+  videoThumbnail.playsInline = true;
+  videoThumbnail.style.width = "100%";
+  videoThumbnail.style.height = "100%";
+  videoThumbnail.style.objectFit = "cover";
+  videoThumbnail.currentTime = 0.1;
+  if ((firstVideo.facingMode || "user") === "user") {
+    videoThumbnail.style.transform = "scaleX(-1)";
+  }
+  pictureBox.appendChild(videoThumbnail);
+} else {
+  // 영상이 아직 없을 때만 산 이름 자막을 보여줌
+  const mountainTag = document.createElement("div");
+  mountainTag.className = "mountain-tag";
+  mountainTag.innerText = proj.mountain;
+  pictureBox.appendChild(mountainTag);
+}
 
       const info = document.createElement("div");
       info.className = "project-info";
