@@ -96,14 +96,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // [개선 3] 산 선택 시 해당 산에 맞는 디자인만 동적으로 활성화하는 핵심 함수
   function updateDesignOptions(selectedMountain) {
-    const cellGroups = document.querySelectorAll('.horizontal-cell-group');
-    if (cellGroups.length < 2) return;
+ const cellGroups = document.querySelectorAll('.horizontal-cell-group');
+ if (cellGroups.length < 2) return;
+ const designGroup = cellGroups[1]; 
+ const designCells = designGroup.querySelectorAll('.select-cell');
+ 
+ const allowedDesign = selectedMountain ? mountainDesignMap[selectedMountain] : null;
+ console.log('selectedMountain:', JSON.stringify(selectedMountain), 'allowedDesign:', allowedDesign);
 
-    const designGroup = cellGroups[1];
-    const designCells = designGroup.querySelectorAll('.select-cell');
-
-    const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;
-    console.log('selectedMountain:', JSON.stringify(selectedMountain), 'allowedDesign:', allowedDesign);
 
     // 선택된 산의 허용 디자인 목록 찾아오기
     let allowedDesigns = [];
