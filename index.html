@@ -149,15 +149,16 @@
     <!-- 2. 카메라 화면 뷰 (홈 화면과 동등한 위치) -->
     <div id="camera-page-view" class="main-view" style="display: none;">
       <div class="app-container">
-        <button id="back-to-home-btn" aria-label="초기 화면으로 나가기">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-        </button>
-        
-        <div class="phone-screen">
-          <div id="slider-wrapper" class="slider-wrapper"> 
+  <button id="back-to-home-btn" aria-label="초기 화면으로 나가기">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+  </button>
+
+  <div class="phone-screen-wrapper">
+    <div class="phone-screen">
+      <div id="slider-wrapper" class="slider-wrapper"> 
             <div class="slide-page" id="camera-page">
               <video id="camera-view" autoplay playsinline></video>
               <div class="altitude-overlay" id="altitude-text">⛰️ 초기 고도 측정중...</div>
@@ -200,12 +201,13 @@
         </div>
         
         <button id="total-download-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/> 
-          </svg>
-          <span>고도필름 다운로드</span>
-        </button>
-      </div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/> 
+      </svg>
+      <span>고도필름 다운로드</span>
+    </button>
+  </div>
+</div>
     </div> <!-- #camera-page-view 정상 닫힘 -->
   </div> <!-- #main-container 정상 닫힘 -->
 
