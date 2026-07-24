@@ -286,9 +286,10 @@ body, html {
 }
 
 #total-download-btn {
-  position: static;       /* absolute 해제 → 정상 흐름에 참여 */
-  align-self: flex-end;   /* app-container가 flex-column이라, 우측 정렬 */
-  margin-top: 5px;       /* phone-screen과의 간격 */
+  position: absolute;
+  top: 100%;          /* wrapper(=phone-screen) 바로 아래 */
+  right: 0;
+  margin-top: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -553,9 +554,9 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 }
 
 #back-to-home-btn {
-  position: absolute;
-  top: -300px;
-  left: 0;
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: 16px;
   width: 40px;
   height: 40px;
   background-color: rgba(0, 0, 0, 0.5);
@@ -1047,3 +1048,7 @@ html, body {
   touch-action: none;
 }
 
+.phone-screen-wrapper {
+  position: relative;
+  width: 100%;
+}
