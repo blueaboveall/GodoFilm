@@ -419,7 +419,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, calc(-50% - 10px)); 
+  transform: translate(-50%, calc(-50% 0px)); 
   color: #87CEEA;
   font-size: 20px;
   font-weight: bold;
