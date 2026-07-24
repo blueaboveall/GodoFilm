@@ -39,7 +39,7 @@ const availableDesigns = {
   "미륵산": { "산 정상": "bg-mireuk-peak.png" }
 };
 
-// 산별 활성화 디자인 매핑 테이블
+// 산별 활성화 디자인 매핑 테이블 (HTML 텍스트와 정확히 일치하도록 설정)
 const mountainDesignMap = {
   "소래산": "산 정상",
   "배봉산": "크래프트 (영어)",
@@ -96,9 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------
   // 산 선택에 따른 디자인 셀 비활성화/활성화 함수
   // ------------------------------------------
-  // ------------------------------------------
-  // 산 선택에 따른 디자인 셀 비활성화/활성화 함수
-  // ------------------------------------------
   function updateDesignOptions(selectedMountain) {
     const cellGroups = document.querySelectorAll('.horizontal-cell-group');
     if (cellGroups.length < 2) return;
@@ -106,12 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const designGroup = cellGroups[1]; 
     const designCells = designGroup.querySelectorAll('.select-cell');
     
-    // 선택된 산이 있으면 매핑된 디자인을 가져오고, 없으면 null
     const allowedDesign = selectedMountain ? mountainDesignMap[selectedMountain] : null;
 
     designCells.forEach(cell => {
       applyCellLayoutStyles(cell);
-      // HTML 요소에 미리 저장해둔 원래 이름을 가져옴
+      
+      // HTML에 저장된 기본 이름을 가져옴
       const baseName = cell.getAttribute('data-base-name') || cleanEmojiText(cell.innerText).replace('(준비 중)', '').trim();
 
       // 1. 산이 아직 선택되지 않은 상태 -> 모든 디자인 아이콘 활성화
@@ -121,11 +118,11 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.style.opacity = '1';
         cell.style.pointerEvents = 'auto';
       } 
-      // 2. 특정 산이 선택된 상태 -> 해당 산에 맞는 디자인만 놔두고 나머지 비활성화
+      // 2. 특정 산이 선택된 상태 -> 해당 산에 맞는 디자인만 활성화, 나머지는 비활성화
       else {
-        // 띄어쓰기로 인한 불일치를 막기 위해 공백을 싹 지우고 비교
-        const cleanBase = baseName.replace(/\s+/g, '');
-        const cleanAllowed = allowedDesign ? allowedDesign.replace(/\s+/g, '') : '';
+        // 공백, 괄호 등을 모두 제거하여 순수 글자만으로 비교
+        const cleanBase = baseName.replace(/[\s()]/g, '');
+        const cleanAllowed = allowedDesign ? allowedDesign.replace(/[\s()]/g, '') : '';
 
         if (cleanBase === cleanAllowed) {
           // 일치하는 디자인: 활성화
@@ -137,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // 일치하지 않는 디자인: 비활성화 + (준비 중)
           cell.innerText = `${baseName} (준비 중)`;
           cell.classList.add('disabled');
-          cell.classList.remove('active'); // 혹시 선택되어 있었다면 선택 해제
+          cell.classList.remove('active'); 
           cell.style.opacity = '0.35';
           cell.style.pointerEvents = 'none';
         }
