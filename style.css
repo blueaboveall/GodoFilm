@@ -691,13 +691,15 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #333333;
 }
 
+/* 1. 배경 오버레이 (iOS 전용 webkit 속성 추가) */
 .bottom-sheet-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(3px); /* iOS 웹앱 필수 속성 */
   backdrop-filter: blur(3px);
   z-index: 1000;
   display: none;
@@ -710,6 +712,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   display: flex !important;
 }
 
+/* 2. 바텀시트 본문 */
 .bottom-sheet-content {
   width: 100%;
   max-width: 430px;
@@ -717,15 +720,26 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   background-color: #FAF8F5;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  padding: 16px 24px 36px 24px;
+  /* 홈화면 웹앱 하단 홈바(아이폰 제스처 바) 영역 감안한 여백 추가 */
+  padding: 16px 24px calc(36px + env(safe-area-inset-bottom)) 24px;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.12);
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+
+  /* 기본 상태 (숨김) */
   transform: translateY(100%);
-  will-change: transform;
+  -webkit-transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ★ 핵심: show 클래스가 붙었을 때 CSS 차원에서 강제로 화면 위로 올림 ★ */
+.bottom-sheet-overlay.show .bottom-sheet-content,
+.bottom-sheet-overlay.active .bottom-sheet-content {
+  transform: translateY(0) !important;
+  -webkit-transform: translateY(0) !important;
 }
 
 .sheet-drag-zone {
