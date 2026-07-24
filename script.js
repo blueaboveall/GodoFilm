@@ -73,7 +73,7 @@ function findAvailableDesignUrl(mountainName, designName) {
 
 function applyCellLayoutStyles(cell) {
   cell.style.display = "flex";
-  cell.style.alignItems = "center"; 
+  cell.style.alignItems = "center";
   cell.style.justifyContent = "center";
   cell.style.textAlign = "center";
   cell.style.boxShadow = "none";
@@ -81,12 +81,72 @@ function applyCellLayoutStyles(cell) {
   cell.style.filter = "none";
 }
 
+// Global State & Function for BottomSheet (iOS + Android PWA)
+let isSheetOpen = false;
+
+function openSheetWithAnimation() {
+  const projectModal = document.getElementById("project-modal");
+  const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
+  const projectNameInput = document.getElementById("project-name-input");
+
+  if (!projectModal || !bottomSheetContent) return;
+
+  projectModal.style.display = 'flex';
+  void projectModal.offsetWidth;
+
+  projectModal.classList.add('show');
+  bottomSheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+  bottomSheetContent.style.transform = 'translateY(0)';
+
+  document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => cell.classList.remove('active'));
+  if (projectNameInput) projectNameInput.value = "";
+  updateDesignOptions(null);
+
+  if (!isSheetOpen) {
+    isSheetOpen = true;
+    history.pushState({ bottomSheet: true }, '');
+  }
+}
+
+function closeSheetWithAnimation(isBackGesture = false) {
+  const projectModal = document.getElementById("project-modal");
+  const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
+
+  if (!projectModal || !bottomSheetContent) return;
+
+  bottomSheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+  bottomSheetContent.style.transform = 'translateY(100%)';
+
+  setTimeout(() => {
+    projectModal.classList.remove('show');
+    projectModal.style.display = 'none';
+    bottomSheetContent.style.transform = '';
+    bottomSheetContent.style.transition = '';
+
+    if (isSheetOpen && !isBackGesture) {
+      isSheetOpen = false;
+      if (history.state && history.state.bottomSheet) {
+        history.back();
+      }
+    } else {
+      isSheetOpen = false;
+    }
+  }, 300);
+}
+
+// 안드로이드 물리 뒤로가기 / 제스처 대응
+window.addEventListener('popstate', () => {
+  if (isSheetOpen) {
+    closeSheetWithAnimation(true);
+  }
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   const openModalBtn = document.getElementById("open-modal-btn");
   const closeModalBtn = document.getElementById("close-modal-btn");
   const projectModal = document.getElementById("project-modal");
   const createProjectSubmitBtn = document.getElementById("create-project-submit-btn");
-  const projectNamelnput = document.getElementById("project-name-input");
+  const projectNameInput = document.getElementById("project-name-input");
   const projectGrid = document.querySelector(".project-grid");
   const mainContainer = document.getElementById("main-container");
   const homeView = document.getElementById("home-view");
@@ -96,134 +156,77 @@ document.addEventListener("DOMContentLoaded", () => {
   const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
   const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone') : null;
 
-  if (projectModal && bottomSheetContent && sheetHandle) {
+  // 열기/닫기 버튼 연동
+  if (openModalBtn) {
+    openModalBtn.addEventListener("click", () => openSheetWithAnimation());
+  }
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener("click", () => closeSheetWithAnimation());
+  }
+  if (projectModal) {
+    projectModal.addEventListener("click", (e) => {
+      if (e.target === projectModal) closeSheetWithAnimation();
+    });
+  }
+
+  // 통합 단일 드래그 제스처
+  if (sheetHandle && bottomSheetContent) {
     let startY = 0;
     let dragY = 0;
     let isDragging = false;
 
-    function onDragStart(clientY) {
+    const onDragStart = (clientY) => {
       isDragging = true;
       startY = clientY;
       bottomSheetContent.style.transition = 'none';
-    }
+    };
 
-    function onDragMove(clientY) {
+    const onDragMove = (clientY) => {
       if (!isDragging) return;
       dragY = clientY - startY;
-      if (dragY < 0) dragY = 0;
-      bottomSheetContent.style.transform = `translateY(${dragY}px)`;
-    }
+      if (dragY > 0) {
+        bottomSheetContent.style.transform = `translateY(${dragY}px)`;
+      }
+    };
 
-    function onDragEnd() {
+    const onDragEnd = () => {
       if (!isDragging) return;
       isDragging = false;
-      bottomSheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-      const closeThreshold = 120;
-      if (dragY > closeThreshold) {
+      if (dragY > 90) {
         closeSheetWithAnimation();
       } else {
+        bottomSheetContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
         bottomSheetContent.style.transform = 'translateY(0px)';
-        dragY = 0;
       }
-    }
+      dragY = 0;
+    };
 
-    function closeSheetWithAnimation() {
-      bottomSheetContent.style.transition = 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)';
-      bottomSheetContent.style.transform = 'translateY(100%)';
-      setTimeout(() => {
-        projectModal.classList.remove('show');
-        projectModal.style.display = 'none';
-        bottomSheetContent.style.transform = '';
-        bottomSheetContent.style.transition = '';
-      }, 550);
-    }
-
-    sheetHandle.addEventListener('touchstart', (e) => {
-      onDragStart(e.touches[0].clientY);
+    sheetHandle.addEventListener('touchstart', (e) => onDragStart(e.touches[0].clientY), { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging) onDragMove(e.touches[0].clientY);
     }, { passive: true });
+    window.addEventListener('touchend', onDragEnd);
 
-    sheetHandle.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      onDragMove(e.touches[0].clientY);
-    }, { passive: false });
-
-    sheetHandle.addEventListener('touchend', onDragEnd);
-
-    sheetHandle.addEventListener('mousedown', (e) => {
-      onDragStart(e.clientY);
-      const onMouseMove = (ev) => onDragMove(ev.clientY);
-      const onMouseUp = () => {
-        onDragEnd();
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-      };
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
+    sheetHandle.addEventListener('mousedown', (e) => onDragStart(e.clientY));
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) onDragMove(e.clientY);
     });
+    window.addEventListener('mouseup', onDragEnd);
   }
 
-  // ⭐ 수정된 부분: innerText 대신 textContent를 사용하고,
-  // 변형 선택자(U+FE0F) 및 개행/공백을 안전하게 정리합니다.
-  // (기존 innerText 방식은 산 선택 버튼에서만 브라우저가 원본 HTML의
-  //  개행을 <br>로 바꿔버려 텍스트가 2줄이 되고, 그 결과 아래로 쏠려 보이는
-  //  버그의 원인이었습니다.)
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
     applyCellLayoutStyles(cell);
     const rawName = cell.textContent;
     const cleanBaseName = rawName
-      .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "")
-      .replace(/[\u{FE00}-\u{FE0F}]/gu, "")
-      .replace(/\(준비 중\)/g, "")
-      .replace(/\s+/g, " ")
+      .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+      .replace(/\(준비 중\)/g, '')
+      .replace(/\s+/g, '')
       .trim();
     cell.setAttribute('data-base-name', cleanBaseName);
     cell.textContent = cleanBaseName;
   });
-
-  function updateDesignOptions(selectedMountain) {
-    const cellGroups = document.querySelectorAll('.horizontal-cell-group');
-    if (cellGroups.length < 2) return;
-    const designGroup = cellGroups[1];
-    const designCells = designGroup.querySelectorAll('.select-cell');
-    const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;
-
-    let allowedDesigns = [];
-    if (cleanSelectedMountain) {
-      for (const [mName, designs] of Object.entries(mountainDesignMap)) {
-        if (normalizeText(mName) === cleanSelectedMountain) {
-          allowedDesigns = designs.map(d => normalizeText(d));
-          break;
-        }
-      }
-    }
-
-    designCells.forEach(cell => {
-      applyCellLayoutStyles(cell);
-      const baseName = cell.getAttribute('data-base-name') || normalizeText(cell.textContent);
-      const cleanCellName = normalizeText(baseName);
-
-      if (!selectedMountain) {
-        cell.textContent = baseName;
-        cell.classList.remove('disabled');
-        cell.style.opacity = '1';
-        cell.style.pointerEvents = 'auto';
-      } else {
-        if (allowedDesigns.includes(cleanCellName)) {
-          cell.textContent = baseName;
-          cell.classList.remove('disabled');
-          cell.style.opacity = '1';
-          cell.style.pointerEvents = 'auto';
-        } else {
-          cell.textContent = `${baseName} (준비 중)`;
-          cell.classList.add('disabled');
-          cell.classList.remove('active');
-          cell.style.opacity = '0.35';
-          cell.style.pointerEvents = 'none';
-        }
-      }
-    });
-  }
 
   const cellGroups = document.querySelectorAll('.horizontal-cell-group');
   cellGroups.forEach((group, groupIndex) => {
@@ -236,223 +239,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       targetCell.classList.add('active');
       applyCellLayoutStyles(targetCell);
-
       if (groupIndex === 0) {
         const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.textContent;
         updateDesignOptions(selectedMountain);
       }
     });
   });
-
-  function renderProjects() {
-    if (!projectGrid) return;
-    projectGrid.innerHTML = "";
-
-    const emptyState = document.getElementById("empty-state");
-    if (emptyState) {
-      emptyState.style.display = projects.length === 0 ? "flex" : "none";
-    }
-
-    if (!db) {
-      renderCards([]);
-      return;
-    }
-
-    const transaction = db.transaction(["videos"], "readonly");
-    const store = transaction.objectStore("videos");
-    const request = store.getAll();
-
-    request.onsuccess = function (e) {
-      const allVideos = e.target.result || [];
-      renderCards(allVideos);
-    };
-
-    function renderCards(allVideos) {
-      const latestProjects = [...projects].reverse();
-      latestProjects.forEach((proj, index) => {
-        const originalIndex = projects.length - 1 - index;
-        const card = document.createElement("div");
-        card.className = "project-card";
-
-        const pictureBox = document.createElement("div");
-        pictureBox.className = "mountain-pic-box";
-
-        const projectVideos = allVideos.filter(item => item.projectid === proj.id);
-        if (projectVideos.length > 0) {
-          const firstVideo = projectVideos[0];
-          const safeBlob = new Blob([firstVideo.videoBlob], { type: firstVideo.videoBlob.type || 'video/mp4' });
-          const videoURL = URL.createObjectURL(safeBlob);
-          const videoThumbnail = document.createElement("video");
-          videoThumbnail.src = videoURL;
-          videoThumbnail.preload = "metadata";
-          videoThumbnail.muted = true;
-          videoThumbnail.playsInline = true;
-          videoThumbnail.style.width = "100%";
-          videoThumbnail.style.height = "100%";
-          videoThumbnail.style.objectFit = "cover";
-          videoThumbnail.currentTime = 0.1;
-          if ((firstVideo.facingMode || "user") === "user") {
-            videoThumbnail.style.transform = "scaleX(-1)";
-          }
-          pictureBox.appendChild(videoThumbnail);
-        } else {
-          const mountainTag = document.createElement("div");
-          mountainTag.className = "mountain-tag";
-          mountainTag.innerText = proj.mountain;
-          pictureBox.appendChild(mountainTag);
-        }
-
-        const info = document.createElement("div");
-        info.className = "project-info";
-        info.innerHTML = `
-          <div class="project-title">${proj.name}</div>
-          <div class="project-date">${proj.date}</div>
-        `;
-
-        const titleElement = info.querySelector('.project-title');
-        function startEditing() {
-          titleElement.contentEditable = "true";
-          titleElement.focus();
-          const range = document.createRange();
-          const sel = window.getSelection();
-          range.selectNodeContents(titleElement);
-          range.collapse(false);
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-
-        function saveEditing() {
-          titleElement.contentEditable = "false";
-          const newName = titleElement.innerText.trim();
-          if (newName && newName !== proj.name) {
-            projects[originalIndex].name = newName;
-            localStorage.setItem("climbingProjects", JSON.stringify(projects));
-          } else {
-            titleElement.innerText = proj.name;
-          }
-        }
-
-        titleElement.addEventListener("click", (e) => {
-          e.stopPropagation();
-          startEditing();
-        });
-
-        titleElement.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            titleElement.blur();
-          }
-        });
-
-        titleElement.addEventListener("blur", saveEditing);
-
-        const menuTrigger = document.createElement("div");
-        menuTrigger.className = "menu-trigger";
-        menuTrigger.innerHTML = '&#8942;';
-
-        const popup = document.createElement("div");
-        popup.className = "project-menu-popup";
-
-        const renameItem = document.createElement("div");
-        renameItem.className = "menu-item";
-        renameItem.innerHTML = '<span class="menu-text">이름 변경하기</span>';
-
-        const deleteItem = document.createElement("div");
-        deleteItem.className = "menu-item";
-        deleteItem.innerHTML = '<span class="menu-text">삭제하기</span>';
-
-        popup.appendChild(renameItem);
-        popup.appendChild(deleteItem);
-
-        menuTrigger.addEventListener("click", (e) => {
-          e.stopPropagation();
-          document.querySelectorAll(".project-menu-popup").forEach(menu => {
-            if (menu !== popup) menu.style.display = "none";
-          });
-          popup.style.display = popup.style.display === "block" ? "none" : "block";
-        });
-
-        renameItem.addEventListener("click", (e) => {
-          e.stopPropagation();
-          popup.style.display = "none";
-          startEditing();
-        });
-
-        deleteItem.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          if (confirm("프로젝트를 삭제하시겠습니까? \n관련 영상도 모두 완전히 삭제됩니다.")) {
-            const targetProjectId = projects[originalIndex].id;
-            projects.splice(originalIndex, 1);
-            localStorage.setItem("climbingProjects", JSON.stringify(projects));
-            await deleteProjectVideos(targetProjectId);
-            renderProjects();
-          }
-        });
-
-        card.addEventListener("click", (e) => {
-          if (e.target.closest(".menu-trigger")) return;
-          if (e.target.closest(".project-menu-popup")) return;
-          if (e.target.closest(".project-title")) return;
-
-          currentProject = proj;
-          loadSavedVideos(currentProject.id);
-
-          let bgImageUrl = "my-background.png";
-          const foundUrl = findAvailableDesignUrl(proj.mountain, proj.design);
-          if (foundUrl) bgImageUrl = foundUrl;
-
-          if (homeView) homeView.style.display = "none";
-          if (cameraPageView) cameraPageView.style.display = "flex";
-          if (mainContainer) {
-            mainContainer.classList.remove("home-mode");
-            mainContainer.style.backgroundImage = `url('${bgImageUrl}')`;
-          }
-          startCamera();
-          getRealAltitude();
-        });
-
-        card.appendChild(menuTrigger);
-        card.appendChild(popup);
-        card.appendChild(pictureBox);
-        card.appendChild(info);
-        projectGrid.appendChild(card);
-      });
-    }
-  }
-
-  window.refreshProjectGrid = renderProjects;
-
-  if (openModalBtn) {
-    openModalBtn.addEventListener("click", () => {
-      if (projectModal) {
-        projectModal.style.display = "flex";
-        projectModal.classList.add("show");
-        document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => {
-          cell.classList.remove('active');
-        });
-        if (projectNamelnput) projectNamelnput.value = "";
-        updateDesignOptions(null);
-      }
-    });
-  }
-
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener("click", () => {
-      if (projectModal) {
-        projectModal.classList.remove("show");
-        projectModal.style.display = "none";
-      }
-    });
-  }
-
-  if (projectModal) {
-    projectModal.addEventListener("click", (e) => {
-      if (e.target === projectModal) {
-        projectModal.classList.remove("show");
-        projectModal.style.display = "none";
-      }
-    });
-  }
 
   if (backToHomeBtn) {
     backToHomeBtn.addEventListener("click", () => {
@@ -479,11 +271,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (createProjectSubmitBtn) {
     createProjectSubmitBtn.addEventListener("click", () => {
-      const name = projectNamelnput ? projectNamelnput.value.trim() : "";
+      const name = projectNameInput ? projectNameInput.value.trim() : "";
       const cellGroups = document.querySelectorAll('.horizontal-cell-group');
       let mountain = "";
       let design = "";
-
       if (cellGroups.length >= 2) {
         const activeMountain = cellGroups[0].querySelector('.select-cell.active');
         if (activeMountain) {
@@ -494,14 +285,12 @@ document.addEventListener("DOMContentLoaded", () => {
           design = activeDesign.getAttribute('data-base-name') || activeDesign.textContent.trim();
         }
       }
-
       if (!name) { alert("프로젝트 이름을 입력해주세요!"); return; }
       if (!mountain) { alert("등산하실 산을 선택해주세요!"); return; }
       if (!design) { alert("배경 디자인을 선택해주세요!"); return; }
 
       const today = new Date();
       const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
-
       const newProject = {
         id: Date.now().toString(),
         name: name,
@@ -509,23 +298,229 @@ document.addEventListener("DOMContentLoaded", () => {
         design: design,
         date: formattedDate
       };
-
       projects.push(newProject);
       localStorage.setItem("climbingProjects", JSON.stringify(projects));
 
-      if (projectNamelnput) projectNamelnput.value = "";
+      if (projectNameInput) projectNameInput.value = "";
       document.querySelectorAll('.select-cell.active').forEach(cell => cell.classList.remove('active'));
 
-      if (projectModal) {
-        projectModal.classList.remove("show");
-        projectModal.style.display = "none";
-      }
+      closeSheetWithAnimation();
       renderProjects();
     });
   }
 
   renderProjects();
 });
+
+function updateDesignOptions(selectedMountain) {
+  const cellGroups = document.querySelectorAll('.horizontal-cell-group');
+  if (cellGroups.length < 2) return;
+  const designGroup = cellGroups[1];
+  const designCells = designGroup.querySelectorAll('.select-cell');
+  const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;
+  let allowedDesigns = [];
+
+  if (cleanSelectedMountain) {
+    for (const [mName, designs] of Object.entries(mountainDesignMap)) {
+      if (normalizeText(mName) === cleanSelectedMountain) {
+        allowedDesigns = designs.map(d => normalizeText(d));
+        break;
+      }
+    }
+  }
+
+  designCells.forEach(cell => {
+    applyCellLayoutStyles(cell);
+    const baseName = cell.getAttribute('data-base-name') || normalizeText(cell.textContent);
+    const cleanCellName = normalizeText(baseName);
+    if (!selectedMountain) {
+      cell.textContent = baseName;
+      cell.classList.remove('disabled');
+      cell.style.opacity = '1';
+      cell.style.pointerEvents = 'auto';
+    } else {
+      if (allowedDesigns.includes(cleanCellName)) {
+        cell.textContent = baseName;
+        cell.classList.remove('disabled');
+        cell.style.opacity = '1';
+        cell.style.pointerEvents = 'auto';
+      } else {
+        cell.textContent = `${baseName} (준비 중)`;
+        cell.classList.add('disabled');
+        cell.classList.remove('active');
+        cell.style.opacity = '0.35';
+        cell.style.pointerEvents = 'none';
+      }
+    }
+  });
+}
+
+function renderProjects() {
+  const projectGrid = document.querySelector(".project-grid");
+  if (!projectGrid) return;
+  projectGrid.innerHTML = "";
+  const emptyState = document.getElementById("empty-state");
+  if (emptyState) {
+    emptyState.style.display = projects.length === 0 ? "flex" : "none";
+  }
+  if (!db) {
+    renderCards([]);
+    return;
+  }
+  const transaction = db.transaction(["videos"], "readonly");
+  const store = transaction.objectStore("videos");
+  const request = store.getAll();
+  request.onsuccess = function (e) {
+    const allVideos = e.target.result || [];
+    renderCards(allVideos);
+  };
+
+  function renderCards(allVideos) {
+    const latestProjects = [...projects].reverse();
+    latestProjects.forEach((proj, index) => {
+      const originalIndex = projects.length - 1 - index;
+      const card = document.createElement("div");
+      card.className = "project-card";
+      const pictureBox = document.createElement("div");
+      pictureBox.className = "mountain-pic-box";
+      const projectVideos = allVideos.filter(item => item.projectid === proj.id);
+
+      if (projectVideos.length > 0) {
+        const firstVideo = projectVideos[0];
+        const safeBlob = new Blob([firstVideo.videoBlob], { type: firstVideo.videoBlob.type || 'video/mp4' });
+        const videoURL = URL.createObjectURL(safeBlob);
+        const videoThumbnail = document.createElement("video");
+        videoThumbnail.src = videoURL;
+        videoThumbnail.preload = "metadata";
+        videoThumbnail.muted = true;
+        videoThumbnail.playsInline = true;
+        videoThumbnail.style.width = "100%";
+        videoThumbnail.style.height = "100%";
+        videoThumbnail.style.objectFit = "cover";
+        videoThumbnail.currentTime = 0.1;
+        if ((firstVideo.facingMode || "user") === "user") {
+          videoThumbnail.style.transform = "scaleX(-1)";
+        }
+        pictureBox.appendChild(videoThumbnail);
+      }
+
+      const mountainTag = document.createElement("div");
+      mountainTag.className = "mountain-tag";
+      mountainTag.innerText = proj.mountain;
+      pictureBox.appendChild(mountainTag);
+
+      const info = document.createElement("div");
+      info.className = "project-info";
+      info.innerHTML = `
+        <div class="project-title">${proj.name}</div>
+        <div class="project-date">${proj.date}</div>
+      `;
+
+      const titleElement = info.querySelector('.project-title');
+      function startEditing() {
+        titleElement.contentEditable = "true";
+        titleElement.focus();
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(titleElement);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      function saveEditing() {
+        titleElement.contentEditable = "false";
+        const newName = titleElement.innerText.trim();
+        if (newName && newName !== proj.name) {
+          projects[originalIndex].name = newName;
+          localStorage.setItem("climbingProjects", JSON.stringify(projects));
+        } else {
+          titleElement.innerText = proj.name;
+        }
+      }
+
+      titleElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        startEditing();
+      });
+      titleElement.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          titleElement.blur();
+        }
+      });
+      titleElement.addEventListener("blur", saveEditing);
+
+      const menuTrigger = document.createElement("div");
+      menuTrigger.className = "menu-trigger";
+      menuTrigger.innerHTML = '&#8942;';
+      const popup = document.createElement("div");
+      popup.className = "project-menu-popup";
+      const renameItem = document.createElement("div");
+      renameItem.className = "menu-item";
+      renameItem.innerHTML = '<span class="menu-text">이름 변경하기</span>';
+      const deleteItem = document.createElement("div");
+      deleteItem.className = "menu-item";
+      deleteItem.innerHTML = '<span class="menu-text">삭제하기</span>';
+      popup.appendChild(renameItem);
+      popup.appendChild(deleteItem);
+
+      menuTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".project-menu-popup").forEach(menu => {
+          if (menu !== popup) menu.style.display = "none";
+        });
+        popup.style.display = popup.style.display === "block" ? "none" : "block";
+      });
+
+      renameItem.addEventListener("click", (e) => {
+        e.stopPropagation();
+        popup.style.display = "none";
+        startEditing();
+      });
+
+      deleteItem.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        if (confirm("프로젝트를 삭제하시겠습니까? \n관련 영상도 모두 완전히 삭제됩니다.")) {
+          const targetProjectId = projects[originalIndex].id;
+          projects.splice(originalIndex, 1);
+          localStorage.setItem("climbingProjects", JSON.stringify(projects));
+          await deleteProjectVideos(targetProjectId);
+          renderProjects();
+        }
+      });
+
+      card.addEventListener("click", (e) => {
+        if (e.target.closest(".menu-trigger")) return;
+        if (e.target.closest(".project-menu-popup")) return;
+        if (e.target.closest(".project-title")) return;
+        currentProject = proj;
+        loadSavedVideos(currentProject.id);
+        let bgImageUrl = "my-background.png";
+        const foundUrl = findAvailableDesignUrl(proj.mountain, proj.design);
+        if (foundUrl) bgImageUrl = foundUrl;
+        const homeView = document.getElementById("home-view");
+        const cameraPageView = document.getElementById("camera-page-view");
+        const mainContainer = document.getElementById("main-container");
+        if (homeView) homeView.style.display = "none";
+        if (cameraPageView) cameraPageView.style.display = "flex";
+        if (mainContainer) {
+          mainContainer.classList.remove("home-mode");
+          mainContainer.style.backgroundImage = `url('${bgImageUrl}')`;
+        }
+        startCamera();
+        getRealAltitude();
+      });
+
+      card.appendChild(menuTrigger);
+      card.appendChild(popup);
+      card.appendChild(pictureBox);
+      card.appendChild(info);
+      projectGrid.appendChild(card);
+    });
+  }
+}
+window.refreshProjectGrid = renderProjects;
 
 function getSupportedMimeType() {
   const types = ['video/mp4', 'video/webm; codecs=vp9', 'video/webm'];
@@ -538,15 +533,15 @@ function getSupportedMimeType() {
 function initDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open("HikeCameraDB", 2);
-    request.onupgradeneeded = function(e) {
+    request.onupgradeneeded = function (e) {
       const database = e.target.result;
       if (database.objectStoreNames.contains("videos")) {
         database.deleteObjectStore("videos");
       }
       database.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
     };
-    request.onsuccess = function(e) { db = e.target.result; resolve(); };
-    request.onerror = function(e) { console.error("DB 에러", e); reject(); };
+    request.onsuccess = function (e) { db = e.target.result; resolve(); };
+    request.onerror = function (e) { console.error("DB 에러", e); reject(); };
   });
 }
 
@@ -567,7 +562,6 @@ function startCameraClock() {
       cameraPage.appendChild(cameraTimeText);
     }
   }
-
   function updateClock() {
     const now = new Date();
     if (cameraTimeText) {
@@ -584,7 +578,6 @@ async function startCamera() {
     cameraView.srcObject.getTracks().forEach(track => track.stop());
     cameraView.srcObject = null;
   }
-
   if (currentFacingMode === "user") {
     if (zoom05Btn) zoom05Btn.classList.add('hide-option');
     if (currentZoomScale === 0.5) currentZoomScale = 1.0;
@@ -594,14 +587,16 @@ async function startCamera() {
   }
 
   try {
+    // 안드로이드 호환성을 위해 exact 제거
     const constraints = {
       audio: true,
       video: {
-        facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" },
+        facingMode: currentFacingMode === "user" ? "user" : "environment",
         width: { ideal: 1280 },
         height: { ideal: 720 }
       }
     };
+
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     cameraView.srcObject = stream;
     cameraView.muted = true;
@@ -614,7 +609,7 @@ async function startCamera() {
     console.error("카메라 작동 에러:", error);
     if (currentFacingMode === "environment") {
       currentFacingMode = "user";
-      alert("후면 카메라 진입 제한으로 전면으로 우회 구동합니다. \n다시 한번 시도해 주세요.");
+      alert("후면 카메라 진입 제한으로 전면으로 우회 구동합니다.");
       startCamera();
     }
   }
@@ -670,12 +665,10 @@ function deleteProjectVideos(projectid) {
     const transaction = db.transaction(["videos"], "readwrite");
     const store = transaction.objectStore("videos");
     const request = store.openCursor();
-    request.onsuccess = function(e) {
+    request.onsuccess = function (e) {
       const cursor = e.target.result;
       if (cursor) {
-        if (cursor.value.projectid === projectid) {
-          cursor.delete();
-        }
+        if (cursor.value.projectid === projectid) cursor.delete();
         cursor.continue();
       } else {
         resolve();
@@ -698,7 +691,7 @@ function loadSavedVideos(projectid) {
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
     const request = store.getAll();
-    request.onsuccess = function(e) {
+    request.onsuccess = function (e) {
       const allVideos = e.target.result || [];
       const filteredVideos = allVideos.filter(item => item.projectid === projectid);
       filteredVideos.forEach(item => {
@@ -715,7 +708,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   if (!sliderWrapper || !cameraPage) return;
   const safeBlob = new Blob([blob], { type: blob.type || 'video/mp4' });
   const videoURL = URL.createObjectURL(safeBlob);
-
   const newSlide = document.createElement('div');
   newSlide.className = 'slide-page';
   newSlide.style.position = 'relative';
@@ -726,11 +718,9 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   newVideo.playsInline = true;
   newVideo.setAttribute('playsinline', '');
   newVideo.loop = true;
-
   if (facingMode === "user") {
     newVideo.style.transform = 'scaleX(-1)';
   }
-
   newVideo.addEventListener('click', (e) => {
     e.stopPropagation();
     if (newVideo.paused) {
@@ -761,7 +751,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   deleteBtn.className = 'delete-btn';
   deleteBtn.setAttribute('aria-label', '영상 삭제');
   deleteBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
-
   deleteBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -785,7 +774,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   sliderWrapper.style.transition = 'none';
   sliderWrapper.insertBefore(newSlide, cameraPage);
   totalSlides++;
-
   if (autoMove) currentSlideIndex++;
   updateSliderPosition();
   sliderWrapper.offsetHeight;
@@ -794,15 +782,15 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
 
 function getRealAltitude() {
   if (!altitudeText) return;
-  navigator.geolocation.getCurrentPosition(async function(position) {
+  navigator.geolocation.getCurrentPosition(async function (position) {
     try {
       const response = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}`);
       const data = await response.json();
-      altitudeText.innerText = "⛰️해발 " + Math.round(data.elevation[0]) + "m";
+      altitudeText.innerText = "해발 " + Math.round(data.elevation[0]) + "m";
     } catch (error) {
       altitudeText.innerText = "고도 로딩 실패";
     }
-  }, function() {
+  }, function () {
     altitudeText.innerText = "GPS 연결 실패";
   });
 }
@@ -812,36 +800,27 @@ function executionRecord() {
   const stream = cameraView.srcObject;
   const mimeType = getSupportedMimeType();
   const options = mimeType ? { mimeType } : {};
-
   mediaRecorder = new MediaRecorder(stream, options);
   recordedChunks = [];
-
   mediaRecorder.ondataavailable = (e) => {
-    if (e.data.size > 0) {
-      recordedChunks.push(e.data);
-    }
+    if (e.data.size > 0) recordedChunks.push(e.data);
   };
-
   mediaRecorder.onstop = async () => {
     const recordedBlob = new Blob(recordedChunks, {
       type: mediaRecorder.mimeType || 'video/mp4'
     });
     recordedChunks = [];
-    const currentAltitude = altitudeText ? altitudeText.innerText : "⛰️해발 0m";
+    const currentAltitude = altitudeText ? altitudeText.innerText : "해발 0m";
     const now = new Date();
     const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
     const savedId = await saveVideoToDB(recordedBlob, currentAltitude, recordTime, currentProject ? currentProject.id : null, currentFacingMode);
     addVideoSlideToUI(recordedBlob, currentAltitude, savedId, recordTime, true, currentFacingMode);
   };
-
   mediaRecorder.start(200);
   recordBtn.innerText = "녹화중";
   recordBtn.style.backgroundColor = "gray";
   recordBtn.style.borderColor = "gray";
-
   getRealAltitude();
-
   setTimeout(() => {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
@@ -855,12 +834,10 @@ function executionRecord() {
 if (recordBtn) {
   recordBtn.addEventListener('click', () => {
     if ((mediaRecorder && mediaRecorder.state === 'recording') || recordBtn.innerText.includes("초")) return;
-
     if (selectedTimerSeconds > 0) {
       let timeLeft = selectedTimerSeconds;
       recordBtn.innerText = `${timeLeft}초`;
       recordBtn.style.backgroundColor = "orange";
-
       const countdownInterval = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
@@ -953,30 +930,26 @@ zoomOptionBtns.forEach(btn => {
     if (zoomBtnText) zoomBtnText.innerText = `${zoomVal}x`;
     if (cameraView && cameraView.srcObject) {
       applyHardwareZoom(cameraView.srcObject, currentZoomScale);
+      updateCameraTransformStyle();
     }
-    updateCameraTransformStyle();
     if (zoomMenu) zoomMenu.classList.remove('open');
   });
 });
 
 let touchStartX = 0, touchEndX = 0, touchStartY = 0, touchEndY = 0;
-
 document.addEventListener('touchstart', e => {
   touchStartX = e.changedTouches[0].screenX;
   touchStartY = e.changedTouches[0].screenY;
 });
-
 document.addEventListener('touchend', e => {
   touchEndX = e.changedTouches[0].screenX;
   touchEndY = e.changedTouches[0].screenY;
   handleSwipe();
 });
-
 document.addEventListener('mousedown', e => {
   touchStartX = e.screenX;
   touchStartY = e.screenY;
 });
-
 document.addEventListener('mouseup', e => {
   touchEndX = e.screenX;
   touchEndY = e.screenY;
@@ -987,7 +960,6 @@ function handleSwipe() {
   const swipeDistanceX = touchStartX - touchEndX;
   const swipeDistanceY = touchStartY - touchEndY;
   if (Math.abs(swipeDistanceX) < 40 || Math.abs(swipeDistanceY) > 60) return;
-
   if (swipeDistanceX < -50 && currentSlideIndex > 0) {
     currentSlideIndex--;
     updateSliderPosition();
@@ -1008,7 +980,6 @@ function updateSliderPosition() {
         video.currentTime = 0;
         video.muted = false;
         video.play().catch(err => {
-          console.log("Autoplay fallback muted mode:", err);
           video.muted = true;
           video.play().catch(e => console.log(e));
         });
@@ -1025,8 +996,7 @@ async function generateTotalLogVideo() {
   const transaction = db.transaction(["videos"], "readonly");
   const store = transaction.objectStore("videos");
   const request = store.getAll();
-
-  request.onsuccess = async function(e) {
+  request.onsuccess = async function (e) {
     let items = e.target.result || [];
     if (currentProject) {
       items = items.filter(item => item.projectid === currentProject.id);
@@ -1037,7 +1007,7 @@ async function generateTotalLogVideo() {
     }
 
     const originalBtnText = totalDownloadBtn.innerHTML;
-    totalDownloadBtn.innerText = "🎞️ 고도필름 제작 시작...";
+    totalDownloadBtn.innerText = "고도필름 제작 시작...";
     totalDownloadBtn.disabled = true;
 
     const renderOverlay = document.createElement('div');
@@ -1050,7 +1020,7 @@ async function generateTotalLogVideo() {
     `;
 
     const renderStatus = document.createElement('div');
-    renderStatus.innerText = "🎞️ 고도필름 제작 중... (0%)";
+    renderStatus.innerText = "고도필름 제작 중... (0%)";
     renderStatus.style.cssText = "font-size: 18px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.5px;";
     renderOverlay.appendChild(renderStatus);
 
@@ -1173,6 +1143,7 @@ async function generateTotalLogVideo() {
             ctx.scale(-1, 1);
             ctx.translate(-(videoX + containerWidth / 2), 0);
           }
+
           ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
           ctx.restore();
 
@@ -1184,7 +1155,7 @@ async function generateTotalLogVideo() {
 
           ctx.font = "bold 55px -apple-system, sans-serif";
           ctx.textBaseline = "middle";
-          const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
+          const cleanText = (item.altitudeText || "해발 0m").trim();
           const totalContentWidth = 48 + ctx.measureText(cleanText).width;
           const startX = (canvas.width - totalContentWidth) / 2;
           ctx.fillText(cleanText, startX + 48, videoY + (containerHeight / 2));
@@ -1192,8 +1163,8 @@ async function generateTotalLogVideo() {
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
 
-          renderStatus.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
-          totalDownloadBtn.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
+          renderStatus.innerText = `고도필름 제작 중... (${percent}%)`;
+          totalDownloadBtn.innerText = `고도필름 제작 중... (${percent}%)`;
 
           await new Promise(requestAnimationFrame);
         }
@@ -1205,8 +1176,8 @@ async function generateTotalLogVideo() {
       }
 
       hiddenVideo.remove();
-      renderStatus.innerText = "💽 파일 저장 중...";
-      totalDownloadBtn.innerText = "💽 파일 저장 중...";
+      renderStatus.innerText = "파일 저장 중...";
+      totalDownloadBtn.innerText = "파일 저장 중...";
       await new Promise(resolve => setTimeout(resolve, 500));
       canvasRecorder.stop();
     } catch (err) {
@@ -1241,150 +1212,3 @@ async function initApp() {
 }
 
 initApp();
-
-// ==========================================
-// 바텀시트 (Bottom Sheet) 애니메이션 & 제스처 제어
-// ==========================================
-
-const sheetOverlay = document.querySelector('.bottom-sheet-overlay');
-const sheetContent = document.querySelector('.bottom-sheet-content');
-const dragZone = document.querySelector('.sheet-drag-zone');
-
-let isSheetOpen = false;
-
-/**
- * 바텀시트를 부드럽게 열 때 사용하는 함수
- */
-function openSheetWithAnimation() {
-  if (!sheetOverlay || !sheetContent) return;
-
-  sheetOverlay.style.display = 'flex';
-  void sheetOverlay.offsetWidth; // Reflow 강제 실행
-  
-  sheetOverlay.classList.add('show');
-  sheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
-  sheetContent.style.transform = 'translateY(0)';
-
-  // 안드로이드 뒤로가기 제스처 대응용 히스토리 생성
-  if (!isSheetOpen) {
-    isSheetOpen = true;
-    history.pushState({ bottomSheet: true }, '');
-  }
-}
-
-/**
- * 바텀시트를 아래로 스르륵 닫는 함수
- */
-function closeSheetWithAnimation(isBackGesture = false) {
-  if (!sheetOverlay || !sheetContent) return;
-
-  sheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-  sheetContent.style.transform = 'translateY(100%)';
-
-  setTimeout(() => {
-    sheetOverlay.classList.remove('show', 'active');
-    sheetOverlay.style.display = 'none';
-    sheetContent.style.transform = '';
-    sheetContent.style.transition = '';
-
-    // 버튼이나 배경 클릭으로 닫았을 때 뒤로가기 히스토리 정리
-    if (isSheetOpen && !isBackGesture) {
-      isSheetOpen = false;
-      if (history.state && history.state.bottomSheet) {
-        history.back();
-      }
-    } else {
-      isSheetOpen = false;
-    }
-  }, 300);
-}
-
-// 1. 바깥 어두운 배경 클릭 시 시트 닫기
-if (sheetOverlay) {
-  sheetOverlay.addEventListener('click', (e) => {
-    if (e.target === sheetOverlay) {
-      closeSheetWithAnimation();
-    }
-  });
-}
-
-// 2. 안드로이드 시스템 뒤로가기 제스처 감지
-window.addEventListener('popstate', () => {
-  if (isSheetOpen) {
-    closeSheetWithAnimation(true);
-  }
-});
-
-// 3. 상단 드래그 영역(sheet-drag-zone) 쓸어내리기 제스처
-let dragStartY = 0;
-let dragCurrentY = 0;
-let isSheetDragging = false;
-
-if (dragZone && sheetContent) {
-  const handleDragStart = (clientY) => {
-    dragStartY = clientY;
-    dragCurrentY = clientY;
-    isSheetDragging = true;
-    sheetContent.style.transition = 'none';
-  };
-
-  const handleDragMove = (clientY) => {
-    if (!isSheetDragging) return;
-    dragCurrentY = clientY;
-    const deltaY = dragCurrentY - dragStartY;
-
-    if (deltaY > 0) {
-      sheetContent.style.transform = `translateY(${deltaY}px)`;
-    }
-  };
-
-  const handleDragEnd = () => {
-    if (!isSheetDragging) return;
-    isSheetDragging = false;
-    const deltaY = dragCurrentY - dragStartY;
-
-    if (deltaY > 90) {
-      closeSheetWithAnimation();
-    } else {
-      sheetContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
-      sheetContent.style.transform = 'translateY(0)';
-    }
-
-    dragStartY = 0;
-    dragCurrentY = 0;
-  };
-
-  // 터치 이벤트 (모바일)
-  dragZone.addEventListener('touchstart', (e) => handleDragStart(e.touches[0].clientY), { passive: true });
-  window.addEventListener('touchmove', (e) => {
-    if (isSheetDragging) handleDragMove(e.touches[0].clientY);
-  }, { passive: true });
-  window.addEventListener('touchend', handleDragEnd);
-
-  // 마우스 이벤트 (데스크톱)
-  dragZone.addEventListener('mousedown', (e) => handleDragStart(e.clientY));
-  window.addEventListener('mousemove', (e) => {
-    if (isSheetDragging) handleDragMove(e.clientY);
-  });
-  window.addEventListener('mouseup', handleDragEnd);
-}
-
-// 4. 새 프로젝트 생성 버튼 클릭 시 바텀시트 열기 연동
-const createProjectBtn = document.querySelector('.create-project-btn');
-if (createProjectBtn) {
-  createProjectBtn.addEventListener('click', () => {
-    openSheetWithAnimation();
-  });
-}
-
-// 5. 시트 내 제출/완료 버튼 클릭 시 시트 닫기
-const sheetSubmitBtn = document.querySelector('.sheet-submit-btn');
-if (sheetSubmitBtn) {
-  sheetSubmitBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    
-    // 프로젝트 생성 로직 처리 위치...
-    
-    closeSheetWithAnimation();
-  });
-}
