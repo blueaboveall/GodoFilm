@@ -406,6 +406,15 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   position: relative;
 }
 
+.mountain-pic-box video {  
+  width: 100%;  
+  height: 100%;  
+  object-fit: cover;  
+  position: absolute;  
+  top: 0;  
+  left: 0;
+}
+
 .mountain-tag {
   position: absolute;
   top: 50%;
