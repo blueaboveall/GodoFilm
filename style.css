@@ -419,7 +419,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, calc(-50% - 10px)); /* 정중앙에서 위로 20px */
+  transform: translate(-50%, calc(-50% - 10px)); 
   color: #87CEEA;
   font-size: 20px;
   font-weight: bold;
@@ -957,10 +957,9 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   justify-content: center;
   gap: 8px;
   height: 52px;
-  
-  /* 👇 핵심 수정 1: 하단에 4px 패딩을 추가해 텍스트의 중심축을 약 2px 위로 밀어 올립니다. */
-  padding: 0 20px 4px 20px; 
-  
+
+  padding: 0 20px;
+
   background-color: #FFFFFF;
   border: 1.5px solid #ECE7DF;
   border-radius: 18px;
@@ -971,9 +970,9 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
   user-select: none;
+
   
-  /* 👇 핵심 수정 2: normal 대신 1.2 고정값을 주어 브라우저별 여백 차이를 통제합니다. */
-  line-height: 1.2; 
+  line-height: 1;
 }
 
 .select-cell:active {
