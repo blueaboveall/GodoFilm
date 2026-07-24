@@ -140,17 +140,16 @@ const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone'
     }
 
     function closeSheetWithAnimation() {
-      bottomSheetContent.style.transition = 'transform 0.28s cubic-bezier(0.4, 0, 1, 1)';
-      bottomSheetContent.style.transform = 'translateY(100%)';
+  bottomSheetContent.style.transition = 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1)'; // ★ 0.28s → 0.38s, easing 변경
+  bottomSheetContent.style.transform = 'translateY(100%)';
 
-      setTimeout(() => {
-        projectModal.classList.remove('show');
-        projectModal.style.display = 'none';
-        bottomSheetContent.style.transform = '';
-        bottomSheetContent.style.transition = '';
-      }, 280);
-    }
-
+  setTimeout(() => {
+    projectModal.classList.remove('show');
+    projectModal.style.display = 'none';
+    bottomSheetContent.style.transform = '';
+    bottomSheetContent.style.transition = '';
+  }, 380); // ★ 위 duration과 맞춰서 280 → 380
+}
     sheetHandle.addEventListener('touchstart', (e) => {
   onDragStart(e.touches[0].clientY);
 }, { passive: true });
