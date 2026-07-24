@@ -1241,3 +1241,124 @@ async function initApp() {
 }
 
 initApp();
+
+// ==========================================
+// 바텀시트 (Bottom Sheet) 애니메이션 & 드래그 제어
+// ==========================================
+
+const sheetOverlay = document.querySelector('.bottom-sheet-overlay');
+const sheetContent = document.querySelector('.bottom-sheet-content');
+const dragZone = document.querySelector('.sheet-drag-zone');
+
+/**
+ * 바텀시트를 아래로 스르륵 닫는 함수
+ */
+function closeSheetWithAnimation() {
+  if (!sheetOverlay || !sheetContent) return;
+
+  // 부드럽게 아래로 내려가는 애니메이션 적용
+  sheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+  sheetContent.style.transform = 'translateY(100%)';
+
+  setTimeout(() => {
+    sheetOverlay.classList.remove('show', 'active');
+    sheetOverlay.style.display = 'none';
+    
+    // 스타일 초기화 (다음 열기를 위해)
+    sheetContent.style.transform = '';
+    sheetContent.style.transition = '';
+  }, 300);
+}
+
+/**
+ * 바텀시트를 부드럽게 열 때 사용하는 함수
+ */
+function openSheetWithAnimation() {
+  if (!sheetOverlay || !sheetContent) return;
+
+  sheetOverlay.style.display = 'flex';
+  // 리플로우(Reflow) 강제 실행하여 transition 적용 보장
+  void sheetOverlay.offsetWidth;
+  
+  sheetOverlay.classList.add('show');
+  sheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+  sheetContent.style.transform = 'translateY(0)';
+}
+
+// 1. 바깥 어두운 배경 클릭 시 시트 닫기
+if (sheetOverlay) {
+  sheetOverlay.addEventListener('click', (e) => {
+    if (e.target === sheetOverlay) {
+      closeSheetWithAnimation();
+    }
+  });
+}
+
+// 2. 상단 드래그 영역(sheet-drag-zone) 아래로 쓸어내리기 제스처 처리
+let dragStartY = 0;
+let dragCurrentY = 0;
+let isSheetDragging = false;
+
+if (dragZone && sheetContent) {
+  const handleDragStart = (clientY) => {
+    dragStartY = clientY;
+    dragCurrentY = clientY;
+    isSheetDragging = true;
+    sheetContent.style.transition = 'none'; // 실시간 추적을 위해 트랜지션 해제
+  };
+
+  const handleDragMove = (clientY) => {
+    if (!isSheetDragging) return;
+    dragCurrentY = clientY;
+    const deltaY = dragCurrentY - dragStartY;
+
+    // 아래로 끌어당길 때만 위치 이동 (위로 끌어올릴 땐 이동 제한)
+    if (deltaY > 0) {
+      sheetContent.style.transform = `translateY(${deltaY}px)`;
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (!isSheetDragging) return;
+    isSheetDragging = false;
+    const deltaY = dragCurrentY - dragStartY;
+
+    // 90px 이상 아래로 내렸으면 시트 닫기, 미만이면 원위치 복귀
+    if (deltaY > 90) {
+      closeSheetWithAnimation();
+    } else {
+      sheetContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+      sheetContent.style.transform = 'translateY(0)';
+    }
+
+    dragStartY = 0;
+    dragCurrentY = 0;
+  };
+
+  // 터치 이벤트 (모바일)
+  dragZone.addEventListener('touchstart', (e) => handleDragStart(e.touches[0].clientY), { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (isSheetDragging) handleDragMove(e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener('touchend', handleDragEnd);
+
+  // 마우스 이벤트 (데스크톱 테스트용)
+  dragZone.addEventListener('mousedown', (e) => handleDragStart(e.clientY));
+  window.addEventListener('mousemove', (e) => {
+    if (isSheetDragging) handleDragMove(e.clientY);
+  });
+  window.addEventListener('mouseup', handleDragEnd);
+}
+
+// 3. 프로젝트 생성 버튼/폼 제출 시 시트 닫기 예시
+const sheetSubmitBtn = document.querySelector('.sheet-submit-btn');
+if (sheetSubmitBtn) {
+  sheetSubmitBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    // 프로젝트 생성 로직 처리 후...
+    
+    // 부드럽게 창 내리기
+    closeSheetWithAnimation();
+  });
+}
