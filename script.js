@@ -152,14 +152,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     sheetHandle.addEventListener('touchstart', (e) => {
-      onDragStart(e.touches[0].clientY);
-    }, { passive: true });
+  onDragStart(e.touches[0].clientY);
+}, { passive: true });
 
-    sheetHandle.addEventListener('touchmove', (e) => {
-      onDragMove(e.touches[0].clientY);
-    }, { passive: true });
+sheetHandle.addEventListener('touchmove', (e) => {
+  e.preventDefault(); // ★ 추가: 사파리 기본 오버스크롤(바운스) 방지
+  onDragMove(e.touches[0].clientY);
+}, { passive: false }); // ★ passive: true → false 로 변경 (preventDefault 사용하려면 필수)
 
-    sheetHandle.addEventListener('touchend', onDragEnd);
+sheetHandle.addEventListener('touchend', onDragEnd);
 
     sheetHandle.addEventListener('mousedown', (e) => {
       onDragStart(e.clientY);
