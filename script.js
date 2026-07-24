@@ -101,6 +101,91 @@ document.addEventListener("DOMContentLoaded", () => {
   const cameraPageView = document.getElementById("camera-page-view");
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
+  // ------------------------------------------
+// 모달 드래그로 닫기 (바텀시트 스와이프 다운)
+// ------------------------------------------
+const modalContent = projectModal ? projectModal.querySelector('.modal-content') : null;
+const modalHandle = projectModal ? projectModal.querySelector('.modal-handle') : null;
+
+if (projectModal && modalContent) {
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  const dragTarget = modalHandle || modalContent; // 핸들이 있으면 핸들만, 없으면 전체 상단
+
+  function onDragStart(clientY) {
+    isDragging = true;
+    startY = clientY;
+    modalContent.style.transition = 'none';
+  }
+
+  function onDragMove(clientY) {
+    if (!isDragging) return;
+    currentY = clientY - startY;
+    if (currentY < 0) currentY = 0; // 위로는 못 올라가게
+    modalContent.style.transform = `translateY(${currentY}px)`;
+
+    // 드래그 거리에 비례해서 배경 어둡기 조절 (선택사항)
+    const dragRatio = Math.min(currentY / 300, 1);
+    projectModal.style.backgroundColor = `rgba(0, 0, 0, ${0.5 * (1 - dragRatio)})`;
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    modalContent.style.transition = 'transform 0.3s ease-out';
+
+    const closeThreshold = 120; // 이 정도 이상 끌어내리면 닫힘
+    if (currentY > closeThreshold) {
+      closeModalWithAnimation();
+    } else {
+      // 원위치로 복귀
+      modalContent.style.transform = 'translateY(0px)';
+      projectModal.style.backgroundColor = '';
+    }
+    currentY = 0;
+  }
+
+  function closeModalWithAnimation() {
+    modalContent.style.transition = 'transform 0.25s ease-in';
+    modalContent.style.transform = 'translateY(100%)';
+    projectModal.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+
+    setTimeout(() => {
+      projectModal.classList.remove('show');
+      projectModal.style.display = 'none';
+      modalContent.style.transform = '';
+      modalContent.style.transition = '';
+      projectModal.style.backgroundColor = '';
+    }, 250);
+  }
+
+  // 터치 이벤트 (모바일)
+  dragTarget.addEventListener('touchstart', (e) => {
+    onDragStart(e.touches[0].clientY);
+  }, { passive: true });
+
+  dragTarget.addEventListener('touchmove', (e) => {
+    onDragMove(e.touches[0].clientY);
+  }, { passive: true });
+
+  dragTarget.addEventListener('touchend', onDragEnd);
+
+  // 마우스 이벤트 (데스크탑 테스트용)
+  dragTarget.addEventListener('mousedown', (e) => {
+    onDragStart(e.clientY);
+    const onMouseMove = (ev) => onDragMove(ev.clientY);
+    const onMouseUp = () => {
+      onDragEnd();
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+}
+
   // DOM 로드 시 초기 셀 원본 이름 보존
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
