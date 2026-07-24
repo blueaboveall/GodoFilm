@@ -289,7 +289,7 @@ body, html {
   position: absolute;
   top: 100%;          /* wrapper(=phone-screen) 바로 아래 */
   right: 0;
-  margin-top: 16px;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
