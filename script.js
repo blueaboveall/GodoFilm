@@ -1,6 +1,3 @@
-// ==========================================
-// 1. 전역 변수 및 DOM 요소 참조
-// ==========================================
 const cameraView = document.getElementById('camera-view');
 const recordBtn = document.getElementById('record-btn');
 const altitudeText = document.getElementById('altitude-text');
@@ -39,7 +36,6 @@ const availableDesigns = {
   "미륵산": { "산 정상": "bg-mireuk-peak.png" }
 };
 
-// [개선 1] 각 산에 활성화할 디자인을 '배열(Array)'로 매핑 (1개 이상 확장 가능)
 const mountainDesignMap = {
   "소래산": ["산 정상"],
   "배봉산": ["크래프트 (영어)"],
@@ -48,18 +44,18 @@ const mountainDesignMap = {
   "미륵산": ["산 정상"]
 };
 
-// [개선 2] 이모지, 괄호, 공백을 모두 제거하고 순수 텍스트만 추출하는 정교한 유틸리티
 function normalizeText(text) {
-  if (!text) return '';
+  if (!text) return "";
   return text
     .normalize('NFC')
-    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // 이모지 본체 제거
-    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')   // ← 추가: 변형 선택자(fe0f 등) 제거
-    .replace(/[\u200B-\u200D]/gu, '')        // ← 추가: 폭 없는 문자(zero-width) 제거
+    .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+    .replace(/[\u200B-\u200D]/gu, '')
     .replace(/\(준비 중\)/g, '')
-    .replace(/\s+/g, '')                     // ← 변경: trim() 대신, 문자열 어디에 있든 모든 공백류(줄바꿈,탭,스페이스) 제거
+    .replace(/\s+/g, '')
     .trim();
 }
+
 function findAvailableDesignUrl(mountainName, designName) {
   const cleanMountain = normalizeText(mountainName);
   const cleanDesign = normalizeText(designName);
@@ -75,7 +71,6 @@ function findAvailableDesignUrl(mountainName, designName) {
   return null;
 }
 
-// 셀 기본 스타일 강제 적용 함수
 function applyCellLayoutStyles(cell) {
   cell.style.display = "flex";
   cell.style.alignItems = "center";
@@ -86,26 +81,20 @@ function applyCellLayoutStyles(cell) {
   cell.style.filter = "none";
 }
 
-// ==========================================
-// 2. DOMContentLoaded (UI 초기화 및 이벤트)
-// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
   const openModalBtn = document.getElementById("open-modal-btn");
   const closeModalBtn = document.getElementById("close-modal-btn");
   const projectModal = document.getElementById("project-modal");
   const createProjectSubmitBtn = document.getElementById("create-project-submit-btn");
-  const projectNameInput = document.getElementById("project-name-input");
+  const projectNamelnput = document.getElementById("project-name-input");
   const projectGrid = document.querySelector(".project-grid");
   const mainContainer = document.getElementById("main-container");
   const homeView = document.getElementById("home-view");
   const cameraPageView = document.getElementById("camera-page-view");
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
-// ------------------------------------------
-  // 바텀시트 드래그로 닫기 (스와이프 다운)
-  // ------------------------------------------
   const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
-const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone') : null; // ★ .sheet-handle → .sheet-drag-zone
+  const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone') : null;
 
   if (projectModal && bottomSheetContent && sheetHandle) {
     let startY = 0;
@@ -129,37 +118,36 @@ const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone'
       if (!isDragging) return;
       isDragging = false;
       bottomSheetContent.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
-
       const closeThreshold = 120;
       if (dragY > closeThreshold) {
         closeSheetWithAnimation();
       } else {
         bottomSheetContent.style.transform = 'translateY(0px)';
+        dragY = 0;
       }
-      dragY = 0;
     }
 
     function closeSheetWithAnimation() {
-  bottomSheetContent.style.transition = 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)'; // ★ 더 길고 부드러운 커브
-  bottomSheetContent.style.transform = 'translateY(100%)';
+      bottomSheetContent.style.transition = 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)';
+      bottomSheetContent.style.transform = 'translateY(100%)';
+      setTimeout(() => {
+        projectModal.classList.remove('show');
+        projectModal.style.display = 'none';
+        bottomSheetContent.style.transform = '';
+        bottomSheetContent.style.transition = '';
+      }, 550);
+    }
 
-  setTimeout(() => {
-    projectModal.classList.remove('show');
-    projectModal.style.display = 'none';
-    bottomSheetContent.style.transform = '';
-    bottomSheetContent.style.transition = '';
-  }, 550); // ★ duration과 동일하게 맞춤
-}
     sheetHandle.addEventListener('touchstart', (e) => {
-  onDragStart(e.touches[0].clientY);
-}, { passive: true });
+      onDragStart(e.touches[0].clientY);
+    }, { passive: true });
 
-sheetHandle.addEventListener('touchmove', (e) => {
-  e.preventDefault(); // ★ 추가: 사파리 기본 오버스크롤(바운스) 방지
-  onDragMove(e.touches[0].clientY);
-}, { passive: false }); // ★ passive: true → false 로 변경 (preventDefault 사용하려면 필수)
+    sheetHandle.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      onDragMove(e.touches[0].clientY);
+    }, { passive: false });
 
-sheetHandle.addEventListener('touchend', onDragEnd);
+    sheetHandle.addEventListener('touchend', onDragEnd);
 
     sheetHandle.addEventListener('mousedown', (e) => {
       onDragStart(e.clientY);
@@ -173,33 +161,25 @@ sheetHandle.addEventListener('touchend', onDragEnd);
       document.addEventListener('mouseup', onMouseUp);
     });
   }
-    
 
-  // DOM 로드 시 초기 셀 원본 이름 보존
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
     applyCellLayoutStyles(cell);
     const rawName = cell.innerText;
-    const cleanBaseName = rawName.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').replace(/\(준비 중\)/g, '').trim();
+    const cleanBaseName = rawName.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "").replace(/\(준비 중\)/g, "").trim();
     cell.setAttribute('data-base-name', cleanBaseName);
     cell.innerText = cleanBaseName;
   });
 
-  // [개선 3] 산 선택 시 해당 산에 맞는 디자인만 동적으로 활성화하는 핵심 함수
   function updateDesignOptions(selectedMountain) {
- const cellGroups = document.querySelectorAll('.horizontal-cell-group');
- if (cellGroups.length < 2) return;
- const designGroup = cellGroups[1]; 
- const designCells = designGroup.querySelectorAll('.select-cell');
- 
- const allowedDesign = selectedMountain ? mountainDesignMap[selectedMountain] : null;
-console.log('selectedMountain:', JSON.stringify(selectedMountain), 'allowedDesign:', allowedDesign);
+    const cellGroups = document.querySelectorAll('.horizontal-cell-group');
+    if (cellGroups.length < 2) return;
+    const designGroup = cellGroups[1];
+    const designCells = designGroup.querySelectorAll('.select-cell');
+    const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;
 
-const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;   // ← 이 줄 추가!
-
-// 선택된 산의 허용 디자인 목록 찾아오기
-let allowedDesigns = [];
-if (cleanSelectedMountain) {
+    let allowedDesigns = [];
+    if (cleanSelectedMountain) {
       for (const [mName, designs] of Object.entries(mountainDesignMap)) {
         if (normalizeText(mName) === cleanSelectedMountain) {
           allowedDesigns = designs.map(d => normalizeText(d));
@@ -213,15 +193,12 @@ if (cleanSelectedMountain) {
       const baseName = cell.getAttribute('data-base-name') || normalizeText(cell.innerText);
       const cleanCellName = normalizeText(baseName);
 
-      // 1. 산이 선택되지 않은 상태 -> 모든 디자인 아이콘 활성화
       if (!selectedMountain) {
         cell.innerText = baseName;
         cell.classList.remove('disabled');
         cell.style.opacity = '1';
         cell.style.pointerEvents = 'auto';
-      } 
-      // 2. 특정 산 선택 상태 -> 허용 목록에 있는 디자인만 활성화, 나머지는 (준비 중)
-      else {
+      } else {
         if (allowedDesigns.includes(cleanCellName)) {
           cell.innerText = baseName;
           cell.classList.remove('disabled');
@@ -238,22 +215,18 @@ if (cleanSelectedMountain) {
     });
   }
 
-  // 가로 셀 선택 클릭 이벤트 (산 / 디자인 선택)
   const cellGroups = document.querySelectorAll('.horizontal-cell-group');
   cellGroups.forEach((group, groupIndex) => {
     group.addEventListener('click', (e) => {
       const targetCell = e.target.closest('.select-cell');
       if (!targetCell || targetCell.classList.contains('disabled')) return;
-
       group.querySelectorAll('.select-cell').forEach(cell => {
         cell.classList.remove('active');
         applyCellLayoutStyles(cell);
       });
-
       targetCell.classList.add('active');
       applyCellLayoutStyles(targetCell);
 
-      // 산(첫 번째 그룹)을 클릭했을 때 해당 산의 매핑 디자인 업데이트
       if (groupIndex === 0) {
         const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.innerText;
         updateDesignOptions(selectedMountain);
@@ -261,12 +234,10 @@ if (cleanSelectedMountain) {
     });
   });
 
-  // 프로젝트 목록 리렌더링
   function renderProjects() {
     if (!projectGrid) return;
     projectGrid.innerHTML = "";
 
-    // 프로젝트 유무에 따라 빈 상태 메시지 토글
     const emptyState = document.getElementById("empty-state");
     if (emptyState) {
       emptyState.style.display = projects.length === 0 ? "flex" : "none";
@@ -329,7 +300,6 @@ if (cleanSelectedMountain) {
         `;
 
         const titleElement = info.querySelector('.project-title');
-
         function startEditing() {
           titleElement.contentEditable = "true";
           titleElement.focus();
@@ -419,9 +389,7 @@ if (cleanSelectedMountain) {
 
           let bgImageUrl = "my-background.png";
           const foundUrl = findAvailableDesignUrl(proj.mountain, proj.design);
-          if (foundUrl) {
-            bgImageUrl = foundUrl;
-          }
+          if (foundUrl) bgImageUrl = foundUrl;
 
           if (homeView) homeView.style.display = "none";
           if (cameraPageView) cameraPageView.style.display = "flex";
@@ -442,7 +410,6 @@ if (cleanSelectedMountain) {
     }
   }
 
-
   window.refreshProjectGrid = renderProjects;
 
   if (openModalBtn) {
@@ -450,12 +417,10 @@ if (cleanSelectedMountain) {
       if (projectModal) {
         projectModal.style.display = "flex";
         projectModal.classList.add("show");
-
         document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => {
           cell.classList.remove('active');
         });
-
-        if (projectNameInput) projectNameInput.value = "";
+        if (projectNamelnput) projectNamelnput.value = "";
         updateDesignOptions(null);
       }
     });
@@ -504,7 +469,7 @@ if (cleanSelectedMountain) {
 
   if (createProjectSubmitBtn) {
     createProjectSubmitBtn.addEventListener("click", () => {
-      const name = projectNameInput ? projectNameInput.value.trim() : "";
+      const name = projectNamelnput ? projectNamelnput.value.trim() : "";
       const cellGroups = document.querySelectorAll('.horizontal-cell-group');
       let mountain = "";
       let design = "";
@@ -514,7 +479,6 @@ if (cleanSelectedMountain) {
         if (activeMountain) {
           mountain = activeMountain.getAttribute('data-base-name') || activeMountain.innerText.trim();
         }
-
         const activeDesign = cellGroups[1].querySelector('.select-cell.active');
         if (activeDesign) {
           design = activeDesign.getAttribute('data-base-name') || activeDesign.innerText.trim();
@@ -539,14 +503,13 @@ if (cleanSelectedMountain) {
       projects.push(newProject);
       localStorage.setItem("climbingProjects", JSON.stringify(projects));
 
-      if (projectNameInput) projectNameInput.value = "";
+      if (projectNamelnput) projectNamelnput.value = "";
       document.querySelectorAll('.select-cell.active').forEach(cell => cell.classList.remove('active'));
 
       if (projectModal) {
         projectModal.classList.remove("show");
         projectModal.style.display = "none";
       }
-
       renderProjects();
     });
   }
@@ -554,9 +517,6 @@ if (cleanSelectedMountain) {
   renderProjects();
 });
 
-// ==========================================
-// 3. 미디어 및 기타 유틸리티 함수
-// ==========================================
 function getSupportedMimeType() {
   const types = ['video/mp4', 'video/webm; codecs=vp9', 'video/webm'];
   for (const type of types) {
@@ -604,7 +564,6 @@ function startCameraClock() {
       cameraTimeText.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     }
   }
-
   updateClock();
   setInterval(updateClock, 1000);
 }
@@ -639,7 +598,6 @@ async function startCamera() {
     await cameraView.play();
     applyHardwareZoom(stream, currentZoomScale);
     updateCameraTransformStyle();
-
     if (recordBtn) recordBtn.style.zIndex = '30';
     if (switchCameraBtn) switchCameraBtn.style.zIndex = '30';
   } catch (error) {
@@ -730,7 +688,6 @@ function loadSavedVideos(projectid) {
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
     const request = store.getAll();
-
     request.onsuccess = function(e) {
       const allVideos = e.target.result || [];
       const filteredVideos = allVideos.filter(item => item.projectid === projectid);
@@ -821,7 +778,6 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
 
   if (autoMove) currentSlideIndex++;
   updateSliderPosition();
-
   sliderWrapper.offsetHeight;
   sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
@@ -861,7 +817,6 @@ function executionRecord() {
       type: mediaRecorder.mimeType || 'video/mp4'
     });
     recordedChunks = [];
-
     const currentAltitude = altitudeText ? altitudeText.innerText : "⛰️해발 0m";
     const now = new Date();
     const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -890,10 +845,12 @@ function executionRecord() {
 if (recordBtn) {
   recordBtn.addEventListener('click', () => {
     if ((mediaRecorder && mediaRecorder.state === 'recording') || recordBtn.innerText.includes("초")) return;
+
     if (selectedTimerSeconds > 0) {
       let timeLeft = selectedTimerSeconds;
       recordBtn.innerText = `${timeLeft}초`;
       recordBtn.style.backgroundColor = "orange";
+
       const countdownInterval = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
@@ -984,13 +941,16 @@ zoomOptionBtns.forEach(btn => {
     const zoomVal = parseFloat(btn.getAttribute('data-zoom'));
     currentZoomScale = zoomVal;
     if (zoomBtnText) zoomBtnText.innerText = `${zoomVal}x`;
-    if (cameraView && cameraView.srcObject) applyHardwareZoom(cameraView.srcObject, currentZoomScale);
+    if (cameraView && cameraView.srcObject) {
+      applyHardwareZoom(cameraView.srcObject, currentZoomScale);
+    }
     updateCameraTransformStyle();
     if (zoomMenu) zoomMenu.classList.remove('open');
   });
 });
 
 let touchStartX = 0, touchEndX = 0, touchStartY = 0, touchEndY = 0;
+
 document.addEventListener('touchstart', e => {
   touchStartX = e.changedTouches[0].screenX;
   touchStartY = e.changedTouches[0].screenY;
@@ -1061,14 +1021,13 @@ async function generateTotalLogVideo() {
     if (currentProject) {
       items = items.filter(item => item.projectid === currentProject.id);
     }
-
     if (!items || items.length === 0) {
       alert("아직 저장된 고도필름이 없습니다. \n먼저 영상을 촬영해 주세요!");
       return;
     }
 
     const originalBtnText = totalDownloadBtn.innerHTML;
-    totalDownloadBtn.innerText = "고도필름 제작 시작...";
+    totalDownloadBtn.innerText = "🎞️ 고도필름 제작 시작...";
     totalDownloadBtn.disabled = true;
 
     const renderOverlay = document.createElement('div');
@@ -1081,7 +1040,7 @@ async function generateTotalLogVideo() {
     `;
 
     const renderStatus = document.createElement('div');
-    renderStatus.innerText = "고도필름 제작 중... (0%)";
+    renderStatus.innerText = "🎞️ 고도필름 제작 중... (0%)";
     renderStatus.style.cssText = "font-size: 18px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.5px;";
     renderOverlay.appendChild(renderStatus);
 
@@ -1091,7 +1050,6 @@ async function generateTotalLogVideo() {
       canvas.height = 2622;
       const ctx = canvas.getContext('2d');
       canvas.style.cssText = "width: 210px; height: 427px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
-
       renderOverlay.appendChild(canvas);
       document.body.appendChild(renderOverlay);
 
@@ -1110,7 +1068,6 @@ async function generateTotalLogVideo() {
         const downloadUrl = URL.createObjectURL(resultBlob);
         const now = new Date();
         const fileName = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일의 고도필름.mp4`;
-
         const a = document.createElement('a');
         a.href = downloadUrl;
         a.download = fileName;
@@ -1118,7 +1075,6 @@ async function generateTotalLogVideo() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(downloadUrl);
-
         renderOverlay.remove();
         totalDownloadBtn.innerHTML = originalBtnText;
         totalDownloadBtn.disabled = false;
@@ -1128,10 +1084,8 @@ async function generateTotalLogVideo() {
 
       const bgImg = new Image();
       let logBgUrl = "my-background.png";
-const foundLogUrl = findAvailableDesignUrl(currentProject?.mountain, currentProject?.design);
-if (foundLogUrl) {
-  logBgUrl = foundLogUrl;
-}
+      const foundLogUrl = findAvailableDesignUrl(currentProject?.mountain, currentProject?.design);
+      if (foundLogUrl) logBgUrl = foundLogUrl;
       bgImg.src = logBgUrl;
       await new Promise((resolve) => { bgImg.onload = resolve; bgImg.onerror = resolve; });
 
@@ -1160,7 +1114,6 @@ if (foundLogUrl) {
         const item = items[i];
         const videoObjectUrl = URL.createObjectURL(item.videoBlob);
         hiddenVideo.src = videoObjectUrl;
-
         await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
         await hiddenVideo.play();
 
@@ -1210,7 +1163,6 @@ if (foundLogUrl) {
             ctx.scale(-1, 1);
             ctx.translate(-(videoX + containerWidth / 2), 0);
           }
-
           ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
           ctx.restore();
 
@@ -1230,24 +1182,22 @@ if (foundLogUrl) {
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
 
-          renderStatus.innerText = `고도필름 제작 중... (${percent}%)`;
-          totalDownloadBtn.innerText = `고도필름 제작 중... (${percent}%)`;
+          renderStatus.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
+          totalDownloadBtn.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
 
           await new Promise(requestAnimationFrame);
         }
 
         URL.revokeObjectURL(videoObjectUrl);
+        hiddenVideo.pause();
+        hiddenVideo.src = "";
+        hiddenVideo.load();
       }
 
-      hiddenVideo.pause();
-      hiddenVideo.src = "";
-      hiddenVideo.load();
       hiddenVideo.remove();
-
-      renderStatus.innerText = "파일 저장 중...";
-      totalDownloadBtn.innerText = "파일 저장 중...";
+      renderStatus.innerText = "💽 파일 저장 중...";
+      totalDownloadBtn.innerText = "💽 파일 저장 중...";
       await new Promise(resolve => setTimeout(resolve, 500));
-
       canvasRecorder.stop();
     } catch (err) {
       console.error("전체 영상 생성 에러:", err);
@@ -1265,9 +1215,6 @@ if (totalDownloadBtn) {
   totalDownloadBtn.addEventListener('click', generateTotalLogVideo);
 }
 
-// ==========================================
-// 4. 앱 초기화 및 구동
-// ==========================================
 async function initApp() {
   await initDatabase();
   await loadSavedVideos("");
