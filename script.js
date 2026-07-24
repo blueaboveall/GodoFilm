@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const cameraPageView = document.getElementById("camera-page-view");
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
- // ------------------------------------------
+// ------------------------------------------
 // 바텀시트 드래그로 닫기 (스와이프 다운)
 // ------------------------------------------
 const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
