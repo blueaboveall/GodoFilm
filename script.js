@@ -162,13 +162,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ⭐ 수정된 부분: innerText 대신 textContent를 사용하고,
+  // 변형 선택자(U+FE0F) 및 개행/공백을 안전하게 정리합니다.
+  // (기존 innerText 방식은 산 선택 버튼에서만 브라우저가 원본 HTML의
+  //  개행을 <br>로 바꿔버려 텍스트가 2줄이 되고, 그 결과 아래로 쏠려 보이는
+  //  버그의 원인이었습니다.)
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
     applyCellLayoutStyles(cell);
-    const rawName = cell.innerText;
-    const cleanBaseName = rawName.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "").replace(/\(준비 중\)/g, "").trim();
+    const rawName = cell.textContent;
+    const cleanBaseName = rawName
+      .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "")
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, "")
+      .replace(/\(준비 중\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
     cell.setAttribute('data-base-name', cleanBaseName);
-    cell.innerText = cleanBaseName;
+    cell.textContent = cleanBaseName;
   });
 
   function updateDesignOptions(selectedMountain) {
@@ -190,22 +200,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     designCells.forEach(cell => {
       applyCellLayoutStyles(cell);
-      const baseName = cell.getAttribute('data-base-name') || normalizeText(cell.innerText);
+      const baseName = cell.getAttribute('data-base-name') || normalizeText(cell.textContent);
       const cleanCellName = normalizeText(baseName);
 
       if (!selectedMountain) {
-        cell.innerText = baseName;
+        cell.textContent = baseName;
         cell.classList.remove('disabled');
         cell.style.opacity = '1';
         cell.style.pointerEvents = 'auto';
       } else {
         if (allowedDesigns.includes(cleanCellName)) {
-          cell.innerText = baseName;
+          cell.textContent = baseName;
           cell.classList.remove('disabled');
           cell.style.opacity = '1';
           cell.style.pointerEvents = 'auto';
         } else {
-          cell.innerText = `${baseName} (준비 중)`;
+          cell.textContent = `${baseName} (준비 중)`;
           cell.classList.add('disabled');
           cell.classList.remove('active');
           cell.style.opacity = '0.35';
@@ -228,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
       applyCellLayoutStyles(targetCell);
 
       if (groupIndex === 0) {
-        const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.innerText;
+        const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.textContent;
         updateDesignOptions(selectedMountain);
       }
     });
@@ -477,11 +487,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (cellGroups.length >= 2) {
         const activeMountain = cellGroups[0].querySelector('.select-cell.active');
         if (activeMountain) {
-          mountain = activeMountain.getAttribute('data-base-name') || activeMountain.innerText.trim();
+          mountain = activeMountain.getAttribute('data-base-name') || activeMountain.textContent.trim();
         }
         const activeDesign = cellGroups[1].querySelector('.select-cell.active');
         if (activeDesign) {
-          design = activeDesign.getAttribute('data-base-name') || activeDesign.innerText.trim();
+          design = activeDesign.getAttribute('data-base-name') || activeDesign.textContent.trim();
         }
       }
 
