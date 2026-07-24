@@ -751,7 +751,7 @@ function getRealAltitude() {
     try {
       const response = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}`);
       const data = await response.json();
-      altitudeText.innerText = "해발 " + Math.round(data.elevation[0]) + "m";
+      altitudeText.innerText = "⛰️해발 " + Math.round(data.elevation[0]) + "m";
     } catch (error) {
       altitudeText.innerText = "고도 로딩 실패";
     }
@@ -781,7 +781,7 @@ function executionRecord() {
     });
     recordedChunks = [];
 
-    const currentAltitude = altitudeText ? altitudeText.innerText : "해발 0m";
+    const currentAltitude = altitudeText ? altitudeText.innerText : "⛰️해발 0m";
     const now = new Date();
     const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -1141,7 +1141,7 @@ if (foundLogUrl) {
 
           ctx.font = "bold 55px -apple-system, sans-serif";
           ctx.textBaseline = "middle";
-          const cleanText = (item.altitudeText || "해발 0m").trim();
+          const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
           const totalContentWidth = 48 + ctx.measureText(cleanText).width;
           const startX = (canvas.width - totalContentWidth) / 2;
           ctx.fillText(cleanText, startX + 48, videoY + (containerHeight / 2));
