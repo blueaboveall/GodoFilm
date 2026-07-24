@@ -416,31 +416,22 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  position: relative; /* 기준점 역할 */
+  position: relative; /* 메인 기준점 */
+  
+  /* 박스 자체를 Flex 정중앙 정렬로 변경 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mountain-tag {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* ★ 이게 핵심: 텍스트 자신의 크기 기준으로 정중앙 고정 */
   color: #87CEEA;
   font-size: 20px;
   font-weight: bold;
   white-space: nowrap;
   margin: 0;
-}
-
-.mountain-tag {
-  color: #87CEEA;
-  font-size: 20px;
-  font-weight: bold;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  padding: 0;
+  line-height: 1; /* 웹폰트 텍스트 윗/아래 여백을 1:1로 꽉 맞추어 완벽 정중앙 배치 */
 }
 
 .project-info {
