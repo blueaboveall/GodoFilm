@@ -691,20 +691,24 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #333333;
 }
 
-/* 1. 배경 오버레이 (iOS 전용 webkit 속성 추가) */
+/* 오버레이 (iOS & 안드로이드 웹앱 공통) */
 .bottom-sheet-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(3px); /* iOS 웹앱 필수 속성 */
-  backdrop-filter: blur(3px);
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   z-index: 1000;
   display: none;
   justify-content: center;
   align-items: flex-end;
+  /* 안드로이드 웹앱 상하단 스크롤 튕김 방지 */
+  overscroll-behavior: contain;
 }
 
 .bottom-sheet-overlay.show,
@@ -712,30 +716,35 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   display: flex !important;
 }
 
-/* 2. 바텀시트 본문 */
+/* 바텀시트 본문 (안드로이드 가상키보드 대응 추가) */
 .bottom-sheet-content {
   width: 100%;
   max-width: 430px;
+  /* 안드로이드 가상키보드가 올라와도 높이가 깨지지 않도록 dvh 적용 */
   height: 76vh;
+  height: 76dvh; 
+  max-height: 85%;
   background-color: #FAF8F5;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  /* 홈화면 웹앱 하단 홈바(아이폰 제스처 바) 영역 감안한 여백 추가 */
-  padding: 16px 24px calc(36px + env(safe-area-inset-bottom)) 24px;
+  /* 아이폰 하단 홈바 + 안드로이드 제스처 바 여백 자동 계산 */
+  padding: 16px 24px calc(36px + env(safe-area-inset-bottom, 0px)) 24px;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.12);
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
 
-  /* 기본 상태 (숨김) */
+  /* 기본 숨김 위치 */
   transform: translateY(100%);
   -webkit-transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
-/* ★ 핵심: show 클래스가 붙었을 때 CSS 차원에서 강제로 화면 위로 올림 ★ */
+/* 활성화 시 위치 강제 상향 */
 .bottom-sheet-overlay.show .bottom-sheet-content,
 .bottom-sheet-overlay.active .bottom-sheet-content {
   transform: translateY(0) !important;
