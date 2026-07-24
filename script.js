@@ -73,7 +73,7 @@ function findAvailableDesignUrl(mountainName, designName) {
 
 function applyCellLayoutStyles(cell) {
   cell.style.display = "flex";
-  cell.style.alignItems = "center";
+  cell.style.alignItems = "center"; 
   cell.style.justifyContent = "center";
   cell.style.textAlign = "center";
   cell.style.boxShadow = "none";
