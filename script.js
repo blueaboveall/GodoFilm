@@ -173,10 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.addEventListener('mouseup', onMouseUp);
     });
   }
-    const onMouseMove = (ev) => onDragMove(ev.clientY);
-    const onMouseUp = () => {
-      onDragEnd();
-      document.removeEventListener('mouse
+    
 
   // DOM 로드 시 초기 셀 원본 이름 보존
   const allSelectCells = document.querySelectorAll('.select-cell');
