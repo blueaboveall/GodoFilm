@@ -60,6 +60,20 @@ function normalizeText(text) {
     .replace(/\s+/g, '')                     // ← 변경: trim() 대신, 문자열 어디에 있든 모든 공백류(줄바꿈,탭,스페이스) 제거
     .trim();
 }
+function findAvailableDesignUrl(mountainName, designName) {
+  const cleanMountain = normalizeText(mountainName);
+  const cleanDesign = normalizeText(designName);
+  for (const [mKey, designs] of Object.entries(availableDesigns)) {
+    if (normalizeText(mKey) === cleanMountain) {
+      for (const [dKey, url] of Object.entries(designs)) {
+        if (normalizeText(dKey) === cleanDesign) {
+          return url;
+        }
+      }
+    }
+  }
+  return null;
+}
 
 // 셀 기본 스타일 강제 적용 함수
 function applyCellLayoutStyles(cell) {
@@ -324,9 +338,10 @@ if (cleanSelectedMountain) {
           loadSavedVideos(currentProject.id);
 
           let bgImageUrl = "my-background.png";
-          if (availableDesigns[proj.mountain] && availableDesigns[proj.mountain][proj.design]) {
-            bgImageUrl = availableDesigns[proj.mountain][proj.design];
-          }
+const foundUrl = findAvailableDesignUrl(proj.mountain, proj.design);
+if (foundUrl) {
+  bgImageUrl = foundUrl;
+}
 
           if (homeView) homeView.style.display = "none";
           if (cameraPageView) cameraPageView.style.display = "flex";
@@ -1032,9 +1047,10 @@ async function generateTotalLogVideo() {
 
       const bgImg = new Image();
       let logBgUrl = "my-background.png";
-      if (currentProject && availableDesigns[currentProject.mountain] && availableDesigns[currentProject.mountain][currentProject.design]) {
-        logBgUrl = availableDesigns[currentProject.mountain][currentProject.design];
-      }
+const foundLogUrl = findAvailableDesignUrl(currentProject?.mountain, currentProject?.design);
+if (foundLogUrl) {
+  logBgUrl = foundLogUrl;
+}
       bgImg.src = logBgUrl;
       await new Promise((resolve) => { bgImg.onload = resolve; bgImg.onerror = resolve; });
 
