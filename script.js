@@ -52,6 +52,7 @@ const mountainDesignMap = {
 function normalizeText(text) {
   if (!text) return '';
   return text
+    .normalize('NFC')
     .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
     .replace(/\(준비 중\)/g, '')
     .replace(/[\s()]/g, '')
