@@ -31,7 +31,6 @@ let currentZoomScale = 1.0;
 let currentProject = null;
 let projects = JSON.parse(localStorage.getItem("climbingProjects") || "[]");
 
-// [수정 포인트 1] 문법 오류 해결 및 깔끔한 매핑 데이터 구조 적용
 const availableDesigns = {
   "소래산": { "산 정상": "bg-sorae-peak.png" },
   "배봉산": { "크래프트 (영어)": "bg-baebong-craft-english.png" },
@@ -40,20 +39,22 @@ const availableDesigns = {
   "미륵산": { "산 정상": "bg-mireuk-peak.png" }
 };
 
-// [수정 포인트 2] 산별 활성화 디자인 매핑 테이블
+// [개선 1] 각 산에 활성화할 디자인을 '배열(Array)'로 매핑 (1개 이상 확장 가능)
 const mountainDesignMap = {
-  "소래산": "산 정상",
-  "배봉산": "크래프트 (영어)",
-  "수락산": "산 정상",
-  "구름산": "크래프트 (한글)",
-  "미륵산": "산 정상"
+  "소래산": ["산 정상"],
+  "배봉산": ["크래프트 (영어)"],
+  "수락산": ["산 정상"],
+  "구름산": ["크래프트 (한글)"],
+  "미륵산": ["산 정상"]
 };
 
-// 이모티콘 및 '(준비 중)' 텍스트 제거 유틸리티 함수
-function cleanEmojiText(text) {
+// [개선 2] 이모지, 괄호, 공백을 모두 제거하고 순수 텍스트만 추출하는 정교한 유틸리티
+function normalizeText(text) {
+  if (!text) return '';
   return text
     .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
     .replace(/\(준비 중\)/g, '')
+    .replace(/[\s()]/g, '')
     .trim();
 }
 
@@ -83,51 +84,60 @@ document.addEventListener("DOMContentLoaded", () => {
   const cameraPageView = document.getElementById("camera-page-view");
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
-  // 셀 초기화
+  // DOM 로드 시 초기 셀 원본 이름 보존
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
     applyCellLayoutStyles(cell);
-    const baseName = cleanEmojiText(cell.innerText);
-    cell.setAttribute('data-base-name', baseName);
-    cell.innerText = baseName;
+    const rawName = cell.innerText;
+    const cleanBaseName = rawName.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').replace(/\(준비 중\)/g, '').trim();
+    cell.setAttribute('data-base-name', cleanBaseName);
+    cell.innerText = cleanBaseName;
   });
 
-  // [수정 포인트 3] 산 선택에 따른 디자인 셀 비활성화/활성화 완벽 로직 구현
+  // [개선 3] 산 선택 시 해당 산에 맞는 디자인만 동적으로 활성화하는 핵심 함수
   function updateDesignOptions(selectedMountain) {
     const cellGroups = document.querySelectorAll('.horizontal-cell-group');
     if (cellGroups.length < 2) return;
 
     const designGroup = cellGroups[1];
     const designCells = designGroup.querySelectorAll('.select-cell');
-    const allowedDesign = selectedMountain ? mountainDesignMap[selectedMountain] : null;
+
+    const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;
+
+    // 선택된 산의 허용 디자인 목록 찾아오기
+    let allowedDesigns = [];
+    if (cleanSelectedMountain) {
+      for (const [mName, designs] of Object.entries(mountainDesignMap)) {
+        if (normalizeText(mName) === cleanSelectedMountain) {
+          allowedDesigns = designs.map(d => normalizeText(d));
+          break;
+        }
+      }
+    }
 
     designCells.forEach(cell => {
       applyCellLayoutStyles(cell);
-      const baseName = cell.getAttribute('data-base-name') || cleanEmojiText(cell.innerText).replace('(준비 중)', '').trim();
+      const baseName = cell.getAttribute('data-base-name') || normalizeText(cell.innerText);
+      const cleanCellName = normalizeText(baseName);
 
-      // 1. 산이 아직 선택되지 않은 상태 -> 모든 디자인 아이콘 활성화
+      // 1. 산이 선택되지 않은 상태 -> 모든 디자인 아이콘 활성화
       if (!selectedMountain) {
         cell.innerText = baseName;
         cell.classList.remove('disabled');
         cell.style.opacity = '1';
         cell.style.pointerEvents = 'auto';
       } 
-      // 2. 특정 산이 선택된 상태 -> 해당 산에 맞는 디자인만 활성화, 나머지는 비활성화 + (준비 중)
+      // 2. 특정 산 선택 상태 -> 허용 목록에 있는 디자인만 활성화, 나머지는 (준비 중)
       else {
-        const cleanBase = baseName.replace(/[\s()]/g, '');
-        const cleanAllowed = allowedDesign ? allowedDesign.replace(/[\s()]/g, '') : '';
-
-        if (cleanAllowed && cleanBase === cleanAllowed) {
-          // 일치하는 디자인: 활성화
+        if (allowedDesigns.includes(cleanCellName)) {
           cell.innerText = baseName;
           cell.classList.remove('disabled');
           cell.style.opacity = '1';
           cell.style.pointerEvents = 'auto';
         } else {
-          // 일치하지 않는 디자인: 비활성화 + (준비 중)
           cell.innerText = `${baseName} (준비 중)`;
           cell.classList.add('disabled');
-          cell.classList.remove('active'); // 비활성화되면 선택 상태 해제
+          cell.classList.remove('active');
           cell.style.opacity = '0.35';
           cell.style.pointerEvents = 'none';
         }
@@ -150,9 +160,9 @@ document.addEventListener("DOMContentLoaded", () => {
       targetCell.classList.add('active');
       applyCellLayoutStyles(targetCell);
 
-      // 산(첫 번째 그룹)을 클릭했을 때 디자인 셀 동기화
+      // 산(첫 번째 그룹)을 클릭했을 때 해당 산의 매핑 디자인 업데이트
       if (groupIndex === 0) {
-        const selectedMountain = targetCell.getAttribute('data-base-name') || cleanEmojiText(targetCell.innerText);
+        const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.innerText;
         updateDesignOptions(selectedMountain);
       }
     });
@@ -334,27 +344,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.refreshProjectGrid = renderProjects;
 
-  // 1) 모달 열기
   if (openModalBtn) {
     openModalBtn.addEventListener("click", () => {
       if (projectModal) {
         projectModal.style.display = "flex";
         projectModal.classList.add("show");
 
-        // 모달 열릴 때 모든 선택 해제
         document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => {
           cell.classList.remove('active');
         });
 
         if (projectNameInput) projectNameInput.value = "";
-
-        // 처음에 선택된 산이 없으므로, 전체 디자인 아이콘 활성화
         updateDesignOptions(null);
       }
     });
   }
 
-  // 2) 모달 닫기
   if (closeModalBtn) {
     closeModalBtn.addEventListener("click", () => {
       if (projectModal) {
@@ -364,7 +369,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3) 모달 바깥 배경 클릭 시 닫기
   if (projectModal) {
     projectModal.addEventListener("click", (e) => {
       if (e.target === projectModal) {
@@ -374,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 4) 뒤로가기 버튼
   if (backToHomeBtn) {
     backToHomeBtn.addEventListener("click", () => {
       if (cameraView && cameraView.srcObject) {
@@ -392,14 +395,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 5) 팝업 바깥 클릭 시 닫기
   document.addEventListener("click", () => {
     document.querySelectorAll(".project-menu-popup").forEach(menu => {
       menu.style.display = "none";
     });
   });
 
-  // 6) 프로젝트 생성 버튼 클릭 이벤트
   if (createProjectSubmitBtn) {
     createProjectSubmitBtn.addEventListener("click", () => {
       const name = projectNameInput ? projectNameInput.value.trim() : "";
@@ -410,12 +411,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (cellGroups.length >= 2) {
         const activeMountain = cellGroups[0].querySelector('.select-cell.active');
         if (activeMountain) {
-          mountain = activeMountain.getAttribute('data-base-name') || cleanEmojiText(activeMountain.innerText);
+          mountain = activeMountain.getAttribute('data-base-name') || activeMountain.innerText.trim();
         }
 
         const activeDesign = cellGroups[1].querySelector('.select-cell.active');
         if (activeDesign) {
-          design = activeDesign.getAttribute('data-base-name') || cleanEmojiText(activeDesign.innerText);
+          design = activeDesign.getAttribute('data-base-name') || activeDesign.innerText.trim();
         }
       }
 
@@ -453,7 +454,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ==========================================
-// 3. 미디어 및 유틸리티 함수들
+// 3. 미디어 및 기타 유틸리티 함수
 // ==========================================
 function getSupportedMimeType() {
   const types = ['video/mp4', 'video/webm; codecs=vp9', 'video/webm'];
