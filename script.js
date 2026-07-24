@@ -786,7 +786,7 @@ function getRealAltitude() {
     try {
       const response = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}`);
       const data = await response.json();
-      altitudeText.innerText = "해발 " + Math.round(data.elevation[0]) + "m";
+      altitudeText.innerText = "⛰️해발 " + Math.round(data.elevation[0]) + "m";
     } catch (error) {
       altitudeText.innerText = "고도 로딩 실패";
     }
@@ -810,7 +810,7 @@ function executionRecord() {
       type: mediaRecorder.mimeType || 'video/mp4'
     });
     recordedChunks = [];
-    const currentAltitude = altitudeText ? altitudeText.innerText : "해발 0m";
+    const currentAltitude = altitudeText ? altitudeText.innerText : "⛰️해발 0m";
     const now = new Date();
     const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const savedId = await saveVideoToDB(recordedBlob, currentAltitude, recordTime, currentProject ? currentProject.id : null, currentFacingMode);
@@ -1007,7 +1007,7 @@ async function generateTotalLogVideo() {
     }
 
     const originalBtnText = totalDownloadBtn.innerHTML;
-    totalDownloadBtn.innerText = "고도필름 제작 시작...";
+    totalDownloadBtn.innerText = "🎞️ 고도필름 제작 시작...";
     totalDownloadBtn.disabled = true;
 
     const renderOverlay = document.createElement('div');
@@ -1020,7 +1020,7 @@ async function generateTotalLogVideo() {
     `;
 
     const renderStatus = document.createElement('div');
-    renderStatus.innerText = "고도필름 제작 중... (0%)";
+    renderStatus.innerText = "🎞️ 고도필름 제작 중... (0%)";
     renderStatus.style.cssText = "font-size: 18px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.5px;";
     renderOverlay.appendChild(renderStatus);
 
@@ -1155,7 +1155,7 @@ async function generateTotalLogVideo() {
 
           ctx.font = "bold 55px -apple-system, sans-serif";
           ctx.textBaseline = "middle";
-          const cleanText = (item.altitudeText || "해발 0m").trim();
+          const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
           const totalContentWidth = 48 + ctx.measureText(cleanText).width;
           const startX = (canvas.width - totalContentWidth) / 2;
           ctx.fillText(cleanText, startX + 48, videoY + (containerHeight / 2));
@@ -1163,8 +1163,8 @@ async function generateTotalLogVideo() {
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
 
-          renderStatus.innerText = `고도필름 제작 중... (${percent}%)`;
-          totalDownloadBtn.innerText = `고도필름 제작 중... (${percent}%)`;
+          renderStatus.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
+          totalDownloadBtn.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
 
           await new Promise(requestAnimationFrame);
         }
