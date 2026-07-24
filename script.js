@@ -92,7 +92,9 @@ function openSheetWithAnimation() {
   if (!projectModal || !bottomSheetContent) return;
 
   projectModal.style.display = 'flex';
-  void projectModal.offsetWidth;
+  bottomSheetContent.style.transition = 'none';
+  bottomSheetContent.style.transform = 'translateY(100%)';
+  void projectModal.offsetWidth; // 리플로우 강제
 
   projectModal.classList.add('show');
   bottomSheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -154,7 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
   const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
-  const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone') : null;
 
   // 열기/닫기 버튼 연동
   if (openModalBtn) {
@@ -169,16 +170,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 통합 단일 드래그 제스처
-  if (sheetHandle && bottomSheetContent) {
+  // Y좌표 기반 드래그 제스처 ( '나만의 고도필름을 만들어보세요' 글자 위 영역 감지 )
+  if (bottomSheetContent) {
     let startY = 0;
     let dragY = 0;
     let isDragging = false;
 
-    const onDragStart = (clientY) => {
-      isDragging = true;
-      startY = clientY;
-      bottomSheetContent.style.transition = 'none';
+    // 모달 내부에서 '나만의 고도필름을 만들어보세요' 글자 엘리먼트 찾기
+    const findTitleElement = () => {
+      const allElements = bottomSheetContent.querySelectorAll('*');
+      for (let el of allElements) {
+        if (el.children.length === 0 && el.textContent.includes('나만의 고도필름을 만들어보세요')) {
+          return el;
+        }
+      }
+      return null;
+    };
+
+    // 터치한 위치가 Title 글자의 Top Y좌표보다 상단인지 검사
+    const checkInDragZone = (clientY) => {
+      const titleEl = findTitleElement();
+      if (titleEl) {
+        const rect = titleEl.getBoundingClientRect();
+        return clientY <= rect.top; // 글자 시작 Y좌표보다 위 영역
+      }
+      // fallback: 글자를 못 찾은 경우 상단 80px 영역
+      const sheetRect = bottomSheetContent.getBoundingClientRect();
+      return clientY <= (sheetRect.top + 80);
+    };
+
+    const onDragStart = (clientY, target) => {
+      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button')) {
+        return;
+      }
+      if (checkInDragZone(clientY)) {
+        isDragging = true;
+        startY = clientY;
+        dragY = 0;
+        bottomSheetContent.style.transition = 'none';
+      }
     };
 
     const onDragMove = (clientY) => {
@@ -186,31 +216,41 @@ document.addEventListener("DOMContentLoaded", () => {
       dragY = clientY - startY;
       if (dragY > 0) {
         bottomSheetContent.style.transform = `translateY(${dragY}px)`;
+      } else {
+        bottomSheetContent.style.transform = `translateY(0px)`;
       }
     };
 
     const onDragEnd = () => {
       if (!isDragging) return;
       isDragging = false;
-      if (dragY > 90) {
+      if (dragY > 90) { // 90px 이상 내려 끌었을 때: 창 닫기
         closeSheetWithAnimation();
-      } else {
+      } else { // 90px 미만: 복원
         bottomSheetContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
         bottomSheetContent.style.transform = 'translateY(0px)';
       }
       dragY = 0;
     };
 
-    sheetHandle.addEventListener('touchstart', (e) => onDragStart(e.touches[0].clientY), { passive: true });
-    window.addEventListener('touchmove', (e) => {
-      if (isDragging) onDragMove(e.touches[0].clientY);
+    bottomSheetContent.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) onDragStart(e.touches[0].clientY, e.target);
     }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches.length > 0) onDragMove(e.touches[0].clientY);
+    }, { passive: true });
+
     window.addEventListener('touchend', onDragEnd);
 
-    sheetHandle.addEventListener('mousedown', (e) => onDragStart(e.clientY));
+    bottomSheetContent.addEventListener('mousedown', (e) => {
+      onDragStart(e.clientY, e.target);
+    });
+
     window.addEventListener('mousemove', (e) => {
       if (isDragging) onDragMove(e.clientY);
     });
+
     window.addEventListener('mouseup', onDragEnd);
   }
 
@@ -587,7 +627,6 @@ async function startCamera() {
   }
 
   try {
-    // 안드로이드 호환성을 위해 exact 제거
     const constraints = {
       audio: true,
       video: {
@@ -1176,8 +1215,8 @@ async function generateTotalLogVideo() {
       }
 
       hiddenVideo.remove();
-      renderStatus.innerText = "파일 저장 중...";
-      totalDownloadBtn.innerText = "파일 저장 중...";
+      renderStatus.innerText = "💽 파일 저장 중...";
+      totalDownloadBtn.innerText = "💽 파일 저장 중...";
       await new Promise(resolve => setTimeout(resolve, 500));
       canvasRecorder.stop();
     } catch (err) {
