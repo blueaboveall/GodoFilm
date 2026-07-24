@@ -103,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const designCells = designGroup.querySelectorAll('.select-cell');
 
     const cleanSelectedMountain = selectedMountain ? normalizeText(selectedMountain) : null;
+    console.log('selectedMountain:', JSON.stringify(selectedMountain), 'allowedDesign:', allowedDesign);
 
     // 선택된 산의 허용 디자인 목록 찾아오기
     let allowedDesigns = [];
