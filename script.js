@@ -1185,11 +1185,10 @@ async function generateTotalLogVideo() {
           ctx.fillText(item.recordTime || "00:00", videoX + 22, videoY + 22);
 
           ctx.font = "bold 55px -apple-system, sans-serif";
-          ctx.textBaseline = "middle";
-          const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
-          const totalContentWidth = 48 + ctx.measureText(cleanText).width;
-          const startX = (canvas.width - totalContentWidth) / 2;
-          ctx.fillText(cleanText, startX + 48, videoY + (containerHeight / 2));
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
+ctx.fillText(cleanText, canvas.width / 2, videoY + (containerHeight / 2));
 
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
