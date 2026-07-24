@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 바텀시트 드래그로 닫기 (스와이프 다운)
   // ------------------------------------------
   const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
-  const sheetHandle = projectModal ? projectModal.querySelector('.sheet-handle') : null;
+const sheetHandle = projectModal ? projectModal.querySelector('.sheet-drag-zone') : null; // ★ .sheet-handle → .sheet-drag-zone
 
   if (projectModal && bottomSheetContent && sheetHandle) {
     let startY = 0;
