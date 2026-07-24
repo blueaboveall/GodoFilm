@@ -1067,3 +1067,16 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #FFFFFF !important;
   box-shadow: 0 6px 16px rgba(35, 42, 44, 0.2);
 }
+
+.modal-handle {
+  width: 40px;
+  height: 5px;
+  background: #ccc;
+  border-radius: 3px;
+  margin: 12px auto;
+  cursor: grab;
+}
+
+.modal-content {
+  will-change: transform;
+}
