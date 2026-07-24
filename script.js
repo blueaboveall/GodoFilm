@@ -28,23 +28,24 @@ let currentFacingMode = "user";
 let db;
 let selectedTimerSeconds = 0;
 let currentZoomScale = 1.0;
-let currentProject = null; 
+let currentProject = null;
 let projects = JSON.parse(localStorage.getItem("climbingProjects") || "[]");
 
+// [수정 포인트 1] 문법 오류 해결 및 깔끔한 매핑 데이터 구조 적용
 const availableDesigns = {
   "소래산": { "산 정상": "bg-sorae-peak.png" },
   "배봉산": { "크래프트 (영어)": "bg-baebong-craft-english.png" },
   "수락산": { "산 정상": "bg-surak-peak.png" },
-  "구름산": { "크래프트 (한글)": "bg-gooreum-craft-korean.png" }, // 구름산 디자인 매핑 수정
+  "구름산": { "크래프트 (한글)": "bg-gooreum-craft-korean.png" },
   "미륵산": { "산 정상": "bg-mireuk-peak.png" }
 };
 
-// 산별 활성화 디자인 매핑 테이블 (HTML 텍스트와 정확히 일치하도록 설정)
+// [수정 포인트 2] 산별 활성화 디자인 매핑 테이블
 const mountainDesignMap = {
   "소래산": "산 정상",
   "배봉산": "크래프트 (영어)",
   "수락산": "산 정상",
-  "구름산": "크래프트 (한글)", 
+  "구름산": "크래프트 (한글)",
   "미륵산": "산 정상"
 };
 
@@ -56,7 +57,7 @@ function cleanEmojiText(text) {
     .trim();
 }
 
-// 셀 기본 스타일(크기 유지, 가운데 정렬, 그림자 제거) 강제 적용 함수
+// 셀 기본 스타일 강제 적용 함수
 function applyCellLayoutStyles(cell) {
   cell.style.display = "flex";
   cell.style.alignItems = "center";
@@ -82,9 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const cameraPageView = document.getElementById("camera-page-view");
   const backToHomeBtn = document.getElementById("back-to-home-btn");
 
-  // ------------------------------------------
-  // 셀 초기화 (이모티콘 제거, 크기 유지, 중앙 정렬, 그림자 제거)
-  // ------------------------------------------
+  // 셀 초기화
   const allSelectCells = document.querySelectorAll('.select-cell');
   allSelectCells.forEach(cell => {
     applyCellLayoutStyles(cell);
@@ -93,22 +92,17 @@ document.addEventListener("DOMContentLoaded", () => {
     cell.innerText = baseName;
   });
 
-  // ------------------------------------------
-  // 산 선택에 따른 디자인 셀 비활성화/활성화 함수
-  // ------------------------------------------
+  // [수정 포인트 3] 산 선택에 따른 디자인 셀 비활성화/활성화 완벽 로직 구현
   function updateDesignOptions(selectedMountain) {
     const cellGroups = document.querySelectorAll('.horizontal-cell-group');
     if (cellGroups.length < 2) return;
 
-    const designGroup = cellGroups[1]; 
+    const designGroup = cellGroups[1];
     const designCells = designGroup.querySelectorAll('.select-cell');
-    
     const allowedDesign = selectedMountain ? mountainDesignMap[selectedMountain] : null;
 
     designCells.forEach(cell => {
       applyCellLayoutStyles(cell);
-      
-      // HTML에 저장된 기본 이름을 가져옴
       const baseName = cell.getAttribute('data-base-name') || cleanEmojiText(cell.innerText).replace('(준비 중)', '').trim();
 
       // 1. 산이 아직 선택되지 않은 상태 -> 모든 디자인 아이콘 활성화
@@ -118,13 +112,12 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.style.opacity = '1';
         cell.style.pointerEvents = 'auto';
       } 
-      // 2. 특정 산이 선택된 상태 -> 해당 산에 맞는 디자인만 활성화, 나머지는 비활성화
+      // 2. 특정 산이 선택된 상태 -> 해당 산에 맞는 디자인만 활성화, 나머지는 비활성화 + (준비 중)
       else {
-        // 공백, 괄호 등을 모두 제거하여 순수 글자만으로 비교
         const cleanBase = baseName.replace(/[\s()]/g, '');
         const cleanAllowed = allowedDesign ? allowedDesign.replace(/[\s()]/g, '') : '';
 
-        if (cleanBase === cleanAllowed) {
+        if (cleanAllowed && cleanBase === cleanAllowed) {
           // 일치하는 디자인: 활성화
           cell.innerText = baseName;
           cell.classList.remove('disabled');
@@ -134,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // 일치하지 않는 디자인: 비활성화 + (준비 중)
           cell.innerText = `${baseName} (준비 중)`;
           cell.classList.add('disabled');
-          cell.classList.remove('active'); 
+          cell.classList.remove('active'); // 비활성화되면 선택 상태 해제
           cell.style.opacity = '0.35';
           cell.style.pointerEvents = 'none';
         }
@@ -142,9 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ------------------------------------------
   // 가로 셀 선택 클릭 이벤트 (산 / 디자인 선택)
-  // ------------------------------------------
   const cellGroups = document.querySelectorAll('.horizontal-cell-group');
   cellGroups.forEach((group, groupIndex) => {
     group.addEventListener('click', (e) => {
@@ -155,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.classList.remove('active');
         applyCellLayoutStyles(cell);
       });
-      
+
       targetCell.classList.add('active');
       applyCellLayoutStyles(targetCell);
 
@@ -167,9 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ------------------------------------------
-  // 프로젝트 목록 리렌더링 함수
-  // ------------------------------------------
+  // 프로젝트 목록 리렌더링
   function renderProjects() {
     if (!projectGrid) return;
     projectGrid.innerHTML = "";
@@ -199,27 +188,22 @@ document.addEventListener("DOMContentLoaded", () => {
         pictureBox.className = "mountain-pic-box";
 
         const projectVideos = allVideos.filter(item => item.projectid === proj.id);
-
         if (projectVideos.length > 0) {
           const firstVideo = projectVideos[0];
           const safeBlob = new Blob([firstVideo.videoBlob], { type: firstVideo.videoBlob.type || 'video/mp4' });
           const videoURL = URL.createObjectURL(safeBlob);
-
           const videoThumbnail = document.createElement("video");
           videoThumbnail.src = videoURL;
           videoThumbnail.preload = "metadata";
           videoThumbnail.muted = true;
           videoThumbnail.playsInline = true;
-          
           videoThumbnail.style.width = "100%";
           videoThumbnail.style.height = "100%";
           videoThumbnail.style.objectFit = "cover";
-          videoThumbnail.currentTime = 0.1; 
-
+          videoThumbnail.currentTime = 0.1;
           if ((firstVideo.facingMode || "user") === "user") {
             videoThumbnail.style.transform = "scaleX(-1)";
           }
-
           pictureBox.appendChild(videoThumbnail);
         } else {
           const mountainTag = document.createElement("div");
@@ -275,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const menuTrigger = document.createElement("div");
         menuTrigger.className = "menu-trigger";
-        menuTrigger.innerHTML = '&#8942;'; 
+        menuTrigger.innerHTML = '&#8942;';
 
         const popup = document.createElement("div");
         popup.className = "project-menu-popup";
@@ -309,10 +293,8 @@ document.addEventListener("DOMContentLoaded", () => {
           e.stopPropagation();
           if (confirm("프로젝트를 삭제하시겠습니까? \n관련 영상도 모두 완전히 삭제됩니다.")) {
             const targetProjectId = projects[originalIndex].id;
-
             projects.splice(originalIndex, 1);
             localStorage.setItem("climbingProjects", JSON.stringify(projects));
-
             await deleteProjectVideos(targetProjectId);
             renderProjects();
           }
@@ -324,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (e.target.closest(".project-title")) return;
 
           currentProject = proj;
-          loadSavedVideos(currentProject.id); 
+          loadSavedVideos(currentProject.id);
 
           let bgImageUrl = "my-background.png";
           if (availableDesigns[proj.mountain] && availableDesigns[proj.mountain][proj.design]) {
@@ -359,19 +341,19 @@ document.addEventListener("DOMContentLoaded", () => {
         projectModal.style.display = "flex";
         projectModal.classList.add("show");
 
-        // 🚨 모달이 켜질 때 모든 산/디자인 아이콘의 활성화(검정색) 상태 끄기
+        // 모달 열릴 때 모든 선택 해제
         document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => {
           cell.classList.remove('active');
         });
 
-        // 이름 입력칸이 있다면 비워두기
         if (projectNameInput) projectNameInput.value = "";
 
-        // 처음에 선택된 산이 없으므로, 전체 디자인 아이콘을 "비활성화 + (준비 중)" 처리
+        // 처음에 선택된 산이 없으므로, 전체 디자인 아이콘 활성화
         updateDesignOptions(null);
       }
     });
   }
+
   // 2) 모달 닫기
   if (closeModalBtn) {
     closeModalBtn.addEventListener("click", () => {
@@ -404,8 +386,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mainContainer) {
         mainContainer.style.backgroundImage = "";
         mainContainer.classList.add("home-mode");
-        currentProject = null;
       }
+      currentProject = null;
       renderProjects();
     });
   }
@@ -421,27 +403,22 @@ document.addEventListener("DOMContentLoaded", () => {
   if (createProjectSubmitBtn) {
     createProjectSubmitBtn.addEventListener("click", () => {
       const name = projectNameInput ? projectNameInput.value.trim() : "";
-      
-      // 🚨 수정된 부분: 텍스트(배열)로 구분하지 않고 요소의 위치(그룹)로 산과 디자인을 명확히 구분
       const cellGroups = document.querySelectorAll('.horizontal-cell-group');
       let mountain = "";
       let design = "";
 
       if (cellGroups.length >= 2) {
-        // 첫 번째 줄(산 그룹)에서 active 된 셀 가져오기
         const activeMountain = cellGroups[0].querySelector('.select-cell.active');
         if (activeMountain) {
           mountain = activeMountain.getAttribute('data-base-name') || cleanEmojiText(activeMountain.innerText);
         }
 
-        // 두 번째 줄(디자인 그룹)에서 active 된 셀 가져오기
         const activeDesign = cellGroups[1].querySelector('.select-cell.active');
         if (activeDesign) {
           design = activeDesign.getAttribute('data-base-name') || cleanEmojiText(activeDesign.innerText);
         }
       }
 
-      // 검증 로직
       if (!name) { alert("프로젝트 이름을 입력해주세요!"); return; }
       if (!mountain) { alert("등산하실 산을 선택해주세요!"); return; }
       if (!design) { alert("배경 디자인을 선택해주세요!"); return; }
@@ -479,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 3. 미디어 및 유틸리티 함수들
 // ==========================================
 function getSupportedMimeType() {
-  const types = ['video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+  const types = ['video/mp4', 'video/webm; codecs=vp9', 'video/webm'];
   for (const type of types) {
     if (MediaRecorder.isTypeSupported(type)) return type;
   }
@@ -488,11 +465,11 @@ function getSupportedMimeType() {
 
 function initDatabase() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("Hike CameraDB", 2);
+    const request = indexedDB.open("HikeCameraDB", 2);
     request.onupgradeneeded = function(e) {
       const database = e.target.result;
       if (database.objectStoreNames.contains("videos")) {
-        database.deleteObjectStore("videos"); 
+        database.deleteObjectStore("videos");
       }
       database.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
     };
@@ -525,6 +502,7 @@ function startCameraClock() {
       cameraTimeText.innerText = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     }
   }
+
   updateClock();
   setInterval(updateClock, 1000);
 }
@@ -535,7 +513,7 @@ async function startCamera() {
     cameraView.srcObject.getTracks().forEach(track => track.stop());
     cameraView.srcObject = null;
   }
-  
+
   if (currentFacingMode === "user") {
     if (zoom05Btn) zoom05Btn.classList.add('hide-option');
     if (currentZoomScale === 0.5) currentZoomScale = 1.0;
@@ -543,28 +521,25 @@ async function startCamera() {
   } else {
     if (zoom05Btn) zoom05Btn.classList.remove('hide-option');
   }
-  
+
   try {
     const constraints = {
       audio: true,
-      video: { 
+      video: {
         facingMode: currentFacingMode === "user" ? "user" : { exact: "environment" },
         width: { ideal: 1280 },
         height: { ideal: 720 }
       }
     };
-    
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     cameraView.srcObject = stream;
     cameraView.muted = true;
     await cameraView.play();
-    
     applyHardwareZoom(stream, currentZoomScale);
     updateCameraTransformStyle();
-    
+
     if (recordBtn) recordBtn.style.zIndex = '30';
     if (switchCameraBtn) switchCameraBtn.style.zIndex = '30';
-    
   } catch (error) {
     console.error("카메라 작동 에러:", error);
     if (currentFacingMode === "environment") {
@@ -605,12 +580,11 @@ function saveVideoToDB(blob, altitude, recordTime, projectid, facingMode) {
       projectid: projectid,
       facingMode: facingMode || "user"
     });
-    
     request.onsuccess = (e) => resolve(e.target.result);
     request.onerror = (e) => reject(e.target.error);
   });
 }
-    
+
 function deleteVideoFromDB(id) {
   return new Promise((resolve) => {
     const transaction = db.transaction(["videos"], "readwrite");
@@ -620,17 +594,16 @@ function deleteVideoFromDB(id) {
   });
 }
 
-function deleteProjectVideos(projectId) {
+function deleteProjectVideos(projectid) {
   return new Promise((resolve) => {
     if (!db) { resolve(); return; }
     const transaction = db.transaction(["videos"], "readwrite");
     const store = transaction.objectStore("videos");
     const request = store.openCursor();
-
     request.onsuccess = function(e) {
       const cursor = e.target.result;
       if (cursor) {
-        if (cursor.value.projectid === projectId) {
+        if (cursor.value.projectid === projectid) {
           cursor.delete();
         }
         cursor.continue();
@@ -645,32 +618,27 @@ function loadSavedVideos(projectid) {
   if (sliderWrapper) {
     const savedSlides = sliderWrapper.querySelectorAll(':scope > .slide-page:not(#camera-page)');
     savedSlides.forEach(slide => slide.remove());
-    totalSlides = 1;
-    currentSlideIndex = 0;
-    sliderWrapper.style.transform = 'translateX(0px)';
   }
+  totalSlides = 1;
+  currentSlideIndex = 0;
+  if (sliderWrapper) sliderWrapper.style.transform = 'translateX(0px)';
+
   return new Promise((resolve) => {
     if (!db) { resolve(); return; }
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
     const request = store.getAll();
-    
+
     request.onsuccess = function(e) {
       const allVideos = e.target.result || [];
       const filteredVideos = allVideos.filter(item => item.projectid === projectid);
-      
       filteredVideos.forEach(item => {
         addVideoSlideToUI(item.videoBlob, item.altitudeText, item.id, item.recordTime, false, item.facingMode || "user");
       });
-      
       currentSlideIndex = totalSlides - 1;
-      if (typeof updateSliderPosition === 'function') {
-        updateSliderPosition();
-      } else {
-        sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-      }
+      updateSliderPosition();
       resolve();
-    }; 
+    };
   });
 }
 
@@ -678,9 +646,11 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   if (!sliderWrapper || !cameraPage) return;
   const safeBlob = new Blob([blob], { type: blob.type || 'video/mp4' });
   const videoURL = URL.createObjectURL(safeBlob);
+
   const newSlide = document.createElement('div');
   newSlide.className = 'slide-page';
   newSlide.style.position = 'relative';
+
   const newVideo = document.createElement('video');
   newVideo.src = videoURL;
   newVideo.className = 'saved-video';
@@ -700,10 +670,12 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
       newVideo.pause();
     }
   });
+
   const newOverlay = document.createElement('div');
   newOverlay.className = 'altitude-overlay';
   newOverlay.innerHTML = `<span>${altitude}</span>`;
   newOverlay.style.pointerEvents = 'none';
+
   const timeOverlay = document.createElement('div');
   timeOverlay.className = 'time-overlay';
   timeOverlay.style.position = 'absolute';
@@ -714,12 +686,13 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   timeOverlay.style.fontWeight = '600';
   timeOverlay.style.zIndex = '10';
   timeOverlay.style.pointerEvents = 'none';
-  timeOverlay.innerHTML = `<span>${recordTime || '00:00'}</span>`;  
+  timeOverlay.innerHTML = `<span>${recordTime || '00:00'}</span>`;
+
   const deleteBtn = document.createElement('button');
   deleteBtn.className = 'delete-btn';
   deleteBtn.setAttribute('aria-label', '영상 삭제');
   deleteBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
-  
+
   deleteBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -734,16 +707,20 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
       newVideo.play().catch(err => console.log(err));
     }
   });
+
   newSlide.appendChild(newVideo);
   newSlide.appendChild(newOverlay);
   newSlide.appendChild(timeOverlay);
   newSlide.appendChild(deleteBtn);
+
   sliderWrapper.style.transition = 'none';
   sliderWrapper.insertBefore(newSlide, cameraPage);
   totalSlides++;
+
   if (autoMove) currentSlideIndex++;
   updateSliderPosition();
-  sliderWrapper.offsetHeight; 
+
+  sliderWrapper.offsetHeight;
   sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
 
@@ -767,53 +744,54 @@ function executionRecord() {
   const stream = cameraView.srcObject;
   const mimeType = getSupportedMimeType();
   const options = mimeType ? { mimeType } : {};
-  
+
   mediaRecorder = new MediaRecorder(stream, options);
   recordedChunks = [];
+
   mediaRecorder.ondataavailable = (e) => {
     if (e.data.size > 0) {
       recordedChunks.push(e.data);
     }
   };
+
   mediaRecorder.onstop = async () => {
-    const recordedBlob = new Blob(recordedChunks, { 
-      type: mediaRecorder.mimeType || 'video/mp4' 
+    const recordedBlob = new Blob(recordedChunks, {
+      type: mediaRecorder.mimeType || 'video/mp4'
     });
     recordedChunks = [];
+
     const currentAltitude = altitudeText ? altitudeText.innerText : "해발 0m";
     const now = new Date();
     const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    
+
     const savedId = await saveVideoToDB(recordedBlob, currentAltitude, recordTime, currentProject ? currentProject.id : null, currentFacingMode);
     addVideoSlideToUI(recordedBlob, currentAltitude, savedId, recordTime, true, currentFacingMode);
   };
-  
-  mediaRecorder.start(200); 
+
+  mediaRecorder.start(200);
   recordBtn.innerText = "녹화중";
   recordBtn.style.backgroundColor = "gray";
   recordBtn.style.borderColor = "gray";
+
   getRealAltitude();
 
   setTimeout(() => {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
+      recordBtn.innerText = "REC";
+      recordBtn.style.backgroundColor = "red";
+      recordBtn.style.borderColor = "white";
     }
-    recordBtn.innerText = "REC";
-    recordBtn.style.backgroundColor = "red";
-    recordBtn.style.borderColor = "white";
-  }, 3300); 
+  }, 3300);
 }
 
 if (recordBtn) {
   recordBtn.addEventListener('click', () => {
-    if ((mediaRecorder && mediaRecorder.state === 'recording') || 
-        recordBtn.innerText.includes("초")) return;
-        
+    if ((mediaRecorder && mediaRecorder.state === 'recording') || recordBtn.innerText.includes("초")) return;
     if (selectedTimerSeconds > 0) {
       let timeLeft = selectedTimerSeconds;
       recordBtn.innerText = `${timeLeft}초`;
       recordBtn.style.backgroundColor = "orange";
-      
       const countdownInterval = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
@@ -904,8 +882,7 @@ zoomOptionBtns.forEach(btn => {
     const zoomVal = parseFloat(btn.getAttribute('data-zoom'));
     currentZoomScale = zoomVal;
     if (zoomBtnText) zoomBtnText.innerText = `${zoomVal}x`;
-    if (cameraView && cameraView.srcObject)
-      applyHardwareZoom(cameraView.srcObject, currentZoomScale);
+    if (cameraView && cameraView.srcObject) applyHardwareZoom(cameraView.srcObject, currentZoomScale);
     updateCameraTransformStyle();
     if (zoomMenu) zoomMenu.classList.remove('open');
   });
@@ -937,14 +914,12 @@ document.addEventListener('mouseup', e => {
 function handleSwipe() {
   const swipeDistanceX = touchStartX - touchEndX;
   const swipeDistanceY = touchStartY - touchEndY;
-  
   if (Math.abs(swipeDistanceX) < 40 || Math.abs(swipeDistanceY) > 60) return;
-  
+
   if (swipeDistanceX < -50 && currentSlideIndex > 0) {
     currentSlideIndex--;
     updateSliderPosition();
   }
-  
   if (swipeDistanceX > 50 && currentSlideIndex < totalSlides - 1) {
     currentSlideIndex++;
     updateSliderPosition();
@@ -954,21 +929,20 @@ function handleSwipe() {
 function updateSliderPosition() {
   if (!sliderWrapper) return;
   sliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
-  
   Array.from(sliderWrapper.children).forEach((slide, i) => {
     const video = slide.querySelector('.saved-video');
     if (video) {
       if (i === currentSlideIndex) {
         video.currentTime = 0;
-        video.muted = false; 
+        video.muted = false;
         video.play().catch(err => {
           console.log("Autoplay fallback muted mode:", err);
-          video.muted = true; 
+          video.muted = true;
           video.play().catch(e => console.log(e));
         });
       } else {
         video.pause();
-        video.muted = true; 
+        video.muted = true;
       }
     }
   });
@@ -976,16 +950,16 @@ function updateSliderPosition() {
 
 async function generateTotalLogVideo() {
   if (!totalDownloadBtn) return;
-  
   const transaction = db.transaction(["videos"], "readonly");
   const store = transaction.objectStore("videos");
   const request = store.getAll();
-  
+
   request.onsuccess = async function(e) {
     let items = e.target.result || [];
     if (currentProject) {
       items = items.filter(item => item.projectid === currentProject.id);
     }
+
     if (!items || items.length === 0) {
       alert("아직 저장된 고도필름이 없습니다. \n먼저 영상을 촬영해 주세요!");
       return;
@@ -1014,8 +988,8 @@ async function generateTotalLogVideo() {
       canvas.width = 1290;
       canvas.height = 2622;
       const ctx = canvas.getContext('2d');
-      
       canvas.style.cssText = "width: 210px; height: 427px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); background: #1c1c1e;";
+
       renderOverlay.appendChild(canvas);
       document.body.appendChild(renderOverlay);
 
@@ -1034,15 +1008,15 @@ async function generateTotalLogVideo() {
         const downloadUrl = URL.createObjectURL(resultBlob);
         const now = new Date();
         const fileName = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일의 고도필름.mp4`;
-        
+
         const a = document.createElement('a');
         a.href = downloadUrl;
         a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        
         URL.revokeObjectURL(downloadUrl);
+
         renderOverlay.remove();
         totalDownloadBtn.innerHTML = originalBtnText;
         totalDownloadBtn.disabled = false;
@@ -1097,7 +1071,6 @@ async function generateTotalLogVideo() {
 
         while (isCurrentVideoPlaying) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
           if (bgImg.complete && bgImg.naturalWidth !== 0) {
             ctx.drawImage(bgImg, bgSx, bgSy, bgSw, bgSh, 0, 0, canvas.width, canvas.height);
           } else {
@@ -1134,6 +1107,7 @@ async function generateTotalLogVideo() {
             ctx.scale(-1, 1);
             ctx.translate(-(videoX + containerWidth / 2), 0);
           }
+
           ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
           ctx.restore();
 
@@ -1146,13 +1120,13 @@ async function generateTotalLogVideo() {
           ctx.font = "bold 55px -apple-system, sans-serif";
           ctx.textBaseline = "middle";
           const cleanText = (item.altitudeText || "해발 0m").trim();
-          const totalContentWidth = 48 + ctx.measureText(cleanText).width; 
+          const totalContentWidth = 48 + ctx.measureText(cleanText).width;
           const startX = (canvas.width - totalContentWidth) / 2;
           ctx.fillText(cleanText, startX + 48, videoY + (containerHeight / 2));
 
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
-          
+
           renderStatus.innerText = `고도필름 제작 중... (${percent}%)`;
           totalDownloadBtn.innerText = `고도필름 제작 중... (${percent}%)`;
 
@@ -1167,11 +1141,11 @@ async function generateTotalLogVideo() {
       hiddenVideo.load();
       hiddenVideo.remove();
 
-      renderStatus.innerText = "💾 파일 저장 중...";
-      totalDownloadBtn.innerText = "💾 파일 저장 중...";
+      renderStatus.innerText = "파일 저장 중...";
+      totalDownloadBtn.innerText = "파일 저장 중...";
       await new Promise(resolve => setTimeout(resolve, 500));
-      canvasRecorder.stop();
 
+      canvasRecorder.stop();
     } catch (err) {
       console.error("전체 영상 생성 에러:", err);
       alert("필름 현상에 실패했습니다.");
@@ -1195,11 +1169,9 @@ async function initApp() {
   await initDatabase();
   await loadSavedVideos("");
   startCameraClock();
-  
   if (window.refreshProjectGrid) {
     window.refreshProjectGrid();
   }
-
   setTimeout(() => {
     const splash = document.getElementById('splash-screen');
     if (splash) {
