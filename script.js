@@ -96,6 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------
   // 산 선택에 따른 디자인 셀 비활성화/활성화 함수
   // ------------------------------------------
+  // ------------------------------------------
+  // 산 선택에 따른 디자인 셀 비활성화/활성화 함수
+  // ------------------------------------------
   function updateDesignOptions(selectedMountain) {
     const cellGroups = document.querySelectorAll('.horizontal-cell-group');
     if (cellGroups.length < 2) return;
