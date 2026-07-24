@@ -787,18 +787,29 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   to { transform: translateY(0); }
 }
 
-/* 시트 상단 드래그 핸들 바 */
+/* 상단 드래그 영역 (바 + 여백 전체가 드래그 가능) */
+.sheet-drag-zone {
+  width: 100%;
+  padding: 10px 0 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none; /* 사파리 기본 스크롤/바운스 방지 */
+  margin-bottom: -12px;
+}
+
+.sheet-drag-zone:active {
+  cursor: grabbing;
+}
+
+/* 시트 상단 드래그 핸들 바 (시각적 표시용) */
 .sheet-handle {
   width: 40px;
   height: 4px;
   background-color: #E2DDD5;
   border-radius: 2px;
-  margin: 0 auto 4px auto;
-  cursor: grab;
-  padding: 12px 30px;
-  background-clip: content-box;
-  box-sizing: content-box;
-  touch-action: none; /* ★ 추가 */
+  pointer-events: none; /* 터치는 부모 drag-zone이 전담 */
 }
 
 
