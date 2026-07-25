@@ -1129,12 +1129,47 @@ async function generateTotalLogVideo() {
       let videoA = createHiddenVideo();
       let videoB = createHiddenVideo();
 
-      // 다음 영상을 "미리 로딩(디코더 세팅)"만 해두는 함수. play()는 호출하지 않음.
-      // → 이렇게 해야 화면에 보여줄 차례가 되기 전까지 시간이 흐르지 않음.
+     // 다음 영상을 미리 로딩 + "디코더 워밍업" 해두는 함수.
+      // 안드로이드는 play() 호출 후 실제 첫 프레임이 나오기까지 지연(콜드 스타트)이
+      // 길어서, 그 지연 시간 동안에도 재생 시계가 흘러가버려 영상이 중간부터
+      // 재생되는 것처럼 보이는 문제가 있었음.
+      // → 미리 아주 짧게 재생해 디코더를 예열시킨 뒤, 즉시 정지하고 0초로
+      //   되돌려놓아서, 실제 전환 시점엔 디코더가 이미 준비된 상태로
+      //   정확히 처음부터 재생되도록 함.
       async function preloadVideo(videoEl, blob) {
         const url = URL.createObjectURL(blob);
         videoEl.src = url;
         await new Promise((resolve) => { videoEl.onloadeddata = resolve; });
+
+        try {
+          await videoEl.play();
+          await new Promise((resolve) => {
+            if (videoEl.requestVideoFrameCallback) {
+              videoEl.requestVideoFrameCallback(() => resolve());
+            } else {
+              requestAnimationFrame(resolve);
+            }
+          });
+        } catch (e) {
+          // 워밍업 재생이 실패해도 치명적이지 않으므로 무시하고 진행
+        }
+
+        videoEl.pause();
+        videoEl.currentTime = 0;
+
+        // currentTime 재설정이 실제로 반영될 때까지 대기 (안드로이드 안정성 확보)
+        await new Promise((resolve) => {
+          let resolved = false;
+          const done = () => {
+            if (resolved) return;
+            resolved = true;
+            videoEl.removeEventListener('seeked', done);
+            resolve();
+          };
+          videoEl.addEventListener('seeked', done);
+          setTimeout(done, 150); // 혹시 seeked가 발생 안 하는 기기 대비 안전장치
+        });
+
         return url;
       }
 
