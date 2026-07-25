@@ -1122,33 +1122,23 @@ async function generateTotalLogVideo() {
       hiddenVideo.style.cssText = "position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;";
       renderOverlay.appendChild(hiddenVideo);
 
+      // 영상 프레임이 아직 준비 안 됐을 때 배경이 비쳐 보이는 대신
+      // 직전 프레임을 임시로 보여주기 위한 캔버스
+      const placeholderCanvas = document.createElement('canvas');
+      placeholderCanvas.width = 1146;
+      placeholderCanvas.height = 645;
+      const placeholderCtx = placeholderCanvas.getContext('2d');
+      let hasPlaceholder = false;
+
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         const videoObjectUrl = URL.createObjectURL(item.videoBlob);
-        hiddenVideo.src = videoObjectUrl;
+       hiddenVideo.src = videoObjectUrl;
         await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
         await hiddenVideo.play();
 
-        // 안드로이드(특히 갤럭시 S10 등)는 loadeddata + play() 직후에도
-        // 실제 디코딩된 프레임이 캔버스에 그릴 준비가 안 된 경우가 있음.
-        // timeupdate 이벤트(실제 재생이 진행되어 currentTime이 움직인 시점)까지
-        // 기다려서, 확실히 그릴 수 있는 프레임이 준비된 후 루프를 시작하도록 함.
-        await new Promise((resolve) => {
-          let resolved = false;
-          const onReady = () => {
-            if (resolved) return;
-            resolved = true;
-            hiddenVideo.removeEventListener('timeupdate', onReady);
-            resolve();
-          };
-          hiddenVideo.addEventListener('timeupdate', onReady);
-          // 혹시 timeupdate가 비정상적으로 늦게 발생하는 기기 대비 안전장치(최대 200ms 대기)
-          setTimeout(onReady, 200);
-        });
-
         let isCurrentVideoPlaying = true;
         hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
-
         const containerWidth = 1146;
         const containerHeight = 645;
         const videoX = (canvas.width - containerWidth) / 2;
@@ -1187,14 +1177,28 @@ async function generateTotalLogVideo() {
           }
           ctx.clip();
 
-          if ((item.facingMode || "user") === "user") {
-            ctx.translate(videoX + containerWidth / 2, 0);
-            ctx.scale(-1, 1);
-            ctx.translate(-(videoX + containerWidth / 2), 0);
-          }
+          // 현재 비디오 프레임이 실제로 그릴 준비가 됐는지 확인 (readyState 2 = HAVE_CURRENT_DATA 이상)
+          const isFrameReady = hiddenVideo.readyState >= 2;
 
-          ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
+          if (isFrameReady) {
+            if ((item.facingMode || "user") === "user") {
+              ctx.translate(videoX + containerWidth / 2, 0);
+              ctx.scale(-1, 1);
+              ctx.translate(-(videoX + containerWidth / 2), 0);
+            }
+            ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
+          } else if (hasPlaceholder) {
+            // 준비 안 됐으면 배경이 비쳐 보이게 두지 않고, 직전에 성공적으로 그렸던 마지막 프레임을 대신 표시
+            ctx.drawImage(placeholderCanvas, videoX, videoY, containerWidth, containerHeight);
+          }
           ctx.restore();
+
+          // 지금 그린 내용을 다음 프레임 대비용으로 저장 (다음 비디오가 아직 준비 안 됐을 때 사용)
+          if (isFrameReady) {
+            placeholderCtx.clearRect(0, 0, placeholderCanvas.width, placeholderCanvas.height);
+            placeholderCtx.drawImage(canvas, videoX, videoY, containerWidth, containerHeight, 0, 0, containerWidth, containerHeight);
+            hasPlaceholder = true;
+          }
 
           ctx.fillStyle = "white";
           ctx.font = "600 49px -apple-system, sans-serif";
