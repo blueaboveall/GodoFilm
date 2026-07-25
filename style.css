@@ -7,10 +7,14 @@
   box-sizing: border-box;
 }
 
+:root, html {
+  color-scheme: light only;
+}
+
 body, html {
   width: 100%;
   height: 100%;
-  background: transparent !important;
+  background: #FBF4E9 !important;
   display: flex;
   justify-content: center;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Noto Sans KR', sans-serif;
