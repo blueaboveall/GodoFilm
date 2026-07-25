@@ -5,7 +5,7 @@ const sliderWrapper = document.getElementById('slider-wrapper');
 const cameraPage = document.getElementById('camera-page');
 const switchCameraBtn = document.getElementById('switch-camera-btn');
 const totalDownloadBtn = document.getElementById('total-download-btn');
-const timerBtn = document.getElementById('timer-btn');
+const timerBtn = document.getElementById('영timer-btn');
 const timerMenu = document.getElementById('timer-menu');
 const timerIconSvg = document.getElementById('timer-icon-svg');
 const timerBtnText = document.getElementById('timer-btn-text');
@@ -1129,15 +1129,20 @@ async function generateTotalLogVideo() {
       let videoA = createHiddenVideo();
       let videoB = createHiddenVideo();
 
-      // 영상을 로딩 + 재생 시작하고, 실제로 화면에 그릴 수 있는 프레임이
-      // 준비될 때까지 최대한 확실하게 기다려주는 함수
-      async function prepareVideo(videoEl, blob) {
+      // 다음 영상을 "미리 로딩(디코더 세팅)"만 해두는 함수. play()는 호출하지 않음.
+      // → 이렇게 해야 화면에 보여줄 차례가 되기 전까지 시간이 흐르지 않음.
+      async function preloadVideo(videoEl, blob) {
         const url = URL.createObjectURL(blob);
         videoEl.src = url;
         await new Promise((resolve) => { videoEl.onloadeddata = resolve; });
+        return url;
+      }
+
+      // 영상을 실제로 재생 시작하고, 화면에 그릴 수 있는 프레임이 준비될 때까지 기다림.
+      // 이 함수는 "지금 이 순간부터 이 영상을 보여줄 것"이라는 뜻이므로,
+      // 반드시 화면 전환 직전에만 호출해야 함.
+      async function playAndWaitFrame(videoEl) {
         await videoEl.play();
-        // 크롬 계열(안드로이드 포함)이 지원하는 rVFC: 실제 디코딩된 프레임이
-        // 준비된 정확한 시점을 알려줌 (readyState보다 훨씬 신뢰도 높음)
         if (videoEl.requestVideoFrameCallback) {
           await new Promise((resolve) => {
             videoEl.requestVideoFrameCallback(() => resolve());
@@ -1145,7 +1150,6 @@ async function generateTotalLogVideo() {
         } else {
           await new Promise((resolve) => requestAnimationFrame(resolve));
         }
-        return url;
       }
 
       // 영상 프레임이 아직 준비 안 됐을 때 배경이 비쳐 보이는 대신
@@ -1158,7 +1162,8 @@ async function generateTotalLogVideo() {
 
       let activeVideo = videoA;
       let bufferVideo = videoB;
-      let activeUrl = await prepareVideo(activeVideo, items[0].videoBlob);
+      let activeUrl = await preloadVideo(activeVideo, items[0].videoBlob);
+      await playAndWaitFrame(activeVideo);
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -1167,11 +1172,11 @@ async function generateTotalLogVideo() {
         const videoX = (canvas.width - containerWidth) / 2;
         const videoY = (canvas.height - containerHeight) / 2;
 
-        // 다음 영상은 지금 영상이 재생되는 동안 미리 백그라운드에서 로딩+재생 시작
-        // → 실제 전환 시점엔 이미 충분히 디코딩되어 있어서 끊김이 사라짐
-        let nextPreparePromise = null;
+        // 다음 영상은 "로딩(디코더 세팅)"만 미리 해둠. 아직 재생(시간 흐름)은 시작 안 함.
+        // → 백그라운드에서 시간이 흐르지 않으므로, 나중에 화면에 나올 때 정확히 처음부터 재생됨.
+        let nextPreloadPromise = null;
         if (i + 1 < items.length) {
-          nextPreparePromise = prepareVideo(bufferVideo, items[i + 1].videoBlob);
+          nextPreloadPromise = preloadVideo(bufferVideo, items[i + 1].videoBlob);
         }
 
         let isCurrentVideoPlaying = true;
@@ -1260,11 +1265,13 @@ async function generateTotalLogVideo() {
         activeVideo.src = "";
         activeVideo.load();
 
-        if (nextPreparePromise) {
-          activeUrl = await nextPreparePromise;
+        if (nextPreloadPromise) {
+          activeUrl = await nextPreloadPromise;
           const temp = activeVideo;
           activeVideo = bufferVideo;
           bufferVideo = temp;
+          // 바로 지금이 이 영상을 보여줄 차례이므로, 여기서 정확히 재생을 시작함
+          await playAndWaitFrame(activeVideo);
         }
       }
 
