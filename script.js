@@ -1186,10 +1186,18 @@ async function generateTotalLogVideo() {
           ctx.fillText(item.recordTime || "00:00", videoX + 22, videoY + 22);
 
           ctx.font = "bold 55px -apple-system, sans-serif";
-ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
-ctx.fillText(cleanText, canvas.width / 2, videoY + (containerHeight / 2));
+
+// 이모지(⛰️)는 실제 렌더링 폭과 브라우저가 계산하는 advance width가 달라
+// textAlign="center"만으로는 시각적으로 중앙에서 어긋날 수 있음.
+// → actualBoundingBox 값으로 "실제 그려지는 폭"을 직접 측정해 중앙 좌표를 계산.
+ctx.textAlign = "left";
+const boxCenterX = videoX + (containerWidth / 2); // 영상 박스의 진짜 가로 중앙
+const metrics = ctx.measureText(cleanText);
+const visualWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+const drawX = boxCenterX - metrics.actualBoundingBoxLeft - (visualWidth / 2);
+ctx.fillText(cleanText, drawX, videoY + (containerHeight / 2));
 
           const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
