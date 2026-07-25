@@ -1114,35 +1114,68 @@ async function generateTotalLogVideo() {
         }
       }
 
-      const hiddenVideo = document.createElement('video');
-      hiddenVideo.muted = true;
-      hiddenVideo.playsInline = true;
-      hiddenVideo.setAttribute('playsinline', '');
-      hiddenVideo.setAttribute('muted', '');
-      hiddenVideo.style.cssText = "position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;";
-      renderOverlay.appendChild(hiddenVideo);
+      // 숨겨진 영상 엘리먼트 2개를 번갈아 사용 (더블 버퍼링)
+      function createHiddenVideo() {
+        const v = document.createElement('video');
+        v.muted = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.setAttribute('muted', '');
+        v.style.cssText = "position: absolute; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;";
+        renderOverlay.appendChild(v);
+        return v;
+      }
+
+      let videoA = createHiddenVideo();
+      let videoB = createHiddenVideo();
+
+      // 영상을 로딩 + 재생 시작하고, 실제로 화면에 그릴 수 있는 프레임이
+      // 준비될 때까지 최대한 확실하게 기다려주는 함수
+      async function prepareVideo(videoEl, blob) {
+        const url = URL.createObjectURL(blob);
+        videoEl.src = url;
+        await new Promise((resolve) => { videoEl.onloadeddata = resolve; });
+        await videoEl.play();
+        // 크롬 계열(안드로이드 포함)이 지원하는 rVFC: 실제 디코딩된 프레임이
+        // 준비된 정확한 시점을 알려줌 (readyState보다 훨씬 신뢰도 높음)
+        if (videoEl.requestVideoFrameCallback) {
+          await new Promise((resolve) => {
+            videoEl.requestVideoFrameCallback(() => resolve());
+          });
+        } else {
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+        }
+        return url;
+      }
 
       // 영상 프레임이 아직 준비 안 됐을 때 배경이 비쳐 보이는 대신
-      // 직전 프레임을 임시로 보여주기 위한 캔버스
+      // 직전 프레임을 임시로 보여주기 위한 캔버스 (이중 안전장치)
       const placeholderCanvas = document.createElement('canvas');
       placeholderCanvas.width = 1146;
       placeholderCanvas.height = 645;
       const placeholderCtx = placeholderCanvas.getContext('2d');
       let hasPlaceholder = false;
 
+      let activeVideo = videoA;
+      let bufferVideo = videoB;
+      let activeUrl = await prepareVideo(activeVideo, items[0].videoBlob);
+
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        const videoObjectUrl = URL.createObjectURL(item.videoBlob);
-       hiddenVideo.src = videoObjectUrl;
-        await new Promise((resolve) => { hiddenVideo.onloadeddata = resolve; });
-        await hiddenVideo.play();
-
-        let isCurrentVideoPlaying = true;
-        hiddenVideo.onended = () => { isCurrentVideoPlaying = false; };
         const containerWidth = 1146;
         const containerHeight = 645;
         const videoX = (canvas.width - containerWidth) / 2;
         const videoY = (canvas.height - containerHeight) / 2;
+
+        // 다음 영상은 지금 영상이 재생되는 동안 미리 백그라운드에서 로딩+재생 시작
+        // → 실제 전환 시점엔 이미 충분히 디코딩되어 있어서 끊김이 사라짐
+        let nextPreparePromise = null;
+        if (i + 1 < items.length) {
+          nextPreparePromise = prepareVideo(bufferVideo, items[i + 1].videoBlob);
+        }
+
+        let isCurrentVideoPlaying = true;
+        activeVideo.onended = () => { isCurrentVideoPlaying = false; };
 
         while (isCurrentVideoPlaying) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1154,7 +1187,7 @@ async function generateTotalLogVideo() {
           }
 
           const targetRatio = containerWidth / containerHeight;
-          const videoRatio = hiddenVideo.videoWidth / hiddenVideo.videoHeight;
+          const videoRatio = activeVideo.videoWidth / activeVideo.videoHeight;
           let drawWidth, drawHeight;
 
           if (videoRatio > targetRatio) {
@@ -1177,8 +1210,7 @@ async function generateTotalLogVideo() {
           }
           ctx.clip();
 
-          // 현재 비디오 프레임이 실제로 그릴 준비가 됐는지 확인 (readyState 2 = HAVE_CURRENT_DATA 이상)
-          const isFrameReady = hiddenVideo.readyState >= 2;
+          const isFrameReady = activeVideo.readyState >= 2;
 
           if (isFrameReady) {
             if ((item.facingMode || "user") === "user") {
@@ -1186,14 +1218,12 @@ async function generateTotalLogVideo() {
               ctx.scale(-1, 1);
               ctx.translate(-(videoX + containerWidth / 2), 0);
             }
-            ctx.drawImage(hiddenVideo, offsetX, offsetY, drawWidth, drawHeight);
+            ctx.drawImage(activeVideo, offsetX, offsetY, drawWidth, drawHeight);
           } else if (hasPlaceholder) {
-            // 준비 안 됐으면 배경이 비쳐 보이게 두지 않고, 직전에 성공적으로 그렸던 마지막 프레임을 대신 표시
             ctx.drawImage(placeholderCanvas, videoX, videoY, containerWidth, containerHeight);
           }
           ctx.restore();
 
-          // 지금 그린 내용을 다음 프레임 대비용으로 저장 (다음 비디오가 아직 준비 안 됐을 때 사용)
           if (isFrameReady) {
             placeholderCtx.clearRect(0, 0, placeholderCanvas.width, placeholderCanvas.height);
             placeholderCtx.drawImage(canvas, videoX, videoY, containerWidth, containerHeight, 0, 0, containerWidth, containerHeight);
@@ -1207,20 +1237,16 @@ async function generateTotalLogVideo() {
           ctx.fillText(item.recordTime || "00:00", videoX + 22, videoY + 22);
 
           ctx.font = "bold 55px -apple-system, sans-serif";
-ctx.textBaseline = "middle";
-const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
+          ctx.textBaseline = "middle";
+          const cleanText = (item.altitudeText || "⛰️해발 0m").trim();
+          ctx.textAlign = "left";
+          const boxCenterX = videoX + (containerWidth / 2);
+          const metrics = ctx.measureText(cleanText);
+          const visualWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
+          const drawX = boxCenterX - metrics.actualBoundingBoxLeft - (visualWidth / 2);
+          ctx.fillText(cleanText, drawX, videoY + (containerHeight / 2));
 
-// 이모지(⛰️)는 실제 렌더링 폭과 브라우저가 계산하는 advance width가 달라
-// textAlign="center"만으로는 시각적으로 중앙에서 어긋날 수 있음.
-// → actualBoundingBox 값으로 "실제 그려지는 폭"을 직접 측정해 중앙 좌표를 계산.
-ctx.textAlign = "left";
-const boxCenterX = videoX + (containerWidth / 2); // 영상 박스의 진짜 가로 중앙
-const metrics = ctx.measureText(cleanText);
-const visualWidth = metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft;
-const drawX = boxCenterX - metrics.actualBoundingBoxLeft - (visualWidth / 2);
-ctx.fillText(cleanText, drawX, videoY + (containerHeight / 2));
-
-          const currentProgress = hiddenVideo.duration ? (hiddenVideo.currentTime / hiddenVideo.duration) : 0;
+          const currentProgress = activeVideo.duration ? (activeVideo.currentTime / activeVideo.duration) : 0;
           const percent = Math.min(99, Math.round(((i + currentProgress) / items.length) * 100));
 
           renderStatus.innerText = `🎞️ 고도필름 제작 중... (${percent}%)`;
@@ -1229,13 +1255,21 @@ ctx.fillText(cleanText, drawX, videoY + (containerHeight / 2));
           await new Promise(requestAnimationFrame);
         }
 
-        URL.revokeObjectURL(videoObjectUrl);
-        hiddenVideo.pause();
-        hiddenVideo.src = "";
-        hiddenVideo.load();
+        URL.revokeObjectURL(activeUrl);
+        activeVideo.pause();
+        activeVideo.src = "";
+        activeVideo.load();
+
+        if (nextPreparePromise) {
+          activeUrl = await nextPreparePromise;
+          const temp = activeVideo;
+          activeVideo = bufferVideo;
+          bufferVideo = temp;
+        }
       }
 
-      hiddenVideo.remove();
+      videoA.remove();
+      videoB.remove();
       renderStatus.innerText = "💽 파일 저장 중...";
       totalDownloadBtn.innerText = "💽 파일 저장 중...";
       await new Promise(resolve => setTimeout(resolve, 500));
