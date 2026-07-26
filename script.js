@@ -29,13 +29,6 @@ document.addEventListener('touchmove', (e) => {
   }
 }, { passive: false });
 
-// 핀치 줌 제스처 차단 (Android Chrome 등, 멀티터치 감지 방식)
-document.addEventListener('touchmove', (e) => {
-  if (e.touches.length > 1) {
-    e.preventDefault();
-  }
-}, { passive: false });
-
 // iOS 엣지 스와이프 뒤로가기/앞으로가기 제스처 차단 (미리보기 애니메이션까지 차단)
 const EDGE_SWIPE_THRESHOLD = 24;
 let isEdgeSwipeActive = false;
