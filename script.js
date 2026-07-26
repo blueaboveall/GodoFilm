@@ -506,10 +506,17 @@ function renderProjects() {
 
       const info = document.createElement("div");
       info.className = "project-info";
-      info.innerHTML = `
-        <div class="project-title">${proj.name}</div>
-        <div class="project-date">${proj.date}</div>
-      `;
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "project-title";
+      titleDiv.textContent = proj.name;
+
+      const dateDiv = document.createElement("div");
+      dateDiv.className = "project-date";
+      dateDiv.textContent = proj.date;
+
+      info.appendChild(titleDiv);
+      info.appendChild(dateDiv);
 
       const titleElement = info.querySelector('.project-title');
       function startEditing() {
