@@ -22,6 +22,13 @@ document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('gesturechange', (e) => e.preventDefault());
 document.addEventListener('gestureend', (e) => e.preventDefault());
 
+// 핀치 줌 제스처 차단 (Android Chrome 등, 멀티터치 감지 방식)
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 let mediaRecorder;
 let recordedChunks = [];
 let currentSlideIndex = 0;
