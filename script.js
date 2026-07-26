@@ -95,6 +95,7 @@ function applyCellLayoutStyles(cell) {
 
 // Global State & Function for BottomSheet (iOS + Android PWA)
 let isSheetOpen = false;
+let isCameraPageOpen = false;
 
 function openSheetWithAnimation() {
   const projectModal = document.getElementById("project-modal");
@@ -147,11 +148,43 @@ function closeSheetWithAnimation(isBackGesture = false) {
     }
   }, 300);
 }
+function goToHomeView(isBackGesture = false) {
+  if (cameraView && cameraView.srcObject) {
+    cameraView.srcObject.getTracks().forEach(track => track.stop());
+    cameraView.srcObject = null;
+  }
+  const cameraPageView = document.getElementById("camera-page-view");
+  const homeView = document.getElementById("home-view");
+  const mainContainer = document.getElementById("main-container");
 
+  if (cameraPageView) cameraPageView.style.display = "none";
+  if (homeView) homeView.style.display = "flex";
+  if (mainContainer) {
+    mainContainer.style.backgroundImage = "";
+    mainContainer.classList.add("home-mode");
+  }
+  currentProject = null;
+  renderProjects();
+
+  if (isCameraPageOpen && !isBackGesture) {
+    // 버튼을 직접 눌러서 나간 경우: history에 쌓아둔 상태를 소비(pop)해줌
+    isCameraPageOpen = false;
+    if (history.state && history.state.cameraPage) {
+      history.back();
+    }
+  } else {
+    // 안드로이드 시스템 뒤로가기로 나간 경우: 이미 history가 소비된 상태
+    isCameraPageOpen = false;
+  }
+}
 // 안드로이드 물리 뒤로가기 / 제스처 대응
 window.addEventListener('popstate', () => {
   if (isSheetOpen) {
     closeSheetWithAnimation(true);
+    return;
+  }
+  if (isCameraPageOpen) {
+    goToHomeView(true);
   }
 });
 
@@ -277,23 +310,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+  if (groupIndex === 0) {
+        const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.textContent;
+        updateDesignOptions(selectedMountain);
+      }
+    });
+  });
 
   if (backToHomeBtn) {
-    backToHomeBtn.addEventListener("click", () => {
-      if (cameraView && cameraView.srcObject) {
-        cameraView.srcObject.getTracks().forEach(track => track.stop());
-        cameraView.srcObject = null;
-      }
-      if (cameraPageView) cameraPageView.style.display = "none";
-      if (homeView) homeView.style.display = "flex";
-      if (mainContainer) {
-        mainContainer.style.backgroundImage = "";
-        mainContainer.classList.add("home-mode");
-      }
-      currentProject = null;
-      renderProjects();
-    });
+    backToHomeBtn.addEventListener("click", () => goToHomeView(false));
   }
+
+  document.addEventListener("click", () => {
 
   document.addEventListener("click", () => {
     document.querySelectorAll(".project-menu-popup").forEach(menu => {
@@ -558,6 +586,11 @@ function renderProjects() {
         }
         startCamera();
         getRealAltitude();
+
+        if (!isCameraPageOpen) {
+          isCameraPageOpen = true;
+          history.pushState({ cameraPage: true }, '');
+        }
       });
 
       card.appendChild(menuTrigger);
