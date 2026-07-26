@@ -310,18 +310,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-  if (groupIndex === 0) {
-        const selectedMountain = targetCell.getAttribute('data-base-name') || targetCell.textContent;
-        updateDesignOptions(selectedMountain);
-      }
-    });
-  });
 
   if (backToHomeBtn) {
     backToHomeBtn.addEventListener("click", () => goToHomeView(false));
   }
-
-  document.addEventListener("click", () => {
 
   document.addEventListener("click", () => {
     document.querySelectorAll(".project-menu-popup").forEach(menu => {
