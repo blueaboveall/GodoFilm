@@ -387,25 +387,40 @@ function updateDesignOptions(selectedMountain) {
   });
 }
 
+let isRenderingProjects = false; // 중복 렌더링 방지 플래그
+
 function renderProjects() {
+  if (isRenderingProjects) return; // 이미 렌더링 중이면 무시
+  isRenderingProjects = true;
+
   const projectGrid = document.querySelector(".project-grid");
-  if (!projectGrid) return;
+  if (!projectGrid) { isRenderingProjects = false; return; }
   projectGrid.innerHTML = "";
   const emptyState = document.getElementById("empty-state");
   if (emptyState) {
     emptyState.style.display = projects.length === 0 ? "flex" : "none";
   }
+
   if (!db) {
     renderCards([]);
+    isRenderingProjects = false;
     return;
   }
+
   const transaction = db.transaction(["videos"], "readonly");
   const store = transaction.objectStore("videos");
   const request = store.getAll();
   request.onsuccess = function (e) {
     const allVideos = e.target.result || [];
     renderCards(allVideos);
+    isRenderingProjects = false; // 렌더링 끝났으니 다시 호출 가능하게 풀어줌
   };
+  request.onerror = function () {
+    isRenderingProjects = false;
+  };
+
+
+
 
   function renderCards(allVideos) {
     const latestProjects = [...projects].reverse();
