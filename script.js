@@ -1368,10 +1368,10 @@ async function generateTotalLogVideo() {
           await new Promise(requestAnimationFrame);
         }
 
-        URL.revokeObjectURL(activeUrl);
-        activeVideo.pause();
-        activeVideo.src = "";
-        activeVideo.load();
+        // 끝난 영상은 바로 청소하지 않고 잠시 들고 있음
+        // → 다음 영상이 먼저 화면에 뜬 뒤에 청소해야 전환 시 멈춤이 없음
+        const finishedVideo = activeVideo;
+        const finishedUrl = activeUrl;
 
         if (nextPreloadPromise) {
           activeUrl = await nextPreloadPromise;
@@ -1381,6 +1381,12 @@ async function generateTotalLogVideo() {
           // 바로 지금이 이 영상을 보여줄 차례이므로, 여기서 정확히 재생을 시작함
           await playAndWaitFrame(activeVideo);
         }
+
+        // 새 영상이 이미 화면에 나온 뒤에 이전 영상을 정리 (전환 끊김 방지)
+        URL.revokeObjectURL(finishedUrl);
+        finishedVideo.pause();
+        finishedVideo.src = "";
+        finishedVideo.load();
       }
 
       videoA.remove();
