@@ -1666,4 +1666,18 @@ initApp();
     gDeltaX = dx;
     const percent = (gDeltaX / wrap.clientWidth) * 100;
     track.style.transform = `translateX(calc(-${guideIndex * 100}% + ${percent}%))`;
-  }, { passive: false
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', (e) => {
+    if (!gDragging) return;
+    e.stopPropagation();
+    gDragging = false;
+    if (gDeltaX < -50) {
+      goNext();
+    } else if (gDeltaX > 50) {
+      goPrev();
+    } else {
+      renderGuide(true);
+    }
+  });
+})();
