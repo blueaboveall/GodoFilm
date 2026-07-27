@@ -1135,7 +1135,7 @@ html, body {
 #help-lightbox-wrap {
   position: relative;
   width: min(84vw, 390px);
-  aspect-ratio: 9 / 19.5;
+  aspect-ratio: 1080 / 1920;
   max-height: 85vh;
   border-radius: 20px;
   overflow: hidden;
@@ -1161,7 +1161,7 @@ html, body {
 .help-lightbox-slide img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;
@@ -1175,12 +1175,12 @@ html, body {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.55);
   border: none;
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    0 0 0 0.5px rgba(0, 0, 0, 0.06);
-  color: rgba(30, 30, 32, 0.9);
+    0 2px 8px rgba(0, 0, 0, 0.14),
+    0 0 0 0.5px rgba(0, 0, 0, 0.05);
+  color: rgba(30, 30, 32, 0.85);
   font-size: 19px;
   font-weight: 600;
   display: flex;
@@ -1188,6 +1188,8 @@ html, body {
   justify-content: center;
   cursor: pointer;
   z-index: 10001;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: transform 0.15s ease;
 }
 .help-lightbox-arrow:active { transform: translateY(-50%) scale(0.9); }
