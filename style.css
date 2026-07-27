@@ -1081,6 +1081,11 @@ html, body {
 }
 
 /* ===== 도움말 아이콘 버튼 ===== */
+/* 홈 화면(#main-container.home-mode)일 때만 보이고, 프로젝트 내부(카메라 화면)로 들어가면 숨김 */
+#main-container:not(.home-mode) ~ #help-icon-btn {
+  display: none !important;
+}
+
 #help-icon-btn {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
