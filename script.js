@@ -1448,12 +1448,12 @@ initApp();
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.55);
+      background: rgba(255, 255, 255, 0.88);
       border: none;
       box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.12),
-        0 0 0 0.5px rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        0 2px 8px rgba(0, 0, 0, 0.14),
+        0 0 0 0.5px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
       color: rgba(30, 30, 32, 0.85);
       font-size: 14px;
       font-weight: 700;
@@ -1463,8 +1463,8 @@ initApp();
       justify-content: center;
       cursor: pointer;
       z-index: 60;
-      backdrop-filter: blur(12px) saturate(160%);
-      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     #help-icon-btn:active {
