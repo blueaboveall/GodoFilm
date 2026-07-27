@@ -191,6 +191,7 @@ function closeSheetWithAnimation(isBackGesture = false) {
     if (helpBtnReset) {
       helpBtnReset.style.backdropFilter = '';
       helpBtnReset.style.webkitBackdropFilter = '';
+      helpBtnReset.style.backgroundColor = ''; // 추가
       helpBtnReset.style.transition = '';
     }
 
@@ -284,6 +285,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const helpBtnEl = document.getElementById('help-icon-btn');
     const BASE_HELP_BLUR_PX = 12; // #help-icon-btn 기본 blur(12px)와 맞춤
     const MIN_HELP_BLUR_PX = 2;
+    const BASE_HELP_BG_ALPHA = 0.88; // 원래 배경 흰색 진하기
+    const MIN_HELP_BG_ALPHA = 0.35;  // 많이 내렸을 때 훨씬 투명해짐
 
     const setOverlayBlur = (px) => {
       if (!projectModal) return;
@@ -291,10 +294,11 @@ document.addEventListener("DOMContentLoaded", () => {
       projectModal.style.webkitBackdropFilter = `blur(${px}px)`;
     };
 
-    const setHelpBtnBlur = (px) => {
+    const setHelpBtnBlur = (px, alpha) => {
       if (!helpBtnEl) return;
       helpBtnEl.style.backdropFilter = `blur(${px}px)`;
       helpBtnEl.style.webkitBackdropFilter = `blur(${px}px)`;
+      helpBtnEl.style.backgroundColor = `rgba(255, 255, 255, ${alpha})`;
     };
 
     const clearOverlayBlurOverride = () => {
@@ -326,15 +330,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (dragY > 0) {
         bottomSheetContent.style.transform = `translateY(${dragY}px)`;
         const progress = Math.min(dragY / dragMaxDistance, 1);
+
         const blurPx = BASE_BLUR_PX - (BASE_BLUR_PX - MIN_BLUR_PX) * progress;
         setOverlayBlur(blurPx);
 
         const helpBlurPx = BASE_HELP_BLUR_PX - (BASE_HELP_BLUR_PX - MIN_HELP_BLUR_PX) * progress;
-        setHelpBtnBlur(helpBlurPx);
+        const helpAlpha = BASE_HELP_BG_ALPHA - (BASE_HELP_BG_ALPHA - MIN_HELP_BG_ALPHA) * progress;
+        setHelpBtnBlur(helpBlurPx, helpAlpha);
       } else {
         bottomSheetContent.style.transform = `translateY(0px)`;
         setOverlayBlur(BASE_BLUR_PX);
-        setHelpBtnBlur(BASE_HELP_BLUR_PX); // 추가
+        setHelpBtnBlur(BASE_HELP_BLUR_PX, BASE_HELP_BG_ALPHA);
       }
     };
     
@@ -354,8 +360,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (helpBtnEl) {
-          helpBtnEl.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease';
-          setHelpBtnBlur(BASE_HELP_BLUR_PX);
+          helpBtnEl.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease, background-color 0.25s ease';
+          setHelpBtnBlur(BASE_HELP_BLUR_PX, BASE_HELP_BG_ALPHA);
         }
       }
       dragY = 0;
