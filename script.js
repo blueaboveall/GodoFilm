@@ -281,6 +281,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const BASE_BLUR_PX = 4;   // .bottom-sheet-overlay의 기본 blur(4px)와 맞춤
     const MIN_BLUR_PX = 0.5;  // 완전히 0으로 두면 배경이 너무 선명해져서 살짝 남겨둠
+    const helpBtnEl = document.getElementById('help-icon-btn');
+    const BASE_HELP_BLUR_PX = 12; // #help-icon-btn 기본 blur(12px)와 맞춤
+    const MIN_HELP_BLUR_PX = 2;
 
     const setOverlayBlur = (px) => {
       if (!projectModal) return;
