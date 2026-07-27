@@ -214,5 +214,29 @@
   </div> <!-- #main-container 정상 닫힘 -->
 
   <script src="script.js"></script>
+
+  <!-- 도움말 버튼 -->
+  <button id="help-icon-btn" aria-label="도움말">?</button>
+
+  <!-- 도움말 가이드 라이트박스 -->
+  <div id="help-lightbox-overlay">
+    <button id="help-lightbox-close" aria-label="닫기">✕</button>
+    <button class="help-lightbox-arrow" id="help-lightbox-prev" aria-label="이전">‹</button>
+    <div id="help-lightbox-wrap">
+      <div id="help-lightbox-track">
+        <div class="help-lightbox-slide"><img src="guide-1.png" alt="가이드 이미지 1"></div>
+        <div class="help-lightbox-slide"><img src="guide-2.png" alt="가이드 이미지 2"></div>
+        <div class="help-lightbox-slide"><img src="guide-3.png" alt="가이드 이미지 3"></div>
+      </div>
+      <div id="help-lightbox-dots">
+        <div class="help-lightbox-dot" data-idx="0"></div>
+        <div class="help-lightbox-dot" data-idx="1"></div>
+        <div class="help-lightbox-dot" data-idx="2"></div>
+      </div>
+    </div>
+    <button class="help-lightbox-arrow" id="help-lightbox-next" aria-label="다음">›</button>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
