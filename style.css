@@ -1134,8 +1134,8 @@ html, body {
 
 #help-lightbox-wrap {
   position: relative;
-  width: min(86vw, 420px);
-  height: min(80vh, 760px);
+  width: min(72vw, 340px);
+  height: min(78vh, 720px);
   border-radius: 20px;
   overflow: hidden;
   touch-action: none;
