@@ -1448,18 +1448,30 @@ initApp();
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(0,0,0,0.35);
-      border: 1.5px solid rgba(255,255,255,0.55);
-      color: #fff;
-      font-size: 16px;
+      background: rgba(255, 255, 255, 0.55);
+      border: none;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.12),
+        0 0 0 0.5px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      color: rgba(30, 30, 32, 0.85);
+      font-size: 14px;
       font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 60;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(12px) saturate(160%);
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    #help-icon-btn:active {
+      transform: scale(0.92);
+      box-shadow:
+        0 1px 4px rgba(0, 0, 0, 0.1),
+        0 0 0 0.5px rgba(0, 0, 0, 0.04);
     }
     #help-lightbox-overlay {
       position: fixed;
