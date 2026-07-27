@@ -1088,7 +1088,7 @@ html, body {
 
 #help-icon-btn {
   position: fixed;
-  top: max(15px, env(safe-area-inset-top));
+  top: max(13px, env(safe-area-inset-top));
   right: 16px;
   width: 34px;
   height: 34px;
