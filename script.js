@@ -187,6 +187,14 @@ function closeSheetWithAnimation(isBackGesture = false) {
     projectModal.style.webkitBackdropFilter = '';
     projectModal.style.transition = '';
 
+    const helpBtnReset = document.getElementById('help-icon-btn');
+    if (helpBtnReset) {
+      helpBtnReset.style.backdropFilter = '';
+      helpBtnReset.style.webkitBackdropFilter = '';
+      helpBtnReset.style.transition = '';
+    }
+
+
     if (isSheetOpen && !isBackGesture) {
       isSheetOpen = false;
       if (history.state && history.state.bottomSheet) {
@@ -280,6 +288,12 @@ document.addEventListener("DOMContentLoaded", () => {
       projectModal.style.webkitBackdropFilter = `blur(${px}px)`;
     };
 
+    const setHelpBtnBlur = (px) => {
+      if (!helpBtnEl) return;
+      helpBtnEl.style.backdropFilter = `blur(${px}px)`;
+      helpBtnEl.style.webkitBackdropFilter = `blur(${px}px)`;
+    };
+
     const clearOverlayBlurOverride = () => {
       if (!projectModal) return;
       projectModal.style.backdropFilter = '';
@@ -300,6 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
       dragMaxDistance = bottomSheetContent.offsetHeight * 0.6; // 시트 높이의 60% 내리면 최소블러 도달
       bottomSheetContent.style.transition = 'none';
       if (projectModal) projectModal.style.transition = 'none';
+       if (helpBtnEl) helpBtnEl.style.transition = 'none';
     };
 
     const onDragMove = (clientY) => {
@@ -310,11 +325,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const progress = Math.min(dragY / dragMaxDistance, 1);
         const blurPx = BASE_BLUR_PX - (BASE_BLUR_PX - MIN_BLUR_PX) * progress;
         setOverlayBlur(blurPx);
+
+        const helpBlurPx = BASE_HELP_BLUR_PX - (BASE_HELP_BLUR_PX - MIN_HELP_BLUR_PX) * progress;
+        setHelpBtnBlur(helpBlurPx);
       } else {
         bottomSheetContent.style.transform = `translateY(0px)`;
         setOverlayBlur(BASE_BLUR_PX);
+        setHelpBtnBlur(BASE_HELP_BLUR_PX); // 추가
       }
     };
+    
+    
 
     const onDragEnd = () => {
       if (!isDragging) return;
@@ -328,9 +349,15 @@ document.addEventListener("DOMContentLoaded", () => {
           projectModal.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease';
           setOverlayBlur(BASE_BLUR_PX);
         }
+
+        if (helpBtnEl) {
+          helpBtnEl.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease';
+          setHelpBtnBlur(BASE_HELP_BLUR_PX);
+        }
       }
       dragY = 0;
     };
+     
 
     bottomSheetContent.addEventListener('touchstart', (e) => {
       if (e.touches.length > 0) onDragStart(e.touches[0].clientY, e.target);
