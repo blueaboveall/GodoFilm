@@ -1448,7 +1448,7 @@ initApp();
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.93);
       border: none;
       box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.14),
