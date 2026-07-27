@@ -1437,174 +1437,9 @@ initApp();
 
 // ================= 도움말 가이드 라이트박스 =================
 (function initHelpGuide() {
-  const GUIDE_IMAGES = ['guide-1.png', 'guide-2.png', 'guide-3.png']; // 이 파일명으로 이미지 3장을 프로젝트 폴더에 넣어주세요 (my-background.png 있는 위치와 동일)
-
-  const style = document.createElement('style');
-  style.textContent = `
-    #help-icon-btn {
-      position: fixed;
-      top: max(16px, env(safe-area-inset-top));
-      right: 16px;
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.93);
-      border: none;
-      box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.14),
-        0 0 0 0.5px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
-      color: rgba(30, 30, 32, 0.85);
-      font-size: 14px;
-      font-weight: 700;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 60;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    #help-icon-btn:active {
-      transform: scale(0.92);
-      box-shadow:
-        0 1px 4px rgba(0, 0, 0, 0.1),
-        0 0 0 0.5px rgba(0, 0, 0, 0.04);
-    }
-    #help-lightbox-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(5,5,7,0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      z-index: 9998;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
-    #help-lightbox-overlay.show { display: flex; opacity: 1; }
-    #help-lightbox-close {
-      position: absolute;
-      top: max(18px, env(safe-area-inset-top));
-      right: 20px;
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.12);
-      border: none;
-      color: #fff;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10001;
-    }
-    #help-lightbox-wrap {
-      position: relative;
-      width: min(86vw, 420px);
-      height: min(80vh, 760px);
-      border-radius: 20px;
-      overflow: hidden;
-      touch-action: none;
-    }
-    #help-lightbox-track {
-      display: flex;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .help-lightbox-slide {
-      flex: 0 0 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #111;
-    }
-    .help-lightbox-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      user-select: none;
-      -webkit-user-drag: none;
-      pointer-events: none;
-    }
-    .help-lightbox-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.14);
-      border: none;
-      color: #fff;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10001;
-    }
-    #help-lightbox-prev { left: -4px; }
-    #help-lightbox-next { right: -4px; }
-    #help-lightbox-dots {
-      position: absolute;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 6px;
-      z-index: 10001;
-    }
-    .help-lightbox-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.35);
-      transition: background 0.2s ease, width 0.2s ease;
-    }
-    .help-lightbox-dot.active {
-      background: #fff;
-      width: 16px;
-      border-radius: 3px;
-    }
-  `;
-  document.head.appendChild(style);
-
-  // 도움말 버튼
-  const helpBtn = document.createElement('button');
-  helpBtn.id = 'help-icon-btn';
-  helpBtn.setAttribute('aria-label', '도움말');
-  helpBtn.innerText = '?';
-  document.body.appendChild(helpBtn);
-
-  // 라이트박스 오버레이
-  const overlay = document.createElement('div');
-  overlay.id = 'help-lightbox-overlay';
-  overlay.innerHTML = `
-    <button id="help-lightbox-close" aria-label="닫기">✕</button>
-    <div id="help-lightbox-wrap">
-      <div id="help-lightbox-track">
-        ${GUIDE_IMAGES.map((src, i) => `
-          <div class="help-lightbox-slide">
-            <img src="${src}" alt="가이드 이미지 ${i + 1}">
-          </div>
-        `).join('')}
-      </div>
-      <button class="help-lightbox-arrow" id="help-lightbox-prev" aria-label="이전">‹</button>
-      <button class="help-lightbox-arrow" id="help-lightbox-next" aria-label="다음">›</button>
-      <div id="help-lightbox-dots">
-        ${GUIDE_IMAGES.map((_, i) => `<div class="help-lightbox-dot" data-idx="${i}"></div>`).join('')}
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
+  const helpBtn = document.getElementById('help-icon-btn');
+  const overlay = document.getElementById('help-lightbox-overlay');
+  if (!helpBtn || !overlay) return;
 
   const track = overlay.querySelector('#help-lightbox-track');
   const dots = overlay.querySelectorAll('.help-lightbox-dot');
@@ -1614,7 +1449,7 @@ initApp();
   const closeBtn = overlay.querySelector('#help-lightbox-close');
 
   let guideIndex = 0;
-  const guideTotal = GUIDE_IMAGES.length;
+  const guideTotal = dots.length;
 
   function renderGuide(animate = true) {
     track.style.transition = animate ? 'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
@@ -1636,11 +1471,11 @@ initApp();
   }
 
   function goPrev() {
-    guideIndex = (guideIndex - 1 + guideTotal) % guideTotal; // 첫 장에서 이전 → 마지막 장으로 순환
+    guideIndex = (guideIndex - 1 + guideTotal) % guideTotal;
     renderGuide(true);
   }
   function goNext() {
-    guideIndex = (guideIndex + 1) % guideTotal; // 마지막 장에서 다음 → 첫 장으로 순환
+    guideIndex = (guideIndex + 1) % guideTotal;
     renderGuide(true);
   }
 
@@ -1657,7 +1492,6 @@ initApp();
     });
   });
 
-  // 스와이프 처리 (기존 전역 스와이프 로직과 충돌 방지를 위해 stopPropagation 사용)
   let gStartX = 0, gStartY = 0, gDragging = false, gDeltaX = 0;
 
   wrap.addEventListener('touchstart', (e) => {
