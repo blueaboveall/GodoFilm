@@ -182,6 +182,10 @@ function closeSheetWithAnimation(isBackGesture = false) {
     projectModal.style.display = 'none';
     bottomSheetContent.style.transform = '';
     bottomSheetContent.style.transition = '';
+    // 아래 한 줄 추가: 다음에 열 때 블러가 항상 기본값에서 시작하도록
+    projectModal.style.backdropFilter = '';
+    projectModal.style.webkitBackdropFilter = '';
+    projectModal.style.transition = '';
 
     if (isSheetOpen && !isBackGesture) {
       isSheetOpen = false;
@@ -265,40 +269,65 @@ document.addEventListener("DOMContentLoaded", () => {
     let startY = 0;
     let dragY = 0;
     let isDragging = false;
+    let dragMaxDistance = 300; // 드래그 중 계산됨
+
+    const BASE_BLUR_PX = 4;   // .bottom-sheet-overlay의 기본 blur(4px)와 맞춤
+    const MIN_BLUR_PX = 0.5;  // 완전히 0으로 두면 배경이 너무 선명해져서 살짝 남겨둠
+
+    const setOverlayBlur = (px) => {
+      if (!projectModal) return;
+      projectModal.style.backdropFilter = `blur(${px}px)`;
+      projectModal.style.webkitBackdropFilter = `blur(${px}px)`;
+    };
+
+    const clearOverlayBlurOverride = () => {
+      if (!projectModal) return;
+      projectModal.style.backdropFilter = '';
+      projectModal.style.webkitBackdropFilter = '';
+      projectModal.style.transition = '';
+    };
 
     const onDragStart = (clientY, target) => {
-  // 입력창/버튼은 드래그 대상에서 제외 (타이핑, 클릭 방해 방지)
-  if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button')) {
-    return;
-  }
-  // 가로 스크롤 셀 영역(산 선택, 디자인 선택)도 제외 (좌우 스와이프와 충돌 방지)
-  if (target.closest('.horizontal-cell-group')) {
-    return;
-  }
-  isDragging = true;
-  startY = clientY;
-  dragY = 0;
-  bottomSheetContent.style.transition = 'none';
-};
+      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button')) {
+        return;
+      }
+      if (target.closest('.horizontal-cell-group')) {
+        return;
+      }
+      isDragging = true;
+      startY = clientY;
+      dragY = 0;
+      dragMaxDistance = bottomSheetContent.offsetHeight * 0.6; // 시트 높이의 60% 내리면 최소블러 도달
+      bottomSheetContent.style.transition = 'none';
+      if (projectModal) projectModal.style.transition = 'none';
+    };
 
     const onDragMove = (clientY) => {
       if (!isDragging) return;
       dragY = clientY - startY;
       if (dragY > 0) {
         bottomSheetContent.style.transform = `translateY(${dragY}px)`;
+        const progress = Math.min(dragY / dragMaxDistance, 1);
+        const blurPx = BASE_BLUR_PX - (BASE_BLUR_PX - MIN_BLUR_PX) * progress;
+        setOverlayBlur(blurPx);
       } else {
         bottomSheetContent.style.transform = `translateY(0px)`;
+        setOverlayBlur(BASE_BLUR_PX);
       }
     };
 
     const onDragEnd = () => {
       if (!isDragging) return;
       isDragging = false;
-      if (dragY > 90) { // 90px 이상 내려 끌었을 때: 창 닫기
+      if (dragY > 90) {
         closeSheetWithAnimation();
-      } else { // 90px 미만: 복원
+      } else {
         bottomSheetContent.style.transition = 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
         bottomSheetContent.style.transform = 'translateY(0px)';
+        if (projectModal) {
+          projectModal.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease';
+          setOverlayBlur(BASE_BLUR_PX);
+        }
       }
       dragY = 0;
     };
