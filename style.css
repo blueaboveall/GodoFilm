@@ -7,6 +7,25 @@
   box-sizing: border-box;
 }
 
+/* ===== 텍스트 길게 눌러도 선택/팝업 안 뜨게 (네이티브 앱처럼) ===== */
+html, body, * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none; /* iOS 길게 눌렀을 때 뜨는 확대/복사 팝업 차단 */
+  -webkit-tap-highlight-color: transparent; /* 탭할 때 회색 하이라이트 제거 (덤) */
+}
+
+/* 입력창 / 이름 수정 중인 텍스트는 예외 (계속 선택·편집 가능해야 함) */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 :root, html {
   color-scheme: light only;
 }
