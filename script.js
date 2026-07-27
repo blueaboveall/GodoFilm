@@ -1,3 +1,21 @@
+// ================= 안드로이드 롱프레스 텍스트 선택 차단 =================
+// (iOS는 CSS의 user-select/-webkit-touch-callout으로 이미 막혀있어 영향 없음)
+document.addEventListener('selectstart', (e) => {
+  const tag = e.target.tagName;
+  const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
+  if (!isEditable) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('contextmenu', (e) => {
+  const tag = e.target.tagName;
+  const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
+  if (!isEditable) {
+    e.preventDefault();
+  }
+});
+
 const cameraView = document.getElementById('camera-view');
 const recordBtn = document.getElementById('record-btn');
 const altitudeText = document.getElementById('altitude-text');
