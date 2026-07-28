@@ -770,18 +770,13 @@ async function startCamera() {
 
   try {
     const constraints = {
-  audio: {
-    echoCancellation: false,
-    noiseSuppression: false,
-    autoGainControl: false,
-    channelCount: 2
-  },
-  video: {
-    facingMode: currentFacingMode === "user" ? "user" : "environment",
-    width: { ideal: 1280 },
-    height: { ideal: 720 }
-  }
-};
+      audio: true,
+      video: {
+        facingMode: currentFacingMode === "user" ? "user" : "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    };
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     cameraView.srcObject = stream;
