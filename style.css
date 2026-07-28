@@ -7,6 +7,14 @@
   box-sizing: border-box;
 }
 
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+}
+
 /* ===== 텍스트 길게 눌러도 선택/팝업 안 뜨게 (네이티브 앱처럼) ===== */
 html, body, * {
   -webkit-user-select: none;
@@ -621,6 +629,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   background-color: #FBF4E9;
   display: flex;
   flex-direction: column;
@@ -705,8 +714,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 
 .create-project-btn {
   position: absolute;
-  bottom: 45px;
-  left: 50%;
+  bottom: calc(45px + env(safe-area-inset-bottom, 0px));  left: 50%;
   transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.95) !important;
   border: none !important;
@@ -869,7 +877,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   border: 1px solid #ECE7DF;
   border-radius: 16px;
   padding: 0 48px 0 18px;
-  font-size: 15px;
+  font-size: 16px;
   color: #1C2222;
   outline: none;
   transition: border-color 0.2s;
