@@ -770,18 +770,13 @@ async function startCamera() {
 
   try {
     const constraints = {
-  audio: {
-    echoCancellation: false,
-    noiseSuppression: false,
-    autoGainControl: false,
-    channelCount: 2
-  },
-  video: {
-    facingMode: currentFacingMode === "user" ? "user" : "environment",
-    width: { ideal: 1280 },
-    height: { ideal: 720 }
-  }
-};
+      audio: true,
+      video: {
+        facingMode: currentFacingMode === "user" ? "user" : "environment",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    };
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     cameraView.srcObject = stream;
@@ -1246,19 +1241,11 @@ async function generateTotalLogVideo() {
       renderOverlay.appendChild(canvas);
       document.body.appendChild(renderOverlay);
 
-      // 수정
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const audioDestination = audioCtx.createMediaStreamDestination();
-
-const canvasStream = canvas.captureStream(30);
-const mixedStream = new MediaStream([
-  ...canvasStream.getVideoTracks(),
-  ...audioDestination.stream.getAudioTracks()
-]);
-const mimeType = getSupportedMimeType();
-const options = mimeType ? { mimeType } : {};
-const canvasRecorder = new MediaRecorder(mixedStream, options);
-const chunks = [];
+      const canvasStream = canvas.captureStream(30);
+      const mimeType = getSupportedMimeType();
+      const options = mimeType ? { mimeType } : {};
+      const canvasRecorder = new MediaRecorder(canvasStream, options);
+      const chunks = [];
 
       canvasRecorder.ondataavailable = (ev) => {
         if (ev.data.size > 0) chunks.push(ev.data);
@@ -1316,18 +1303,7 @@ const chunks = [];
       }
 
       let videoA = createHiddenVideo();
-let videoB = createHiddenVideo();
-
-// 각 영상의 소리를 오디오 그래프에 연결 (스피커로는 안 나가고 녹화용으로만 씀)
-const gainA = audioCtx.createGain();
-const gainB = audioCtx.createGain();
-gainA.gain.value = 0;
-gainB.gain.value = 0;
-audioCtx.createMediaElementSource(videoA).connect(gainA).connect(audioDestination);
-audioCtx.createMediaElementSource(videoB).connect(gainB).connect(audioDestination);
-
-let activeGain = gainA;
-let bufferGain = gainB;
+      let videoB = createHiddenVideo();
 
      // 다음 영상을 미리 로딩 + "디코더 워밍업" 해두는 함수.
       // 안드로이드는 play() 호출 후 실제 첫 프레임이 나오기까지 지연(콜드 스타트)이
@@ -1398,7 +1374,6 @@ let bufferGain = gainB;
       let bufferVideo = videoB;
       let activeUrl = await preloadVideo(activeVideo, items[0].videoBlob);
       await playAndWaitFrame(activeVideo);
-      activeGain.gain.value = 1;
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -1500,23 +1475,15 @@ let bufferGain = gainB;
         const finishedVideo = activeVideo;
         const finishedUrl = activeUrl;
 
-        // 수정
-if (nextPreloadPromise) {
-  activeUrl = await nextPreloadPromise;
-  const temp = activeVideo;
-  activeVideo = bufferVideo;
-  bufferVideo = temp;
+        if (nextPreloadPromise) {
+          activeUrl = await nextPreloadPromise;
+          const temp = activeVideo;
+          activeVideo = bufferVideo;
+          bufferVideo = temp;
+          // 바로 지금이 이 영상을 보여줄 차례이므로, 여기서 정확히 재생을 시작함
+          await playAndWaitFrame(activeVideo);
+        }
 
-  const tempGain = activeGain;
-  activeGain = bufferGain;
-  bufferGain = tempGain;
-
-  bufferGain.gain.value = 0; // 방금 끝난 영상 소리 끄기
-  await playAndWaitFrame(activeVideo);
-  activeGain.gain.value = 1; // 새로 시작하는 영상 소리 켜기
-} else {
-  activeGain.gain.value = 0; // 마지막 영상이라 전환 없이 종료
-}
         // 새 영상이 이미 화면에 나온 뒤에 이전 영상을 정리 (전환 끊김 방지)
         URL.revokeObjectURL(finishedUrl);
         finishedVideo.pause();
