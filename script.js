@@ -18,18 +18,7 @@ document.addEventListener('contextmenu', (e) => {
 
 
 
-// 배경 오버레이(.bottom-sheet-overlay)와 완전히 동일한 값 사용
-const OVERLAY_DARK_ALPHA = 0.45;   // 검은 틴트, 드래그해도 고정
-const OVERLAY_BASE_BLUR_PX = 4;    // 시트 열렸을 때
-const OVERLAY_MIN_BLUR_PX = 0.5;   // 끝까지 드래그했을 때
 
-function setHelpBtnBlur(px) {
-  const helpBtnEl = document.getElementById('help-icon-btn');
-  if (!helpBtnEl) return;
-  helpBtnEl.style.backdropFilter = `blur(${px}px)`;
-  helpBtnEl.style.webkitBackdropFilter = `blur(${px}px)`;
-  helpBtnEl.style.backgroundColor = `rgba(0, 0, 0, ${OVERLAY_DARK_ALPHA})`; // 흰색 → 검은색으로 변경
-}
 
 
 const cameraView = document.getElementById('camera-view');
@@ -174,11 +163,7 @@ function openSheetWithAnimation() {
   bottomSheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
   bottomSheetContent.style.transform = 'translateY(0)';
 
-const helpBtnEl = document.getElementById('help-icon-btn');
-  if (helpBtnEl) {
-    helpBtnEl.style.transition = 'backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease, background-color 0.3s ease';
-  }
-setHelpBtnBlur(OVERLAY_BASE_BLUR_PX); // HELP_DIM_BLUR_PX, HELP_DIM_ALPHA 대신
+
 
 
   document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => cell.classList.remove('active'));
@@ -211,15 +196,9 @@ function closeSheetWithAnimation(isBackGesture = false) {
     projectModal.style.backdropFilter = '';
     projectModal.style.webkitBackdropFilter = '';
     projectModal.style.transition = '';
-    setHelpBtnBlur(HELP_DIM_BLUR_PX, HELP_DIM_ALPHA);
 
-    const helpBtnReset = document.getElementById('help-icon-btn');
-    if (helpBtnReset) {
-      helpBtnReset.style.backdropFilter = '';
-      helpBtnReset.style.webkitBackdropFilter = '';
-      helpBtnReset.style.backgroundColor = ''; // 추가
-      helpBtnReset.style.transition = '';
-    }
+
+
 
 
     if (isSheetOpen && !isBackGesture) {
@@ -352,15 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setOverlayBlur(blurPx);
 
 
-        const helpBlurPx = OVERLAY_BASE_BLUR_PX - (OVERLAY_BASE_BLUR_PX - OVERLAY_MIN_BLUR_PX) * progress;
-setHelpBtnBlur(helpBlurPx);
-// else 블록도:
-setHelpBtnBlur(OVERLAY_BASE_BLUR_PX);
-
-      } else {
-        bottomSheetContent.style.transform = `translateY(0px)`;
-        setOverlayBlur(BASE_BLUR_PX);
-        setHelpBtnBlur(HELP_DIM_BLUR_PX, HELP_DIM_ALPHA);
+ 
       }
     };
     
@@ -379,11 +350,9 @@ setHelpBtnBlur(OVERLAY_BASE_BLUR_PX);
           setOverlayBlur(BASE_BLUR_PX);
         }
 
-        if (helpBtnEl) {
-  helpBtnEl.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease, background-color 0.25s ease';
-  setHelpBtnBlur(OVERLAY_BASE_BLUR_PX); // 원래 HELP_DIM_BLUR_PX, HELP_DIM_ALPHA
 
-}
+
+
 
       }
       dragY = 0;
