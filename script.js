@@ -171,6 +171,12 @@ function openSheetWithAnimation() {
   bottomSheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
   bottomSheetContent.style.transform = 'translateY(0)';
 
+const helpBtnEl = document.getElementById('help-icon-btn');
+  if (helpBtnEl) {
+    helpBtnEl.style.transition = 'backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease, background-color 0.3s ease';
+  }
+  setHelpBtnBlur(HELP_DIM_BLUR_PX, HELP_DIM_ALPHA);
+
   document.querySelectorAll('.horizontal-cell-group .select-cell').forEach(cell => cell.classList.remove('active'));
   if (projectNameInput) projectNameInput.value = "";
   updateDesignOptions(null);
@@ -180,6 +186,8 @@ function openSheetWithAnimation() {
     history.pushState({ bottomSheet: true }, '');
   }
 }
+
+
 
 function closeSheetWithAnimation(isBackGesture = false) {
   const projectModal = document.getElementById("project-modal");
