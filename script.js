@@ -968,6 +968,7 @@ const ALTITUDE_FETCH_INTERVAL = 15000; // 15초에 한 번만 API 재조회 (배
 function getRealAltitude() {
   if (!altitudeText) return;
   if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
+  lastAltitudeFetchTime = 0;
 
   gpsWatchId = navigator.geolocation.watchPosition(async function (position) {
     const now = Date.now();
