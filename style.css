@@ -1112,7 +1112,6 @@ html, body {
   -webkit-backdrop-filter: blur(12px);
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
-}
   transition: transform 0.15s ease;
 }
 #help-icon-btn:active { transform: scale(0.92); }
