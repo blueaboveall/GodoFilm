@@ -1134,8 +1134,8 @@ html, body {
 
 #help-lightbox-close {
   position: absolute;
-  top: max(18px, env(safe-area-inset-top));
-  right: 20px;
+  top: max(10px, env(safe-area-inset-top));
+  right: 16px;
   width: 34px;
   height: 34px;
   border-radius: 50%;
