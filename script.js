@@ -16,6 +16,19 @@ document.addEventListener('contextmenu', (e) => {
   }
 });
 
+const HELP_DIM_BLUR_PX = 2;      // 시트가 완전히 올라와 있을 때 (도움말 버튼도 흐려짐)
+const HELP_DIM_ALPHA = 0.35;
+const HELP_CLEAR_BLUR_PX = 12;   // 시트를 끝까지 내렸을 때 (원래 선명한 모습으로)
+const HELP_CLEAR_ALPHA = 0.88;
+
+function setHelpBtnBlur(px, alpha) {
+  const helpBtnEl = document.getElementById('help-icon-btn');
+  if (!helpBtnEl) return;
+  helpBtnEl.style.backdropFilter = `blur(${px}px)`;
+  helpBtnEl.style.webkitBackdropFilter = `blur(${px}px)`;
+  helpBtnEl.style.backgroundColor = `rgba(255, 255, 255, ${alpha})`;
+}
+
 const cameraView = document.getElementById('camera-view');
 const recordBtn = document.getElementById('record-btn');
 const altitudeText = document.getElementById('altitude-text');
@@ -186,6 +199,7 @@ function closeSheetWithAnimation(isBackGesture = false) {
     projectModal.style.backdropFilter = '';
     projectModal.style.webkitBackdropFilter = '';
     projectModal.style.transition = '';
+    setHelpBtnBlur(HELP_DIM_BLUR_PX, HELP_DIM_ALPHA);
 
     const helpBtnReset = document.getElementById('help-icon-btn');
     if (helpBtnReset) {
@@ -283,10 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const BASE_BLUR_PX = 4;   // .bottom-sheet-overlay의 기본 blur(4px)와 맞춤
     const MIN_BLUR_PX = 0.5;  // 완전히 0으로 두면 배경이 너무 선명해져서 살짝 남겨둠
     const helpBtnEl = document.getElementById('help-icon-btn');
-    const BASE_HELP_BLUR_PX = 12; // #help-icon-btn 기본 blur(12px)와 맞춤
-    const MIN_HELP_BLUR_PX = 2;
-    const BASE_HELP_BG_ALPHA = 0.88; // 원래 배경 흰색 진하기
-    const MIN_HELP_BG_ALPHA = 0.35;  // 많이 내렸을 때 훨씬 투명해짐
+    
 
     const setOverlayBlur = (px) => {
       if (!projectModal) return;
@@ -294,12 +305,6 @@ document.addEventListener("DOMContentLoaded", () => {
       projectModal.style.webkitBackdropFilter = `blur(${px}px)`;
     };
 
-    const setHelpBtnBlur = (px, alpha) => {
-      if (!helpBtnEl) return;
-      helpBtnEl.style.backdropFilter = `blur(${px}px)`;
-      helpBtnEl.style.webkitBackdropFilter = `blur(${px}px)`;
-      helpBtnEl.style.backgroundColor = `rgba(255, 255, 255, ${alpha})`;
-    };
 
     const clearOverlayBlurOverride = () => {
       if (!projectModal) return;
@@ -334,13 +339,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const blurPx = BASE_BLUR_PX - (BASE_BLUR_PX - MIN_BLUR_PX) * progress;
         setOverlayBlur(blurPx);
 
-        const helpBlurPx = BASE_HELP_BLUR_PX - (BASE_HELP_BLUR_PX - MIN_HELP_BLUR_PX) * progress;
-        const helpAlpha = BASE_HELP_BG_ALPHA - (BASE_HELP_BG_ALPHA - MIN_HELP_BG_ALPHA) * progress;
+        const helpBlurPx = HELP_DIM_BLUR_PX + (HELP_CLEAR_BLUR_PX - HELP_DIM_BLUR_PX) * progress;
+        const helpAlpha  = HELP_DIM_ALPHA  + (HELP_CLEAR_ALPHA  - HELP_DIM_ALPHA)  * progress;
         setHelpBtnBlur(helpBlurPx, helpAlpha);
+
       } else {
         bottomSheetContent.style.transform = `translateY(0px)`;
         setOverlayBlur(BASE_BLUR_PX);
-        setHelpBtnBlur(BASE_HELP_BLUR_PX, BASE_HELP_BG_ALPHA);
+        setHelpBtnBlur(HELP_DIM_BLUR_PX, HELP_DIM_ALPHA);
       }
     };
     
@@ -360,9 +366,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (helpBtnEl) {
-          helpBtnEl.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease, background-color 0.25s ease';
-          setHelpBtnBlur(BASE_HELP_BLUR_PX, BASE_HELP_BG_ALPHA);
-        }
+  helpBtnEl.style.transition = 'backdrop-filter 0.25s ease, -webkit-backdrop-filter 0.25s ease, background-color 0.25s ease';
+  setHelpBtnBlur(HELP_DIM_BLUR_PX, HELP_DIM_ALPHA); // BASE_HELP_... → HELP_DIM_...
+}
+
       }
       dragY = 0;
     };
