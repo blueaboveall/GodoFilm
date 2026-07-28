@@ -216,6 +216,7 @@ function goToHomeView(isBackGesture = false) {
     cameraView.srcObject.getTracks().forEach(track => track.stop());
     cameraView.srcObject = null;
   }
+  stopAltitudeWatch();
   const cameraPageView = document.getElementById("camera-page-view");
   const homeView = document.getElementById("home-view");
   const mainContainer = document.getElementById("main-container");
@@ -960,9 +961,18 @@ function addVideoSlideToUI(blob, altitude, id, recordTime, autoMove = true, faci
   sliderWrapper.style.transition = 'transform 0.3s ease-out';
 }
 
+let gpsWatchId = null;
+let lastAltitudeFetchTime = 0;
+const ALTITUDE_FETCH_INTERVAL = 15000; // 15초에 한 번만 API 재조회 (배터리/API 절약)
+
 function getRealAltitude() {
   if (!altitudeText) return;
-  navigator.geolocation.getCurrentPosition(async function (position) {
+  if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
+
+  gpsWatchId = navigator.geolocation.watchPosition(async function (position) {
+    const now = Date.now();
+    if (now - lastAltitudeFetchTime < ALTITUDE_FETCH_INTERVAL) return;
+    lastAltitudeFetchTime = now;
     try {
       const response = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}`);
       const data = await response.json();
@@ -972,7 +982,18 @@ function getRealAltitude() {
     }
   }, function () {
     altitudeText.innerText = "GPS 연결 실패";
+  }, {
+    enableHighAccuracy: true,
+    maximumAge: 10000,
+    timeout: 15000
   });
+}
+
+function stopAltitudeWatch() {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
 }
 
 function executionRecord() {
@@ -1000,7 +1021,6 @@ function executionRecord() {
   recordBtn.innerText = "녹화중";
   recordBtn.style.backgroundColor = "gray";
   recordBtn.style.borderColor = "gray";
-  getRealAltitude();
   setTimeout(() => {
     if (mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
@@ -1508,6 +1528,11 @@ async function initApp() {
 }
 
 initApp();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.log('SW 등록 실패:', err));
+  });
+}
 
 // ================= 도움말 가이드 라이트박스 =================
 (function initHelpGuide() {
