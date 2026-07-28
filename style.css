@@ -741,12 +741,12 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
 /* 오버레이 (iOS & 안드로이드 웹앱 공통) */
 .bottom-sheet-overlay {
   position: fixed;
-  top: -1px;                 /* 기존 top: 0 → -1px */
-  left: -1px;                /* 기존 left: 0 → -1px */
-  right: -1px;                /* 기존 right: 0 → -1px */
-  bottom: -1px;               /* 기존 bottom: 0 → -1px */
-  width: calc(100% + 2px);    /* 추가 */
-  height: calc(100% + 2px);   /* 추가 */
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
   background-color: rgba(0, 0, 0, 0.45);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
@@ -756,6 +756,7 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   align-items: flex-end;
   overscroll-behavior: contain;
 }
+
 
 
 .bottom-sheet-overlay.show,
@@ -1109,6 +1110,9 @@ html, body {
   z-index: 60;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
   transition: transform 0.15s ease;
 }
 #help-icon-btn:active { transform: scale(0.92); }
