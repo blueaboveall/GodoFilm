@@ -148,6 +148,8 @@ let isSheetOpen = false;
 let isCameraPageOpen = false;
 let isHelpGuideOpen = false;
 let isMenuPopupOpen = false;
+let isEditingTitle = false;
+let activeEditingTitleElement = null;
 
 function openSheetWithAnimation() {
   const projectModal = document.getElementById("project-modal");
@@ -257,12 +259,27 @@ function closeProjectMenuPopup(isBackGesture = false) {
   }
 }
 
+window.closeTitleEditOnBack = () => {
+  if (activeEditingTitleElement) {
+    isEditingTitle = false; // 먼저 false로 만들어서, blur 시 saveEditing이 history.back()을 또 호출하지 않게 함
+    const el = activeEditingTitleElement;
+    activeEditingTitleElement = null;
+    el.blur(); // blur 이벤트 → saveEditing() 실행 → 이름 저장 + 키보드 닫힘
+  }
+};
+
+
 // 안드로이드 물리 뒤로가기 / 제스처 대응
 window.addEventListener('popstate', () => {
+  if (isEditingTitle) {
+    if (window.closeTitleEditOnBack) window.closeTitleEditOnBack();
+    return;
+  }
   if (isMenuPopupOpen) {
     closeProjectMenuPopup(true);
     return;
   }
+
   if (isHelpGuideOpen) {
     if (window.closeHelpGuideOnBack) window.closeHelpGuideOnBack();
     return;
@@ -619,7 +636,7 @@ function renderProjects() {
       info.appendChild(titleDiv);
       info.appendChild(dateDiv);
 
-      const titleElement = info.querySelector('.project-title');
+            const titleElement = info.querySelector('.project-title');
       function startEditing() {
         titleElement.contentEditable = "true";
         titleElement.focus();
@@ -629,9 +646,16 @@ function renderProjects() {
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
+
+        if (!isEditingTitle) {
+          isEditingTitle = true;
+          activeEditingTitleElement = titleElement;
+          history.pushState({ titleEdit: true }, '');
+        }
       }
 
       function saveEditing() {
+        const wasEditing = isEditingTitle;
         titleElement.contentEditable = "false";
         const newName = titleElement.innerText.trim();
         if (newName && newName !== proj.name) {
@@ -640,7 +664,16 @@ function renderProjects() {
         } else {
           titleElement.innerText = proj.name;
         }
+
+        if (wasEditing) {
+          isEditingTitle = false;
+          activeEditingTitleElement = null;
+          if (history.state && history.state.titleEdit) {
+            history.back();
+          }
+        }
       }
+
 
       titleElement.addEventListener("click", (e) => {
         e.stopPropagation();
