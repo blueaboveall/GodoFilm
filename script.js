@@ -146,6 +146,7 @@ function applyCellLayoutStyles(cell) {
 // Global State & Function for BottomSheet (iOS + Android PWA)
 let isSheetOpen = false;
 let isCameraPageOpen = false;
+let isHelpGuideOpen = false;
 
 function openSheetWithAnimation() {
   const projectModal = document.getElementById("project-modal");
@@ -243,6 +244,10 @@ function goToHomeView(isBackGesture = false) {
 }
 // 안드로이드 물리 뒤로가기 / 제스처 대응
 window.addEventListener('popstate', () => {
+  if (isHelpGuideOpen) {
+    if (window.closeHelpGuideOnBack) window.closeHelpGuideOnBack();
+    return;
+  }
   if (isSheetOpen) {
     closeSheetWithAnimation(true);
     return;
@@ -251,6 +256,7 @@ window.addEventListener('popstate', () => {
     goToHomeView(true);
   }
 });
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const openModalBtn = document.getElementById("open-modal-btn");
@@ -1563,12 +1569,30 @@ if ('serviceWorker' in navigator) {
     overlay.style.display = 'flex';
     void overlay.offsetWidth;
     overlay.classList.add('show');
+
+    if (!isHelpGuideOpen) {
+      isHelpGuideOpen = true;
+      history.pushState({ helpGuide: true }, '');
+    }
   }
 
-  function closeGuide() {
+  function closeGuide(isBackGesture = false) {
     overlay.classList.remove('show');
     setTimeout(() => { overlay.style.display = 'none'; }, 250);
+
+    if (isHelpGuideOpen && !isBackGesture) {
+      isHelpGuideOpen = false;
+      if (history.state && history.state.helpGuide) {
+        history.back();
+      }
+    } else {
+      isHelpGuideOpen = false;
+    }
   }
+
+  // 안드로이드 시스템 뒤로가기에서 호출할 수 있도록 전역에 노출
+  window.closeHelpGuideOnBack = () => closeGuide(true);
+
 
   function goPrev() {
     guideIndex = (guideIndex - 1 + guideTotal) % guideTotal;
