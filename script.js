@@ -147,6 +147,7 @@ function applyCellLayoutStyles(cell) {
 let isSheetOpen = false;
 let isCameraPageOpen = false;
 let isHelpGuideOpen = false;
+let isMenuPopupOpen = false;
 
 function openSheetWithAnimation() {
   const projectModal = document.getElementById("project-modal");
@@ -242,8 +243,26 @@ function goToHomeView(isBackGesture = false) {
     isCameraPageOpen = false;
   }
 }
+function closeProjectMenuPopup(isBackGesture = false) {
+  document.querySelectorAll(".project-menu-popup").forEach(menu => {
+    menu.style.display = "none";
+  });
+  if (isMenuPopupOpen && !isBackGesture) {
+    isMenuPopupOpen = false;
+    if (history.state && history.state.menuPopup) {
+      history.back();
+    }
+  } else {
+    isMenuPopupOpen = false;
+  }
+}
+
 // 안드로이드 물리 뒤로가기 / 제스처 대응
 window.addEventListener('popstate', () => {
+  if (isMenuPopupOpen) {
+    closeProjectMenuPopup(true);
+    return;
+  }
   if (isHelpGuideOpen) {
     if (window.closeHelpGuideOnBack) window.closeHelpGuideOnBack();
     return;
@@ -423,10 +442,11 @@ document.addEventListener("DOMContentLoaded", () => {
     backToHomeBtn.addEventListener("click", () => goToHomeView(false));
   }
 
+  
   document.addEventListener("click", () => {
-    document.querySelectorAll(".project-menu-popup").forEach(menu => {
-      menu.style.display = "none";
-    });
+    if (isMenuPopupOpen) {
+      closeProjectMenuPopup();
+    }
   });
 
   if (createProjectSubmitBtn) {
@@ -648,23 +668,42 @@ function renderProjects() {
       popup.appendChild(renameItem);
       popup.appendChild(deleteItem);
 
-      menuTrigger.addEventListener("click", (e) => {
+            menuTrigger.addEventListener("click", (e) => {
         e.stopPropagation();
+        const isCurrentlyOpen = popup.style.display === "block";
         document.querySelectorAll(".project-menu-popup").forEach(menu => {
           if (menu !== popup) menu.style.display = "none";
         });
-        popup.style.display = popup.style.display === "block" ? "none" : "block";
+        if (isCurrentlyOpen) {
+          popup.style.display = "none";
+          if (isMenuPopupOpen) {
+            isMenuPopupOpen = false;
+            if (history.state && history.state.menuPopup) {
+              history.back();
+            }
+          }
+        } else {
+          popup.style.display = "block";
+          if (!isMenuPopupOpen) {
+            isMenuPopupOpen = true;
+            history.pushState({ menuPopup: true }, '');
+          }
+        }
       });
 
-      renameItem.addEventListener("click", (e) => {
+
+            renameItem.addEventListener("click", (e) => {
         e.stopPropagation();
-        popup.style.display = "none";
+        closeProjectMenuPopup();
         startEditing();
       });
 
-      deleteItem.addEventListener("click", async (e) => {
+
+            deleteItem.addEventListener("click", async (e) => {
         e.stopPropagation();
+        closeProjectMenuPopup();
         if (confirm("프로젝트를 삭제하시겠습니까? \n관련 영상도 모두 완전히 삭제됩니다.")) {
+
           const targetProjectId = projects[originalIndex].id;
           projects.splice(originalIndex, 1);
           localStorage.setItem("climbingProjects", JSON.stringify(projects));
