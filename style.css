@@ -1251,13 +1251,13 @@ html, body {
 /* SE2, 13 mini 등 세로가 짧은 기기 전용 — 다른 기기엔 영향 없음 */
 @media (max-height: 740px) {
   .bottom-sheet-content {
-    height: 92dvh;
-    max-height: 92dvh;
+    height: auto;           /* 92dvh 고정값 제거 → 콘텐츠 크기만큼만 높이 차지 */
+    max-height: 92dvh;      /* 혹시 콘텐츠가 늘어나도 안전하게 상한선만 유지 */
     padding: 10px 26px calc(18px + env(safe-area-inset-bottom, 0px)) 26px;
     gap: 10px;
   }
   .sheet-header {
-    margin-top: 0;       /* auto 제거 → 핸들 바로 아래로 자연스럽게 붙음 (2번째 사진처럼) */
+    margin-top: 0;
     margin-bottom: 0;
   }
   .sheet-title { font-size: 19px; margin-bottom: 3px; }
@@ -1265,7 +1265,7 @@ html, body {
   .sheet-input, .select-cell { height: 46px; }
   .sheet-submit-btn {
     height: 48px;
-    margin-top: 16px;    /* auto 대신 고정값 → 디자인 선택 카드와 적당히만 떨어짐 */
-    margin-bottom: 6px;  /* 화면 맨 아래 가장자리에서 살짝만 띄움 */
+    margin-top: 16px;
+    margin-bottom: 0;      /* 이제 padding-bottom이 여백을 담당하니 0으로 */
   }
 }
