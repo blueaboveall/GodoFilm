@@ -1270,8 +1270,28 @@ html, body {
   }
 }
 
-/* ② 13 mini, 12 mini, 11 Pro 등 중간 길이 기종 전용 (701~820px) */
-@media (min-height: 701px) and (max-height: 820px) {
+/* 미니~중간 사이즈 기기 전체를 아우르는 단일 구간 (SE2, 13 mini, 그리고 실측 812px대인 기기 포함) */
+@media (max-height: 820px) {
+  .bottom-sheet-content {
+    height: auto;
+    max-height: 92dvh;
+    padding: 14px 28px calc(30px + env(safe-area-inset-bottom, 0px)) 28px;
+    gap: 14px;
+  }
+  .sheet-header {
+    margin-top: 0;
+    margin-bottom: 18px;
+  }
+  .sheet-title { font-size: 21px; margin-bottom: 5px; }
+  .sheet-body { gap: 16px; }
+  .sheet-input, .select-cell { height: 50px; }
+  .sheet-submit-btn {
+    height: 52px;
+    margin-top: 20px;
+    margin-bottom: 0;
+  }
+}/* 미니~중간 사이즈 기기 전체를 아우르는 단일 구간 (SE2, 13 mini, 그리고 실측 812px대인 기기 포함) */
+@media (max-height: 820px) {
   .bottom-sheet-content {
     height: auto;
     max-height: 92dvh;
