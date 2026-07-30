@@ -1247,3 +1247,21 @@ html, body {
   width: 16px;
   border-radius: 3px;
 }
+
+/* SE2, 13 mini 등 세로가 짧은 기기 전용 — 다른 기기엔 영향 없음 */
+@media (max-height: 740px) {
+  .bottom-sheet-content {
+    height: 92dvh;
+    max-height: 92dvh;
+    padding: 10px 20px calc(18px + env(safe-area-inset-bottom, 0px)) 20px;
+    gap: 10px;
+  }
+  .sheet-header { margin-top: 0; }
+  .sheet-title { font-size: 19px; margin-bottom: 3px; }
+  .sheet-body { gap: 12px; }
+  .sheet-input, .select-cell { height: 46px; }
+  .sheet-submit-btn {
+    height: 48px;
+    margin-top: 12px;   /* auto 대신 고정 여백 강제 부여 */
+  }
+}
