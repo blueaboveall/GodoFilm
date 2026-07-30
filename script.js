@@ -1723,3 +1723,9 @@ if ('serviceWorker' in navigator) {
     }
   });
 })();
+
+// 임시 디버그용 - 확인 끝나면 삭제하세요
+const debugBox = document.createElement('div');
+debugBox.style.cssText = 'position:fixed; top:60px; left:8px; background:red; color:white; font-size:14px; padding:4px 8px; z-index:99999; border-radius:6px;';
+debugBox.innerText = `H: ${window.innerHeight}px`;
+document.body.appendChild(debugBox);
