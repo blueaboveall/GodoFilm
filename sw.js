@@ -1,4 +1,4 @@
-const CACHE_NAME = 'godofilm-v2';
+const CACHE_NAME = 'godofilm-v3';
 const APP_SHELL = [
   './',
   './index.html',
