@@ -1248,8 +1248,8 @@ html, body {
   border-radius: 3px;
 }
 
-/* SE2, 13 mini 등 세로가 짧은 기기 전용 — 다른 기기엔 영향 없음 */
-@media (max-height: 820px) {
+/* ① SE2 등 가장 짧은 기종 전용 (667px 포함) */
+@media (max-height: 700px) {
   .bottom-sheet-content {
     height: auto;
     max-height: 92dvh;
@@ -1258,7 +1258,7 @@ html, body {
   }
   .sheet-header {
     margin-top: 0;
-    margin-bottom: 14px;   /* 0 → 14px: 부제와 '프로젝트 이름' 사이만 살짝 더 벌어짐 */
+    margin-bottom: 14px;
   }
   .sheet-title { font-size: 19px; margin-bottom: 3px; }
   .sheet-body { gap: 12px; }
@@ -1266,6 +1266,28 @@ html, body {
   .sheet-submit-btn {
     height: 48px;
     margin-top: 16px;
+    margin-bottom: 0;
+  }
+}
+
+/* ② 13 mini, 12 mini, 11 Pro 등 중간 길이 기종 전용 (701~820px) */
+@media (min-height: 701px) and (max-height: 820px) {
+  .bottom-sheet-content {
+    height: auto;
+    max-height: 92dvh;
+    padding: 14px 28px calc(30px + env(safe-area-inset-bottom, 0px)) 28px;
+    gap: 14px;
+  }
+  .sheet-header {
+    margin-top: 0;
+    margin-bottom: 18px;
+  }
+  .sheet-title { font-size: 21px; margin-bottom: 5px; }
+  .sheet-body { gap: 16px; }
+  .sheet-input, .select-cell { height: 50px; }
+  .sheet-submit-btn {
+    height: 52px;
+    margin-top: 20px;
     margin-bottom: 0;
   }
 }
