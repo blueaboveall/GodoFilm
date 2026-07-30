@@ -1270,10 +1270,7 @@ html, body {
   }
 }
 
-/* SE2, 13 mini 등 세로가 짧은 기기 전용 — 프로젝트 배경 이미지가 
-   가로로 꽉 차도록 (위아래는 잘려도 됨) */
-@media (max-height: 820px) {
-  .background-container:not(.home-mode) {
-    background-size: cover;
-  }
+.background-container:not(.home-mode) {
+  background-image: url('my-background.png');
+  background-size: cover;   /* contain → cover로 변경 */
 }
