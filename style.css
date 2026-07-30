@@ -1262,6 +1262,6 @@ html, body {
   .sheet-input, .select-cell { height: 46px; }
   .sheet-submit-btn {
     height: 48px;
-    margin-top: 12px;   /* auto 대신 고정 여백 강제 부여 */
+    margin-top: auto;   /* auto 대신 고정 여백 강제 부여 */
   }
 }
