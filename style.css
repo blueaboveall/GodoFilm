@@ -1251,14 +1251,14 @@ html, body {
 /* SE2, 13 mini 등 세로가 짧은 기기 전용 — 다른 기기엔 영향 없음 */
 @media (max-height: 740px) {
   .bottom-sheet-content {
-    height: auto;           /* 92dvh 고정값 제거 → 콘텐츠 크기만큼만 높이 차지 */
-    max-height: 92dvh;      /* 혹시 콘텐츠가 늘어나도 안전하게 상한선만 유지 */
+    height: auto;
+    max-height: 92dvh;
     padding: 10px 26px calc(34px + env(safe-area-inset-bottom, 0px)) 26px;
     gap: 10px;
   }
   .sheet-header {
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: 14px;   /* 0 → 14px: 부제와 '프로젝트 이름' 사이만 살짝 더 벌어짐 */
   }
   .sheet-title { font-size: 19px; margin-bottom: 3px; }
   .sheet-body { gap: 12px; }
@@ -1266,6 +1266,6 @@ html, body {
   .sheet-submit-btn {
     height: 48px;
     margin-top: 16px;
-    margin-bottom: 0;      /* 이제 padding-bottom이 여백을 담당하니 0으로 */
+    margin-bottom: 0;
   }
 }
