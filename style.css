@@ -1253,7 +1253,7 @@ html, body {
   .bottom-sheet-content {
     height: auto;           /* 92dvh 고정값 제거 → 콘텐츠 크기만큼만 높이 차지 */
     max-height: 92dvh;      /* 혹시 콘텐츠가 늘어나도 안전하게 상한선만 유지 */
-    padding: 10px 26px calc(18px + env(safe-area-inset-bottom, 0px)) 26px;
+    padding: 10px 26px calc(34px + env(safe-area-inset-bottom, 0px)) 26px;
     gap: 10px;
   }
   .sheet-header {
