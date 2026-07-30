@@ -1253,7 +1253,7 @@ html, body {
   .bottom-sheet-content {
     height: auto;
     max-height: 92dvh;
-    padding: 10px 26px calc(34px + env(safe-area-inset-bottom, 0px)) 26px;
+    padding: 10px 30px calc(34px + env(safe-area-inset-bottom, 0px)) 30px;
     gap: 10px;
   }
   .sheet-header {
