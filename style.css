@@ -7,13 +7,13 @@
   box-sizing: border-box;
 }
 
-/* ===== 텍스트 길게 눌러도 선택/팝업 안 뜨게 (네이티브 앱처럼) ===== */
+/* 텍스트 길게 눌러도 선택/팝업 안 뜨도록 함. ===== */
 html, body, * {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
   -webkit-touch-callout: none; /* iOS 길게 눌렀을 때 뜨는 확대/복사 팝업 차단 */
-  -webkit-tap-highlight-color: transparent; /* 탭할 때 회색 하이라이트 제거 (덤) */
+  -webkit-tap-highlight-color: transparent; /* 탭할 때 회색 하이라이트 제거 */
 }
 
 /* 입력창 / 이름 수정 중인 텍스트는 예외 (계속 선택·편집 가능해야 함) */
@@ -1081,7 +1081,7 @@ html, body {
   width: 100%;
 }
 
-/* ===== 도움말 아이콘 버튼 ===== */
+/* 도움말 아이콘 버튼 관련 */
 /* 홈 화면(#main-container.home-mode)일 때만 보이고, 프로젝트 내부(카메라 화면)로 들어가면 숨김 */
 #main-container:not(.home-mode) #help-icon-btn {
   display: none !important;
@@ -1116,7 +1116,7 @@ html, body {
 }
 #help-icon-btn:active { transform: scale(0.92); }
 
-/* ===== 도움말 라이트박스 ===== */
+/* 도움말 라이트박스 */
 #help-lightbox-overlay {
   position: fixed;
   inset: 0;
@@ -1271,26 +1271,6 @@ html, body {
 }
 
 /* 미니~중간 사이즈 기기 전체를 아우르는 단일 구간 (SE2, 13 mini, 그리고 실측 812px대인 기기 포함) */
-@media (max-height: 820px) {
-  .bottom-sheet-content {
-    height: auto;
-    max-height: 92dvh;
-    padding: 14px 28px calc(30px + env(safe-area-inset-bottom, 0px)) 28px;
-    gap: 14px;
-  }
-  .sheet-header {
-    margin-top: 0;
-    margin-bottom: 18px;
-  }
-  .sheet-title { font-size: 21px; margin-bottom: 5px; }
-  .sheet-body { gap: 16px; }
-  .sheet-input, .select-cell { height: 50px; }
-  .sheet-submit-btn {
-    height: 52px;
-    margin-top: 20px;
-    margin-bottom: 0;
-  }
-}/* 미니~중간 사이즈 기기 전체를 아우르는 단일 구간 (SE2, 13 mini, 그리고 실측 812px대인 기기 포함) */
 @media (max-height: 820px) {
   .bottom-sheet-content {
     height: auto;
