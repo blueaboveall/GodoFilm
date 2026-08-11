@@ -39,13 +39,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 고도 API(open-meteo)는 항상 실시간 데이터가 필요하므로 캐싱하지 않고 그대로 통과
   if (url.hostname.includes('open-meteo.com')) return;
 
   if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // stale-while-revalidate: 캐시에 있으면 즉시 응답(산속 즉시 실행), 
-  // 동시에 백그라운드에서 최신본으로 갱신
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
