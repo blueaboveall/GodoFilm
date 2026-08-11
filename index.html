@@ -11,40 +11,29 @@
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
 
-
-  <!-- 카톡/인스타 공유 시 뜨는 제목 -->
   <meta property="og:title" content="고도필름">
 
-  <!-- 카톡/인스타 공유 시 뜨는 설명 -->
   <meta property="og:description" content="찰나의 순간을 나만의 등산필름으로, 고도필름">
 
-  <!-- 준비한 썸네일 이미지 이름 -->
   <meta property="og:image" content="https://blueaboveall.github.io/GodoFilm/og-image-2.png">
 </head>
 <body>
-  <!-- 앱 최상단에 배치될 스플래시 화면 -->
   <div id="splash-screen">
     <div class="splash-logo-wrapper">
-      <!-- 왼쪽으로 밀리며 나타날 GOD 글자 -->
       <div class="splash-god-box">
         <img src="god-text.png" alt="GOD" class="anim-god">
       </div>
-      <!-- 중앙에 있다가 오른쪽으로 튕겨 나갈 카메라 O -->
       <div class="splash-camera-box">
         <img src="camera-o.png" alt="Camera O" class="anim-camera">
       </div>
     </div>
-    
-    <!-- 하단에 뱅글뱅글 도는 모던한 로딩 바 -->
     <div class="splash-loader"></div>
   </div>
 
   <div class="full-screen-bg"></div>
 
   <div class="background-container home-mode" id="main-container">
-    <!-- 1. 홈 화면 뷰 -->
     <div id="home-view" class="main-view">
-      <!-- 스크롤되는 영역 -->
       <div id="home-scroll-area" class="home-scroll-area">
         <div id="empty-state" class="empty-state">
           <div class="empty-project-message">
@@ -57,10 +46,8 @@
         <div class="project-grid"></div>
       </div>
 
-      <!-- 하단 그라데이션 -->
       <div class="home-bottom-fade"></div>
 
-      <!-- 새 프로젝트 생성 버튼 -->
       <button id="open-modal-btn" class="create-project-btn" aria-label="새 프로젝트 생성">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="9"/>
@@ -70,24 +57,19 @@
         <span>새 프로젝트 생성</span>
       </button>
 
-      <!-- 도움말 버튼 -->
       <button id="help-icon-btn" aria-label="도움말">?</button>
 
-      <!-- 새 프로젝트 생성 창 (바텀 시트) -->
       <div id="project-modal" class="bottom-sheet-overlay">
         <div class="bottom-sheet-content">
-          <!-- 상단 드래그 영역 -->
           <div class="sheet-drag-zone">
             <div class="sheet-handle"></div>
           </div>
 
-          <!-- 시트 헤더 -->
           <div class="sheet-header">
             <h2 class="sheet-title">새 프로젝트 만들기</h2>
             <p class="sheet-subtitle">나만의 고도 필름을 만들어 보세요.</p>
           </div>
 
-          <!-- 입력 및 셀 선택 영역 -->
           <div class="sheet-body">
             <div class="input-group">
               <label class="input-label">프로젝트 이름</label>
@@ -145,13 +127,11 @@
             </div>
           </div>
 
-          <!-- 하단 생성 버튼 -->
           <button id="create-project-submit-btn" class="sheet-submit-btn">프로젝트 만들기</button>
         </div>
       </div>
-    </div> <!-- #home-view 정상 닫힘 -->
+    </div> 
 
-    <!-- 2. 카메라 화면 뷰 -->
     <div id="camera-page-view" class="main-view" style="display: none;">
 
       <div class="app-container">
@@ -214,12 +194,9 @@
     </button>
   </div>
 </div>
-   </div> <!-- #camera-page-view 정상 닫힘 -->
-  </div> <!-- #main-container 정상 닫힘 -->
+   </div> 
+  </div> 
 
-
-
-  <!-- 도움말 가이드 라이트박스 -->
   <div id="help-lightbox-overlay">
     <button id="help-lightbox-close" aria-label="닫기">✕</button>
     <button class="help-lightbox-arrow" id="help-lightbox-prev" aria-label="이전">‹</button>
