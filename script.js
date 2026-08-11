@@ -245,11 +245,11 @@ function goToHomeView(isBackGesture = false) {
     isCameraPageOpen = false;
   }
 }
-function closeProjectMenuPopup(isBackGesture = false) {
+function closeProjectMenuPopup(isBackGesture = false, skipHistoryBack = false) {
   document.querySelectorAll(".project-menu-popup").forEach(menu => {
     menu.style.display = "none";
   });
-  if (isMenuPopupOpen && !isBackGesture) {
+  if (isMenuPopupOpen && !isBackGesture && !skipHistoryBack) {
     isMenuPopupOpen = false;
     if (history.state && history.state.menuPopup) {
       history.back();
@@ -637,23 +637,26 @@ function renderProjects() {
       info.appendChild(dateDiv);
 
             const titleElement = info.querySelector('.project-title');
-      function startEditing() {
-        titleElement.contentEditable = "true";
-        titleElement.focus();
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.selectNodeContents(titleElement);
-        range.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(range);
+      function startEditing(replaceHistory = false) {
+  titleElement.contentEditable = "true";
+  titleElement.focus();
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(titleElement);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
 
-        if (!isEditingTitle) {
-          isEditingTitle = true;
-          activeEditingTitleElement = titleElement;
-          history.pushState({ titleEdit: true }, '');
-        }
-      }
-
+  if (!isEditingTitle) {
+    isEditingTitle = true;
+    activeEditingTitleElement = titleElement;
+    if (replaceHistory) {
+      history.replaceState({ titleEdit: true }, '');
+    } else {
+      history.pushState({ titleEdit: true }, '');
+    }
+  }
+}
       function saveEditing() {
         const wasEditing = isEditingTitle;
         titleElement.contentEditable = "false";
@@ -726,10 +729,10 @@ function renderProjects() {
 
 
             renameItem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        closeProjectMenuPopup();
-        startEditing();
-      });
+  e.stopPropagation();
+  closeProjectMenuPopup(false, true); 
+  startEditing(true);                 
+});
 
 
             deleteItem.addEventListener("click", async (e) => {
