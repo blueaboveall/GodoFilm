@@ -1,5 +1,3 @@
-// ================= 안드로이드 롱프레스 텍스트 선택 차단 =================
-// (iOS는 CSS의 user-select/-webkit-touch-callout으로 이미 막혀있어 영향 없음)
 document.addEventListener('selectstart', (e) => {
   const tag = e.target.tagName;
   const isEditable = tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable;
@@ -40,19 +38,15 @@ const zoomBtnText = document.getElementById('zoom-btn-text');
 const zoomOptionBtns = document.querySelectorAll('.zoom-option-btn');
 const zoom05Btn = document.getElementById('zoom-05-btn');
 
-// 핀치 줌 제스처 차단 (iOS Safari)
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('gesturechange', (e) => e.preventDefault());
 document.addEventListener('gestureend', (e) => e.preventDefault());
-
-// 핀치 줌 제스처 차단 (Android Chrome 등, 멀티터치 감지 방식)
 document.addEventListener('touchmove', (e) => {
   if (e.touches.length > 1) {
     e.preventDefault();
   }
 }, { passive: false });
 
-// iOS 엣지 스와이프 뒤로가기/앞으로가기 제스처 차단 (미리보기 애니메이션까지 차단)
 const EDGE_SWIPE_THRESHOLD = 24;
 let isEdgeSwipeActive = false;
 
@@ -143,7 +137,6 @@ function applyCellLayoutStyles(cell) {
   cell.style.filter = "none";
 }
 
-// Global State & Function for BottomSheet (iOS + Android PWA)
 let isSheetOpen = false;
 let isCameraPageOpen = false;
 let isHelpGuideOpen = false;
@@ -161,7 +154,7 @@ function openSheetWithAnimation() {
   projectModal.style.display = 'flex';
   bottomSheetContent.style.transition = 'none';
   bottomSheetContent.style.transform = 'translateY(100%)';
-  void projectModal.offsetWidth; // 리플로우 강제
+  void projectModal.offsetWidth;
 
   projectModal.classList.add('show');
   bottomSheetContent.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -196,7 +189,6 @@ function closeSheetWithAnimation(isBackGesture = false) {
     projectModal.style.display = 'none';
     bottomSheetContent.style.transform = '';
     bottomSheetContent.style.transition = '';
-    // 아래 한 줄 추가: 다음에 열 때 블러가 항상 기본값에서 시작하도록
     projectModal.style.backdropFilter = '';
     projectModal.style.webkitBackdropFilter = '';
     projectModal.style.transition = '';
@@ -235,13 +227,11 @@ function goToHomeView(isBackGesture = false) {
   renderProjects();
 
   if (isCameraPageOpen && !isBackGesture) {
-    // 버튼을 직접 눌러서 나간 경우: history에 쌓아둔 상태를 소비(pop)해줌
     isCameraPageOpen = false;
     if (history.state && history.state.cameraPage) {
       history.back();
     }
   } else {
-    // 안드로이드 시스템 뒤로가기로 나간 경우: 이미 history가 소비된 상태
     isCameraPageOpen = false;
   }
 }
@@ -261,15 +251,13 @@ function closeProjectMenuPopup(isBackGesture = false, skipHistoryBack = false) {
 
 window.closeTitleEditOnBack = () => {
   if (activeEditingTitleElement) {
-    isEditingTitle = false; // 먼저 false로 만들어서, blur 시 saveEditing이 history.back()을 또 호출하지 않게 함
+    isEditingTitle = false; 
     const el = activeEditingTitleElement;
     activeEditingTitleElement = null;
-    el.blur(); // blur 이벤트 → saveEditing() 실행 → 이름 저장 + 키보드 닫힘
+    el.blur(); 
   }
 };
 
-
-// 안드로이드 물리 뒤로가기 / 제스처 대응
 window.addEventListener('popstate', () => {
   if (isEditingTitle) {
     if (window.closeTitleEditOnBack) window.closeTitleEditOnBack();
@@ -308,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const bottomSheetContent = projectModal ? projectModal.querySelector('.bottom-sheet-content') : null;
 
-  // 열기/닫기 버튼 연동
   if (openModalBtn) {
     openModalBtn.addEventListener("click", () => openSheetWithAnimation());
   }
@@ -321,15 +308,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Y좌표 기반 드래그 제스처 ( '나만의 고도필름을 만들어보세요' 글자 위 영역 감지 )
   if (bottomSheetContent) {
     let startY = 0;
     let dragY = 0;
     let isDragging = false;
-    let dragMaxDistance = 300; // 드래그 중 계산됨
+    let dragMaxDistance = 300;
 
-    const BASE_BLUR_PX = 4;   // .bottom-sheet-overlay의 기본 blur(4px)와 맞춤
-    const MIN_BLUR_PX = 0.5;  // 완전히 0으로 두면 배경이 너무 선명해져서 살짝 남겨둠
+    const BASE_BLUR_PX = 4; 
+    const MIN_BLUR_PX = 0.5;  
     const helpBtnEl = document.getElementById('help-icon-btn');
     
 
@@ -357,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isDragging = true;
       startY = clientY;
       dragY = 0;
-      dragMaxDistance = bottomSheetContent.offsetHeight * 0.6; // 시트 높이의 60% 내리면 최소블러 도달
+      dragMaxDistance = bottomSheetContent.offsetHeight * 0.6; 
       bottomSheetContent.style.transition = 'none';
       if (projectModal) projectModal.style.transition = 'none';
        if (helpBtnEl) helpBtnEl.style.transition = 'none';
@@ -552,10 +538,10 @@ function updateDesignOptions(selectedMountain) {
   });
 }
 
-let isRenderingProjects = false; // 중복 렌더링 방지 플래그
+let isRenderingProjects = false; 
 
 function renderProjects() {
-  if (isRenderingProjects) return; // 이미 렌더링 중이면 무시
+  if (isRenderingProjects) return; 
   isRenderingProjects = true;
 
   const projectGrid = document.querySelector(".project-grid");
@@ -578,7 +564,7 @@ function renderProjects() {
   request.onsuccess = function (e) {
     const allVideos = e.target.result || [];
     renderCards(allVideos);
-    isRenderingProjects = false; // 렌더링 끝났으니 다시 호출 가능하게 풀어줌
+    isRenderingProjects = false;
   };
   request.onerror = function () {
     isRenderingProjects = false;
@@ -615,7 +601,6 @@ function renderProjects() {
   }
   pictureBox.appendChild(videoThumbnail);
 } else {
-  // 영상이 아직 없을 때만 산 이름 자막을 보여줌
   const mountainTag = document.createElement("div");
   mountainTag.className = "mountain-tag";
   mountainTag.innerText = proj.mountain;
@@ -1370,8 +1355,7 @@ async function generateTotalLogVideo() {
           bgSy = (bgImg.naturalHeight - bgSh) / 2;
         }
       }
-
-      // 숨겨진 영상 엘리먼트 2개를 번갈아 사용 (더블 버퍼링)
+      
       function createHiddenVideo() {
         const v = document.createElement('video');
         v.muted = true;
@@ -1385,14 +1369,7 @@ async function generateTotalLogVideo() {
 
       let videoA = createHiddenVideo();
       let videoB = createHiddenVideo();
-
-     // 다음 영상을 미리 로딩 + "디코더 워밍업" 해두는 함수.
-      // 안드로이드는 play() 호출 후 실제 첫 프레임이 나오기까지 지연(콜드 스타트)이
-      // 길어서, 그 지연 시간 동안에도 재생 시계가 흘러가버려 영상이 중간부터
-      // 재생되는 것처럼 보이는 문제가 있었음.
-      // → 미리 아주 짧게 재생해 디코더를 예열시킨 뒤, 즉시 정지하고 0초로
-      //   되돌려놓아서, 실제 전환 시점엔 디코더가 이미 준비된 상태로
-      //   정확히 처음부터 재생되도록 함.
+      
       async function preloadVideo(videoEl, blob) {
         const url = URL.createObjectURL(blob);
         videoEl.src = url;
@@ -1408,13 +1385,12 @@ async function generateTotalLogVideo() {
             }
           });
         } catch (e) {
-          // 워밍업 재생이 실패해도 치명적이지 않으므로 무시하고 진행
+        
         }
 
         videoEl.pause();
         videoEl.currentTime = 0;
 
-        // currentTime 재설정이 실제로 반영될 때까지 대기 (안드로이드 안정성 확보)
         await new Promise((resolve) => {
           let resolved = false;
           const done = () => {
@@ -1424,14 +1400,12 @@ async function generateTotalLogVideo() {
             resolve();
           };
           videoEl.addEventListener('seeked', done);
-          setTimeout(done, 150); // 혹시 seeked가 발생 안 하는 기기 대비 안전장치
+          setTimeout(done, 150); 
         });
 
         return url;
       }
-      // 영상을 실제로 재생 시작하고, 화면에 그릴 수 있는 프레임이 준비될 때까지 기다림.
-      // 이 함수는 "지금 이 순간부터 이 영상을 보여줄 것"이라는 뜻이므로,
-      // 반드시 화면 전환 직전에만 호출해야 함.
+     
       async function playAndWaitFrame(videoEl) {
         await videoEl.play();
         if (videoEl.requestVideoFrameCallback) {
@@ -1442,9 +1416,6 @@ async function generateTotalLogVideo() {
           await new Promise((resolve) => requestAnimationFrame(resolve));
         }
       }
-
-      // 영상 프레임이 아직 준비 안 됐을 때 배경이 비쳐 보이는 대신
-      // 직전 프레임을 임시로 보여주기 위한 캔버스 (이중 안전장치)
       const placeholderCanvas = document.createElement('canvas');
       placeholderCanvas.width = 1146;
       placeholderCanvas.height = 645;
@@ -1462,9 +1433,6 @@ async function generateTotalLogVideo() {
         const containerHeight = 645;
         const videoX = (canvas.width - containerWidth) / 2;
         const videoY = (canvas.height - containerHeight) / 2;
-
-        // 다음 영상은 "로딩(디코더 세팅)"만 미리 해둠. 아직 재생(시간 흐름)은 시작 안 함.
-        // → 백그라운드에서 시간이 흐르지 않으므로, 나중에 화면에 나올 때 정확히 처음부터 재생됨.
         let nextPreloadPromise = null;
         if (i + 1 < items.length) {
           nextPreloadPromise = preloadVideo(bufferVideo, items[i + 1].videoBlob);
@@ -1550,9 +1518,6 @@ async function generateTotalLogVideo() {
 
           await new Promise(requestAnimationFrame);
         }
-
-        // 끝난 영상은 바로 청소하지 않고 잠시 들고 있음
-        // → 다음 영상이 먼저 화면에 뜬 뒤에 청소해야 전환 시 멈춤이 없음
         const finishedVideo = activeVideo;
         const finishedUrl = activeUrl;
 
@@ -1561,11 +1526,8 @@ async function generateTotalLogVideo() {
           const temp = activeVideo;
           activeVideo = bufferVideo;
           bufferVideo = temp;
-          // 바로 지금이 이 영상을 보여줄 차례이므로, 여기서 정확히 재생을 시작함
           await playAndWaitFrame(activeVideo);
         }
-
-        // 새 영상이 이미 화면에 나온 뒤에 이전 영상을 정리 (전환 끊김 방지)
         URL.revokeObjectURL(finishedUrl);
         finishedVideo.pause();
         finishedVideo.src = "";
@@ -1616,7 +1578,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// ================= 도움말 가이드 라이트박스 =================
 (function initHelpGuide() {
   const helpBtn = document.getElementById('help-icon-btn');
   const overlay = document.getElementById('help-lightbox-overlay');
@@ -1664,8 +1625,6 @@ if ('serviceWorker' in navigator) {
       isHelpGuideOpen = false;
     }
   }
-
-  // 안드로이드 시스템 뒤로가기에서 호출할 수 있도록 전역에 노출
   window.closeHelpGuideOnBack = () => closeGuide(true);
 
 
