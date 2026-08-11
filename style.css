@@ -7,16 +7,14 @@
   box-sizing: border-box;
 }
 
-/* 텍스트 길게 눌러도 선택/팝업 안 뜨도록 함. */
 html, body, * {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
-  -webkit-touch-callout: none; /* iOS 길게 눌렀을 때 뜨는 확대/복사 팝업 차단 */
-  -webkit-tap-highlight-color: transparent; /* 탭할 때 회색 하이라이트 제거 */
+  -webkit-touch-callout: none; 
+  -webkit-tap-highlight-color: transparent; 
 }
 
-/* 입력창 / 이름 수정 중인 텍스트는 예외 (계속 선택·편집 가능해야 함) */
 input,
 textarea,
 [contenteditable="true"] {
@@ -95,7 +93,7 @@ body, html {
   right: 0;
   height: 130px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
-  pointer-events: none; /* 그라데이션이 터치/스크롤을 가로채지 않도록 */
+  pointer-events: none; 
   z-index: 40;
 }
 
@@ -314,7 +312,7 @@ body, html {
 
 #total-download-btn {
   position: absolute;
-  top: 100%;          /* wrapper(=phone-screen) 바로 아래 */
+  top: 100%;        
   right: 0;
   margin-top: 4px;
   display: flex;
@@ -738,7 +736,6 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   color: #333333;
 }
 
-/* 오버레이 (iOS & 안드로이드 웹앱 공통) */
 .bottom-sheet-overlay {
   position: fixed;
   top: -20px;
@@ -764,18 +761,15 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   display: flex !important;
 }
 
-/* 바텀시트 본문 (안드로이드 가상키보드 대응 추가) */
 .bottom-sheet-content {
   width: 100%;
   max-width: 430px;
-  /* 안드로이드 가상키보드가 올라와도 높이가 깨지지 않도록 dvh 적용 */
   height: 76vh;
   height: 76dvh; 
   max-height: 85%;
   background-color: #FAF8F5;
   border-top-left-radius: 32px;
   border-top-right-radius: 32px;
-  /* 아이폰 하단 홈바 + 안드로이드 제스처 바 여백 자동 계산 */
   padding: 16px 24px calc(36px + env(safe-area-inset-bottom, 0px)) 24px;
   box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.12);
   position: relative;
@@ -785,14 +779,12 @@ body > #total-download-btn, body > div[class*="Safari"] #total-download-btn,
   overflow-y: auto;
   overscroll-behavior-y: contain;
 
-  /* 기본 숨김 위치 */
   transform: translateY(100%);
   -webkit-transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
 
-/* 활성화 시 위치 강제 상향 */
 .bottom-sheet-overlay.show .bottom-sheet-content,
 .bottom-sheet-overlay.active .bottom-sheet-content {
   transform: translateY(0);
@@ -1081,8 +1073,6 @@ html, body {
   width: 100%;
 }
 
-/* 도움말 아이콘 버튼 관련 */
-/* 홈 화면(#main-container.home-mode)일 때만 보이고, 프로젝트 내부(카메라 화면)로 들어가면 숨김 */
 #main-container:not(.home-mode) #help-icon-btn {
   display: none !important;
 }
@@ -1116,7 +1106,6 @@ html, body {
 }
 #help-icon-btn:active { transform: scale(0.92); }
 
-/* 도움말 라이트박스 */
 #help-lightbox-overlay {
   position: fixed;
   inset: 0;
@@ -1248,7 +1237,6 @@ html, body {
   border-radius: 3px;
 }
 
-/* ① SE2 등 가장 짧은 기종 전용 (667px 포함) */
 @media (max-height: 700px) {
   .bottom-sheet-content {
     height: auto;
@@ -1270,7 +1258,6 @@ html, body {
   }
 }
 
-/* 미니~중간 사이즈 기기 전체를 아우르는 단일 구간 (SE2, 13 mini, 그리고 실측 812px대인 기기 포함) */
 @media (max-height: 820px) {
   .bottom-sheet-content {
     height: auto;
