@@ -1095,7 +1095,7 @@ function executionRecord() {
       recordBtn.style.backgroundColor = "red";
       recordBtn.style.borderColor = "white";
     }
-  }, 3300);
+  }, 2500);
 }
 
 if (recordBtn) {
