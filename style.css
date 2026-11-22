@@ -54,6 +54,11 @@ body, html {
   z-index: 1;
 }
 
+.background-container.home-mode {
+  background-image: url('home-background.png') !important;
+  background-size: cover;
+}
+
 .background-container:not(.home-mode) {
   background-image: url('my-background.png');
   background-size: contain;
