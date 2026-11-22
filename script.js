@@ -74,7 +74,7 @@ document.addEventListener('touchend', () => {
 });
 
 let mediaRecorder;
-let recordedChunks = [];
+let recordingCountdown = null;
 let currentSlideIndex = 0;
 let totalSlides = 1;
 let currentFacingMode = "user";
@@ -208,6 +208,10 @@ function closeSheetWithAnimation(isBackGesture = false) {
   }, 300);
 }
 function goToHomeView(isBackGesture = false) {
+  clearInterval(recordingCountdown);
+  recordingCountdown = null;
+  if (mediaRecorder?.state === "recording") mediaRecorder.stop();
+  resetRecordButton();
   if (cameraView && cameraView.srcObject) {
     cameraView.srcObject.getTracks().forEach(track => track.stop());
     cameraView.srcObject = null;
@@ -738,7 +742,10 @@ function renderProjects() {
         if (e.target.closest(".project-menu-popup")) return;
         if (e.target.closest(".project-title")) return;
         currentProject = proj;
-        loadSavedVideos(currentProject.id);
+        loadSavedVideos(currentProject.id).catch((error) => {
+          console.error("저장된 영상 불러오기 실패:", error);
+          if (currentProject === proj) alert("저장된 영상을 불러오지 못했습니다.");
+        });
         let bgImageUrl = "my-background.png";
         const foundUrl = findAvailableDesignUrl(proj.mountain, proj.design);
         if (foundUrl) bgImageUrl = foundUrl;
@@ -783,13 +790,13 @@ function initDatabase() {
     const request = indexedDB.open("HikeCameraDB", 2);
     request.onupgradeneeded = function (e) {
       const database = e.target.result;
-      if (database.objectStoreNames.contains("videos")) {
-        database.deleteObjectStore("videos");
+      if (!database.objectStoreNames.contains("videos")) {
+        database.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
       }
-      database.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
     };
     request.onsuccess = function (e) { db = e.target.result; resolve(); };
     request.onerror = function (e) { console.error("DB 에러", e); reject(); };
+    request.onblocked = () => reject(new Error("Video database upgrade blocked"));
   });
 }
 
@@ -882,7 +889,7 @@ function updateCameraTransformStyle() {
 
 function saveVideoToDB(blob, altitude, recordTime, projectid, facingMode) {
   return new Promise((resolve, reject) => {
-    if (!db) { resolve(null); return; }
+    if (!db) { reject(new Error("Video database unavailable")); return; }
     const transaction = db.transaction(["videos"], "readwrite");
     const store = transaction.objectStore("videos");
     const request = store.add({
@@ -892,8 +899,8 @@ function saveVideoToDB(blob, altitude, recordTime, projectid, facingMode) {
       projectid: projectid,
       facingMode: facingMode || "user"
     });
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
+    transaction.oncomplete = () => resolve(request.result);
+    transaction.onabort = () => reject(transaction.error);
   });
 }
 
@@ -933,12 +940,17 @@ function loadSavedVideos(projectid) {
   currentSlideIndex = 0;
   if (sliderWrapper) sliderWrapper.style.transform = 'translateX(0px)';
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (!db) { resolve(); return; }
     const transaction = db.transaction(["videos"], "readonly");
     const store = transaction.objectStore("videos");
     const request = store.getAll();
+    request.onerror = () => reject(request.error);
     request.onsuccess = function (e) {
+      if ((currentProject?.id ?? "") !== projectid) {
+        resolve();
+        return;
+      }
       const allVideos = e.target.result || [];
       const filteredVideos = allVideos.filter(item => item.projectid === projectid);
       filteredVideos.forEach(item => {
@@ -1063,52 +1075,77 @@ function stopAltitudeWatch() {
   }
 }
 
+function resetRecordButton() {
+  if (!recordBtn) return;
+  recordBtn.innerText = "REC";
+  recordBtn.style.backgroundColor = "red";
+  recordBtn.style.borderColor = "white";
+}
+
 function executionRecord() {
-  if (!cameraView || !cameraView.srcObject || !recordBtn) return;
+  resetRecordButton();
+  if (!cameraView?.srcObject || !recordBtn || !currentProject || !db) return;
   const stream = cameraView.srcObject;
+  const projectId = currentProject.id;
+  const facingMode = currentFacingMode;
   const mimeType = getSupportedMimeType();
   const options = mimeType ? { mimeType } : {};
-  mediaRecorder = new MediaRecorder(stream, options);
-  recordedChunks = [];
-  mediaRecorder.ondataavailable = (e) => {
+  let recorder;
+  try {
+    recorder = new MediaRecorder(stream, options);
+    recorder.start(200);
+  } catch (error) {
+    console.error("녹화 시작 실패:", error);
+    alert("녹화를 시작하지 못했습니다. 카메라를 확인하고 다시 시도해 주세요.");
+    return;
+  }
+  mediaRecorder = recorder;
+  const recordedChunks = [];
+  recorder.ondataavailable = (e) => {
     if (e.data.size > 0) recordedChunks.push(e.data);
   };
-  mediaRecorder.onstop = async () => {
+  recorder.onstop = async () => {
+    if (mediaRecorder === recorder) resetRecordButton();
+    if (!recordedChunks.length) return;
     const recordedBlob = new Blob(recordedChunks, {
-      type: mediaRecorder.mimeType || 'video/mp4'
+      type: recorder.mimeType || 'video/mp4'
     });
-    recordedChunks = [];
     const currentAltitude = altitudeText ? altitudeText.innerText : "⛰️해발 0m";
     const now = new Date();
     const recordTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    const savedId = await saveVideoToDB(recordedBlob, currentAltitude, recordTime, currentProject ? currentProject.id : null, currentFacingMode);
-    addVideoSlideToUI(recordedBlob, currentAltitude, savedId, recordTime, true, currentFacingMode);
+    try {
+      const savedId = await saveVideoToDB(recordedBlob, currentAltitude, recordTime, projectId, facingMode);
+      if (currentProject?.id === projectId) {
+        addVideoSlideToUI(recordedBlob, currentAltitude, savedId, recordTime, true, facingMode);
+      } else if (!currentProject) {
+        renderProjects();
+      }
+    } catch (error) {
+      console.error("영상 저장 실패:", error);
+      alert("영상을 저장하지 못했습니다.");
+    }
   };
-  mediaRecorder.start(200);
   recordBtn.innerText = "녹화중";
   recordBtn.style.backgroundColor = "gray";
   recordBtn.style.borderColor = "gray";
   setTimeout(() => {
-    if (mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-      recordBtn.innerText = "REC";
-      recordBtn.style.backgroundColor = "red";
-      recordBtn.style.borderColor = "white";
-    }
+    if (recorder.state === "recording") recorder.stop();
   }, 3000);
 }
 
 if (recordBtn) {
   recordBtn.addEventListener('click', () => {
-    if ((mediaRecorder && mediaRecorder.state === 'recording') || recordBtn.innerText.includes("초")) return;
+    if (!db || !currentProject || !cameraView?.srcObject ||
+        mediaRecorder?.state === "recording" || recordingCountdown !== null) return;
     if (selectedTimerSeconds > 0) {
       let timeLeft = selectedTimerSeconds;
       recordBtn.innerText = `${timeLeft}초`;
       recordBtn.style.backgroundColor = "orange";
-      const countdownInterval = setInterval(() => {
+      recordingCountdown = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
+          clearInterval(recordingCountdown);
+          recordingCountdown = null;
           executionRecord();
         } else {
           recordBtn.innerText = `${timeLeft}초`;
@@ -1557,14 +1594,29 @@ if (totalDownloadBtn) {
 }
 
 async function initApp() {
-  await initDatabase();
-  await loadSavedVideos("");
+  const splash = document.getElementById("splash-screen");
+  try {
+    await initDatabase();
+    await loadSavedVideos("");
+  } catch (error) {
+    console.error("앱 초기화 실패:", error);
+    const message = document.createElement("p");
+    message.setAttribute("role", "alert");
+    message.textContent = "영상 저장 공간을 열지 못했습니다.";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.textContent = "다시 시도";
+    retry.addEventListener("click", () => window.location.reload());
+    splash.replaceChildren(message, retry);
+    document.getElementById("main-container").inert = true;
+    retry.focus();
+    return;
+  }
   startCameraClock();
   if (window.refreshProjectGrid) {
     window.refreshProjectGrid();
   }
   setTimeout(() => {
-    const splash = document.getElementById('splash-screen');
     if (splash) {
       splash.classList.add('fade-out');
     }

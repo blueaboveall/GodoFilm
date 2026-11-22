@@ -1,4 +1,4 @@
-const CACHE_NAME = 'godofilm-v8';
+const CACHE_NAME = 'godofilm-v9';
 const APP_SHELL = [
   './',
   './index.html',
@@ -22,17 +22,19 @@ const APP_SHELL = [
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(APP_SHELL.map((path) => new Request(new URL(path, self.registration.scope), { cache: 'reload' })))
+    )
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+      Promise.all(keys.filter((k) => /^godofilm-v\d+$/.test(k) && k !== CACHE_NAME)
+        .map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -40,17 +42,17 @@ self.addEventListener('fetch', (event) => {
 
   if (url.hostname.includes('open-meteo.com')) return;
 
-  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (event.request.method !== 'GET' || !url.href.startsWith(self.registration.scope) ||
+      event.request.headers.has('Range')) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse.clone()));
-          return networkResponse;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+  const cachePromise = caches.open(CACHE_NAME);
+  const cachedResponse = cachePromise.then((cache) => cache.match(event.request)).catch(() => undefined);
+  const networkResponse = fetch(event.request);
+  event.waitUntil(networkResponse.then(async (response) => {
+    if (!response.ok || response.status === 206) return;
+    const responseCopy = response.clone();
+    const cache = await cachePromise;
+    await cache.put(event.request, responseCopy);
+  }).catch(() => {}));
+  event.respondWith(cachedResponse.then((cached) => cached || networkResponse));
 });
