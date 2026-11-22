@@ -1,8 +1,8 @@
-const CACHE_NAME = 'godofilm-v6';
+const CACHE_NAME = 'godofilm-v7';
 const APP_SHELL = [
   './',
   './index.html',
-  './style.css?v=4',
+  './style.css?v=5',
   './script.js',
   './manifest.json',
   './icon.png',
@@ -11,8 +11,6 @@ const APP_SHELL = [
   './guide-1.png',
   './guide-2.png',
   './guide-3.png',
-  './home-background.png',
-  './my-background.png',
   './bg-sorae-peak.png',
   './bg-baebong-craft-english.png',
   './bg-surak-peak.png',
