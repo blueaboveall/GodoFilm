@@ -3,7 +3,7 @@
   "name": "고도필름",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "assets/branding/icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }

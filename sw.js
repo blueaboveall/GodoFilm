@@ -1,22 +1,22 @@
-const CACHE_NAME = 'godofilm-v9';
+const CACHE_NAME = 'godofilm-v10';
 const APP_SHELL = [
   './',
   './index.html',
-  './style.css?v=6',
+  './style.css?v=7',
   './script.js',
   './manifest.json',
-  './icon.png',
-  './god-text.png',
-  './camera-o.png',
-  './guide-1.png',
-  './guide-2.png',
-  './guide-3.png',
-  './home-background.png',
-  './bg-sorae-peak.png',
-  './bg-baebong-craft-english.png',
-  './bg-surak-peak.png',
-  './bg-gooreum-craft-korean.png',
-  './bg-mireuk-peak.png'
+  './assets/branding/icon.png',
+  './assets/branding/god-text.png',
+  './assets/branding/camera-o.png',
+  './assets/guides/guide-1.png',
+  './assets/guides/guide-2.png',
+  './assets/guides/guide-3.png',
+  './assets/backgrounds/home-background.png',
+  './assets/backgrounds/bg-sorae-peak.png',
+  './assets/backgrounds/bg-baebong-craft-english.png',
+  './assets/backgrounds/bg-surak-peak.png',
+  './assets/backgrounds/bg-gooreum-craft-korean.png',
+  './assets/backgrounds/bg-mireuk-peak.png'
 ];
 
 self.addEventListener('install', (event) => {

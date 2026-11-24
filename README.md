@@ -6,7 +6,7 @@
 
 [고도필름 열기](https://blueaboveall.github.io/GodoFilm/)
 
-![고도필름 소개 이미지](og-image-2.png)
+![고도필름 소개 이미지](assets/branding/og-image-2.png)
 
 ## 사용 방법
 

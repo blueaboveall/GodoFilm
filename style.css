@@ -55,13 +55,8 @@ body, html {
 }
 
 .background-container.home-mode {
-  background-image: url('home-background.png') !important;
+  background-image: url('assets/backgrounds/home-background.png') !important;
   background-size: cover;
-}
-
-.background-container:not(.home-mode) {
-  background-image: url('my-background.png');
-  background-size: contain;
 }
 
 .main-view {
@@ -1272,6 +1267,5 @@ html, body {
 }
 
 .background-container:not(.home-mode) {
-  background-image: url('my-background.png');
   background-size: cover;   /* contain → cover로 변경 */
 }

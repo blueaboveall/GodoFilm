@@ -85,11 +85,11 @@ let currentProject = null;
 let projects = JSON.parse(localStorage.getItem("climbingProjects") || "[]");
 
 const availableDesigns = {
-  "소래산": { "산 정상": "bg-sorae-peak.png" },
-  "배봉산": { "크래프트 (영어)": "bg-baebong-craft-english.png" },
-  "수락산": { "산 정상": "bg-surak-peak.png" },
-  "구름산": { "크래프트 (한글)": "bg-gooreum-craft-korean.png" },
-  "미륵산": { "산 정상": "bg-mireuk-peak.png" }
+  "소래산": { "산 정상": "assets/backgrounds/bg-sorae-peak.png" },
+  "배봉산": { "크래프트 (영어)": "assets/backgrounds/bg-baebong-craft-english.png" },
+  "수락산": { "산 정상": "assets/backgrounds/bg-surak-peak.png" },
+  "구름산": { "크래프트 (한글)": "assets/backgrounds/bg-gooreum-craft-korean.png" },
+  "미륵산": { "산 정상": "assets/backgrounds/bg-mireuk-peak.png" }
 };
 
 const mountainDesignMap = {
@@ -746,9 +746,7 @@ function renderProjects() {
           console.error("저장된 영상 불러오기 실패:", error);
           if (currentProject === proj) alert("저장된 영상을 불러오지 못했습니다.");
         });
-        let bgImageUrl = "my-background.png";
-        const foundUrl = findAvailableDesignUrl(proj.mountain, proj.design);
-        if (foundUrl) bgImageUrl = foundUrl;
+        const bgImageUrl = findAvailableDesignUrl(proj.mountain, proj.design);
         const homeView = document.getElementById("home-view");
         const cameraPageView = document.getElementById("camera-page-view");
         const mainContainer = document.getElementById("main-container");
@@ -756,7 +754,7 @@ function renderProjects() {
         if (cameraPageView) cameraPageView.style.display = "flex";
         if (mainContainer) {
           mainContainer.classList.remove("home-mode");
-          mainContainer.style.backgroundImage = `url('${bgImageUrl}')`;
+          mainContainer.style.backgroundImage = bgImageUrl ? `url('${bgImageUrl}')` : '';
         }
         startCamera();
         getRealAltitude();
@@ -1374,11 +1372,14 @@ async function generateTotalLogVideo() {
       canvasRecorder.start();
 
       const bgImg = new Image();
-      let logBgUrl = "my-background.png";
-      const foundLogUrl = findAvailableDesignUrl(currentProject?.mountain, currentProject?.design);
-      if (foundLogUrl) logBgUrl = foundLogUrl;
-      bgImg.src = logBgUrl;
-      await new Promise((resolve) => { bgImg.onload = resolve; bgImg.onerror = resolve; });
+      const logBgUrl = findAvailableDesignUrl(currentProject?.mountain, currentProject?.design);
+      if (logBgUrl) {
+        await new Promise((resolve) => {
+          bgImg.onload = resolve;
+          bgImg.onerror = resolve;
+          bgImg.src = logBgUrl;
+        });
+      }
 
       let bgSx = 0, bgSy = 0, bgSw = bgImg.naturalWidth, bgSh = bgImg.naturalHeight;
       if (bgImg.complete && bgImg.naturalWidth !== 0) {
